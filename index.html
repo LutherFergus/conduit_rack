@@ -22,7 +22,7 @@ input,select,button{font:inherit}input,select{width:100%;min-height:44px;backgro
 input:focus,select:focus{outline:2px solid #38bdf8;outline-offset:1px}.choices{display:flex;gap:14px;flex-wrap:wrap;padding-top:7px}.choices label{display:flex;align-items:center;gap:7px;margin:0;font-weight:650}.choices input{width:auto;min-height:auto}
 .buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{min-height:44px;border:0;border-radius:10px;padding:10px 15px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#334155;color:#fff}.secondary.toggle-active{background:#f97316;color:#fff;box-shadow:0 0 0 2px rgba(249,115,22,.32)}.danger{background:#7f1d1d;color:#fff}
 .helper{font-size:.88rem;color:var(--muted);margin-top:5px;line-height:1.35}.formula{background:#0f172a;border:1px dashed #475569;border-radius:12px;padding:12px;color:#cbd5e1;line-height:1.55}
-.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1410px;background:#0b1220}table.offset-layout{min-width:2050px}th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:8px;text-align:center;vertical-align:middle}th{background:#1e293b;position:sticky;top:0;z-index:2}td input,td select{min-width:90px;padding:8px}td.output{background:#0f172a;font-variant-numeric:tabular-nums;white-space:nowrap}td.need{font-size:.78rem;line-height:1.35;color:#fbbf24;min-width:190px}.auto-filled{border-color:#2563eb!important;background:#0c2044!important}.invalid{border-color:var(--bad)!important;box-shadow:0 0 0 3px rgba(239,68,68,.45)!important;outline:2px solid var(--bad)!important;outline-offset:1px}
+.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1410px;background:#0b1220}table.offset-layout{min-width:2050px}th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:8px;text-align:center;vertical-align:middle}th{background:#1e293b;position:sticky;top:0;z-index:2}td input,td select{min-width:90px;padding:8px}.cc{min-width:102px}td.output{background:#0f172a;font-variant-numeric:tabular-nums;white-space:nowrap}td.need{font-size:.78rem;line-height:1.35;color:#fbbf24;min-width:190px}.bender-col{display:none!important}.auto-filled{border-color:#2563eb!important;background:#0c2044!important}.invalid{border-color:var(--bad)!important;box-shadow:0 0 0 3px rgba(239,68,68,.45)!important;outline:2px solid var(--bad)!important;outline-offset:1px}
 .toolbar-title{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}.dot.auto{background:#2563eb}.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.conduit-id{display:inline-flex;align-items:center;justify-content:center;gap:8px}.conduit-color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:0 0 12px;border:2px solid rgba(255,255,255,.72);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 
 
@@ -172,7 +172,7 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
       <div id="globalBenderBox"><label for="globalBender">Bender Profile</label><select id="globalBender"></select><div class="helper">When every conduit is the same trade size, this profile applies to the entire rack. Mixed conduit sizes automatically show a separate Bender Profile for each row.</div></div>
       <div class="strut-stack"><div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div><div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div></div>
     </div>
-    <div class="buttons"><button class="primary" id="buildBtn">Build / Rebuild Table</button><button class="secondary" id="loadLastBtn">Load Last Conduit Set</button><button class="secondary toggle-active" id="autoSpaceBtn" type="button" aria-pressed="true">Auto Space: ON</button><button class="secondary" id="saveBtn">Save Project</button><button class="secondary" id="loadBtn">Open Project</button><input id="fileInput" class="hidden" type="file" accept=".json"><button class="danger" id="clearBtn">Clear Values</button></div>
+    <div class="buttons"><button class="primary" id="buildBtn">Build / Rebuild Table</button><button class="secondary" id="loadLastBtn">Load Last Conduit Set</button><button class="secondary toggle-active" id="autoSpaceBtn" type="button" aria-pressed="true">Auto Space: ON</button><button class="secondary" id="randomRunTestBtn" type="button" title="Generate a realistic random multi-section run">⚗ Run Test</button><button class="secondary" id="saveBtn">Save Project</button><button class="secondary" id="loadBtn">Open Project</button><input id="fileInput" class="hidden" type="file" accept=".json"><button class="danger" id="clearBtn">Clear Values</button></div>
   </div>
 </details>
 </section>
@@ -228,7 +228,7 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
 
 <div id="projectStatusModal" class="project-status-modal" role="dialog" aria-modal="true" aria-labelledby="projectStatusTitle" aria-hidden="true"><div class="project-status-dialog"><div class="project-status-header"><div id="projectStatusTitle" class="project-status-title">Project Status</div><button id="projectStatusClose" class="project-status-close" type="button">Close</button></div><div class="project-status-body"><div id="status" class="status-grid"></div></div></div></div>
 
-<section class="panel viewer-panel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper">Rendered EMT uses the selected trade size and actual outside diameter. Two full 3-D 1-5/8-inch square tubes are placed a few inches in from the conduit ends. Each strut independently follows its selected top or bottom contact and remains tangent and perpendicular to the conduit runs where they touch. The two struts are perpendicular to each other and are independently extended to support every conduit. Collisions are highlighted in red.</div></div><div class="view-buttons"><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="primary" id="resetViewBtn" type="button">⌂ Reset View</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Isometric</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">✥ Pan</button><button class="secondary" id="fitViewBtn" type="button">Fit to Model</button><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim Rack</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">↶ Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">↷ Redo</button></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div></section>
+<section class="panel viewer-panel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper">Rendered EMT uses the selected trade size and actual outside diameter. Two full 3-D 1-5/8-inch square tubes are placed a few inches in from the conduit ends. Each strut independently follows its selected top or bottom contact and remains tangent and perpendicular to the conduit runs where they touch. The two struts are perpendicular to each other and are independently extended to support every conduit. Collisions are highlighted in red.</div></div><div class="view-buttons"><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">✥ Pan</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Isometric</button><button class="secondary" id="fitViewBtn" type="button">Fit to Model</button><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim Rack</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">↶ Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">↷ Redo</button></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div></section>
 <section class="panel local-storage-panel setup rack-data-panel" id="rackDataPanel">
   <div class="rack-data-header">
     <button class="rack-data-toggle" id="rackDataToggle" type="button" aria-expanded="false" aria-controls="rackDataBody"><span class="rack-data-chevron" aria-hidden="true">›</span><span class="rack-data-title">Rack Data</span></button>
@@ -397,7 +397,7 @@ function initializeRunControlLayout(){
   const format=$('#layoutModeSelector'),formatHost=$('#topFormatHost');
   if(format&&formatHost&&!formatHost.contains(format))formatHost.appendChild(format);
   const actions=$('#topRunActions');
-  [$('#autoSpaceBtn'),$('#randomTestBtn')].forEach(button=>{if(button&&actions&&!actions.contains(button))actions.appendChild(button)});
+  [$('#autoSpaceBtn'),$('#randomTestBtn'),$('#randomRunTestBtn')].forEach(button=>{if(button&&actions&&!actions.contains(button))actions.appendChild(button)});
   const countBox=$('#conduitCountBox'),countHost=$('#conduitCountCardHost');
   if(countBox&&countHost&&!countHost.contains(countBox))countHost.appendChild(countBox);
   const controls=$('#conduitCardControls');
@@ -505,6 +505,7 @@ function updateRackModeUI(){
   $$('.kicked-only').forEach(el=>el.classList.toggle('hidden',nonKicked));
   $('#offsetVerticalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='parallel');
   $('#offsetHorizontalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='standard');
+  $$('.offset-gap-col').forEach(el=>el.classList.toggle('hidden',!(isOffset&&activeOffsetType==='parallel')));
   $('#saddleHorizontalDirectionBox')?.classList.toggle('hidden',isSaddle&&activeSaddleType==='standard');
   $('#offsetModeSelector [data-offset-mode="parallel"]')?.classList.toggle('hidden',activeLayoutMode==='single');
   setSegmentedState('#offsetModeSelector','offsetMode',activeOffsetType);
@@ -546,12 +547,13 @@ function renderLayoutTypeScreen(){
   wizardState.layoutTypeScreen=true;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=false;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
   $('#wizardStepLabel').textContent='Layout';
   $('#wizardQuestion').textContent='Single Conduit or Rack?';
-  $('#wizardHelp').textContent='Choose whether you are laying out one conduit or a complete conduit rack.';
+  $('#wizardHelp').textContent='Choose Single, Rack, or generate a realistic random multi-section run.';
   const opts=$('#wizardOptions');opts.classList.add('rack-type-options');
-  opts.innerHTML='<button type="button" class="rack-type-button available" data-layout-type="single"><span><span class="rack-type-name">Single Conduit</span><span class="rack-type-desc">Create one conduit using the selected bend type.</span></span><span class="rack-type-status">Select</span></button><button type="button" class="rack-type-button available" data-layout-type="rack"><span><span class="rack-type-name">Rack</span><span class="rack-type-desc">Create and space multiple conduits as one rack.</span></span><span class="rack-type-status">Select</span></button>';
+  opts.innerHTML='<button type="button" class="rack-type-button available" data-layout-type="single"><span><span class="rack-type-name">Single Conduit</span><span class="rack-type-desc">Create one conduit using the selected bend type.</span></span><span class="rack-type-status">Select</span></button><button type="button" class="rack-type-button available" data-layout-type="rack"><span><span class="rack-type-name">Rack</span><span class="rack-type-desc">Create and space multiple conduits as one rack.</span></span><span class="rack-type-status">Select</span></button><button type="button" class="rack-type-button available" data-layout-type="run-test"><span><span class="rack-type-name">Run Test</span><span class="rack-type-desc">Generate a realistic random rack run with multiple sections.</span></span><span class="rack-type-status">Generate</span></button>';
   $('#wizardResult').classList.add('wizard-hidden');$('#wizardBack').classList.add('wizard-hidden');
 }
 function chooseLayoutType(type){
+  if(type==='run-test'){realisticRandomRunTest();$('#setupWizard').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});return}
   if(type!=='single'&&type!=='rack')return;
   wizardState.layoutMode=type;
   activeLayoutMode=type;
@@ -772,6 +774,7 @@ function populateTestRack(hard=false){
 function chooseSetupMode(mode){
   if(mode==='wizard'){wizardState.step=wizardState.layoutMode==='single'?1:0;if(wizardState.layoutMode==='single')wizardState.conduitCount='1';renderSetupWizard();return}
   if(mode==='manual'){if(wizardState.layoutMode==='single')countEl.value=1;build(false);$('#setupWizard').classList.remove('open');return}
+  if(mode==='run-test'){realisticRandomRunTest();$('#setupWizard').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});return}
   if(activeRackType==='basic-90'){populateBasic90TestRack(mode==='hard-test');$('#setupWizard').classList.remove('open');return}
   populateTestRack(mode==='hard-test');
 }
@@ -1271,15 +1274,24 @@ function finishCalculatedSection(){
 }
 function buildOffsetTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
-  if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center<br><small>from previous</small></th><th>Critical Bend<br><small>measurement</small></th><th class="oal-col">OAL</th><th class="offset-rise-col">Rise</th><th class="offset-distance-col">Offset Distance</th><th>Bend Angle</th><th>True Offset</th><th>Travel Between Bends</th><th>Shrink</th><th>First Bend Mark</th><th>Second Bend Mark</th><th>Missing / Needed</th>';
+  if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center<br><small>from previous</small></th><th>Critical Bend<br><small>measurement</small></th><th class="oal-col">OAL</th><th class="offset-rise-col">Rise</th><th class="offset-distance-col">Offset Distance</th><th>Bend Angle</th><th>True Offset</th><th>Travel Between Bends</th><th>Shrink</th><th class="offset-gap-col">Gap at Offsets</th><th>First Bend Mark</th><th>Second Bend Mark</th><th>Missing / Needed</th>';
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
     tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td><td class="input-cell" data-label="Center to Center"><input class="cc" type="text" ${i===0?'disabled':''} placeholder="${i===0?'—':'e.g. 2-1/2'}" value="${r.cc||''}"></td><td class="input-cell" data-label="Critical Bend Measurement"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell offset-rise-col" data-label="Rise"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 8"></td><td class="input-cell offset-distance-col" data-label="Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="Bend Angle"><input class="bend-angle ${r.autoBendAngle?'auto-filled':''}" data-auto="${r.autoBendAngle?'1':'0'}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 30"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset" data-label="True Offset">—</td><td class="output result-cell travel" data-label="Travel Between Bends">—</td><td class="output result-cell shrink" data-label="Shrink">—</td><td class="output result-cell first-mark" data-label="First Bend Mark">—</td><td class="output result-cell second-mark" data-label="Second Bend Mark">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
+    const shrinkCell=tr.querySelector('.shrink');
+    if(shrinkCell&&!tr.querySelector('.offset-gap')){
+      const gapCell=document.createElement('td');
+      gapCell.className='output result-cell offset-gap';
+      gapCell.dataset.label='Gap at Offsets';
+      gapCell.textContent='—';
+      tr.insertBefore(gapCell,shrinkCell.nextSibling);
+    }
   }
   $$('.offset-rise-col').forEach(el=>el.classList.toggle('hidden',activeOffsetType==='parallel'));
   $$('.offset-distance-col').forEach(el=>el.classList.toggle('hidden',activeOffsetType==='standard'));
+  $$('.offset-gap-col').forEach(el=>el.classList.toggle('hidden',activeOffsetType!=='parallel'));
   updateOalVisibility();
 }
 function buildSaddleTable(old,n){
@@ -1444,6 +1456,29 @@ function riseOffsetFromRowZero(rowIndex,trs){
   const kickSign=getRadio('kickDirection')==='down'?-1:1;
   return kickSign*(secondSign-firstSign)*(referenceRadius-currentRadius);
 }
+function parallelGapProgression(rowIndex,anchorIndex,trs){
+  if(activeOffsetType!=='parallel'||rowIndex===anchorIndex)return 0;
+  const step=rowIndex>anchorIndex?1:-1;
+  let total=0;
+  for(let i=anchorIndex+step;step>0?i<=rowIndex:i>=rowIndex;i+=step){
+    const prevSize=trs[i-1]?.querySelector('.size')?.value;
+    const curSize=trs[i]?.querySelector('.size')?.value;
+    const cc=parseM(trs[i]?.querySelector('.cc')?.value);
+    const gap=outsideClearance(prevSize,curSize,cc);
+    if(gap!=null)total+=gap;
+  }
+  return total;
+}
+function parallelOffsetGapFromModels(models,rowIndex){
+  if(activeOffsetType!=='parallel'||rowIndex<=0||!models?.[rowIndex]||!models[rowIndex-1])return null;
+  const a=models[rowIndex-1],b=models[rowIndex];
+  let best={dist:Infinity};
+  for(let i=0;i<a.points.length-1;i++)for(let j=0;j<b.points.length-1;j++){
+    const hit=closestSegments(a.points[i],a.points[i+1],b.points[j],b.points[j+1]);
+    if(hit.dist<best.dist)best=hit;
+  }
+  return Number.isFinite(best.dist)?best.dist-a.radius-b.radius:null;
+}
 function applyCalculatedRises(){
   const trs=$$('#rows tr');
   const anchor=findManualAnchor(trs,'rise','autoRise');
@@ -1562,7 +1597,7 @@ function recalcOffset(){
   const projection=activeOffsetType==='standard'?0:activeOffsetType==='parallel'?1:(preliminaryTrueOffset>0?Math.abs(distanceForProjection)/preliminaryTrueOffset:0);
   const progressionSign=offsetRackStart==='left'?1:-1;
   const staggerPerInch=Math.tan(Math.max(0,Math.min(89.9,angleForProgression))*Math.PI/360)*projection;
-  setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*(pos[i]-pos[anchorIndex])*staggerPerInch);
+  setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*(pos[i]-pos[anchorIndex])*staggerPerInch+progressionSign*parallelGapProgression(i,anchorIndex,trs));
   setOffsetFieldFromAnchor(trs,'oal',oalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'bend-angle',angleAnchor,value=>value);
   if(riseAnchor){
@@ -1578,11 +1613,13 @@ function recalcOffset(){
     const cc=parseM(tr.querySelector('.cc').value);
     const critical=parseM(tr.querySelector('.critical').value);
     const oal=parseM(tr.querySelector('.oal').value);
+    const size=tr.querySelector('.size').value,bender=tr.querySelector('.bender').value;
     const rise=activeOffsetType==='parallel'?0:parseM(tr.querySelector('.rise')?.value);
     const offsetDistance=activeOffsetType==='standard'?0:parseM(tr.querySelector('.offset-distance')?.value);
     const angle=parseM(tr.querySelector('.bend-angle').value);
     const validAngle=angle!=null&&angle>0&&angle<90;
     const trueOffset=rise!=null&&offsetDistance!=null?Math.hypot(rise,offsetDistance):null;
+    const gapAtOffsets=activeOffsetType==='parallel'&&i>0&&cc!=null?outsideClearance(data[i-1].size,size,cc):null;
     const theta=validAngle?angle*Math.PI/180:null;
     const travel=trueOffset!=null&&theta?trueOffset/Math.sin(theta):null;
     const shrink=trueOffset!=null&&theta?trueOffset*Math.tan(theta/2):null;
@@ -1591,13 +1628,14 @@ function recalcOffset(){
       if(offsetCriticalBend==='first'){firstMark=critical;secondMark=critical+travel;}
       else{secondMark=critical+shrink;firstMark=secondMark-travel;}
     }
-    const size=tr.querySelector('.size').value,bender=tr.querySelector('.bender').value;
     const clr=profileCLR(size,bender)||emtGeometry[size]?.clr||null;
     const tangentSetback=clr!=null&&theta?clr*Math.tan(theta/2):null;
-    data.push({size,bender,cc,critical,oal,rise,offsetDistance,angle,trueOffset,travel,shrink,firstMark,secondMark});
+    data.push({size,bender,cc,critical,oal,rise,offsetDistance,angle,trueOffset,travel,shrink,gapAtOffsets,firstMark,secondMark});
     tr.querySelector('.true-offset').textContent=fmtDecimal(trueOffset,3);
     tr.querySelector('.travel').textContent=fmtDecimal(travel,3);
     tr.querySelector('.shrink').textContent=fmtDecimal(shrink,3);
+    const gapCell=tr.querySelector('.offset-gap');
+    if(gapCell)gapCell.textContent=fmtDecimal(gapAtOffsets,3);
     tr.querySelector('.first-mark').textContent=fmtDecimal(firstMark,3);
     tr.querySelector('.second-mark').textContent=fmtDecimal(secondMark,3);
     const need=[];
@@ -1626,6 +1664,15 @@ function recalcOffset(){
   }
   modelData=data;
   rackModels=buildRackModels();
+  if(activeOffsetType==='parallel'){
+    rackModels.forEach((model,index)=>{
+      if(index===0)return;
+      const gap=parallelOffsetGapFromModels(rackModels,index);
+      if(modelData[index])modelData[index].gapAtOffsets=gap;
+      const gapCell=$$('#rows tr')[index]?.querySelector('.offset-gap');
+      if(gapCell)gapCell.textContent=fmtDecimal(gap,3);
+    });
+  }
   rackStrutSolids=buildRunStrutSolids(rackModels);
   modelCollisions=detectCollisions(rackModels);
   hypotenuseConflicts=[];
@@ -2152,6 +2199,121 @@ function randomRackTest(){
   randomRackTest.badgeTimer=setTimeout(()=>viewerBadge.classList.add('hidden'),3200);
 }
 
+function realisticRandomRunTest(){
+  closeMeasureKeypad(true);
+  const sectionCount=2+Math.floor(Math.random()*11);
+  const conduitCount=3+Math.floor(Math.random()*13);
+  const anglePool=[15,22.5,30,30,45,45,60];
+  const sizePool=['3/4"','3/4"','3/4"','1"','1"','1"','1-1/4"','1-1/4"','1-1/4"','1-1/2"','2"','2-1/2"'];
+  const typePool=['kicked-90','kicked-90','offset-standard','offset-standard','offset-rolled','saddle-standard','saddle-rolled','basic-90','segmented','straight'];
+  const fmtR=v=>fmt16Input(v);
+  const q=(min,max)=>Math.round((min+Math.random()*(max-min))*4)/4;
+  const commonRows=[];
+  for(let i=0;i<conduitCount;i++){
+    const size=i>0&&Math.random()<.42?commonRows[i-1].size:randomChoice(sizePool);
+    const bender=defaultBenderForSize(size);
+    let cc='';
+    if(i>0){
+      const prev=commonRows[i-1].size;
+      const base=requiredCC(prev,size,preferredClearance)||2;
+      const extra=Math.random()<.82?q(0,.5):q(.5,1.25);
+      cc=fmtR(roundUp16(base+extra));
+    }
+    commonRows.push({size,bender,cc});
+  }
+  const sectionProject=kind=>{
+    const p={...baseProjectObject(),layoutMode:'rack',count:conduitCount,autoSpaceActive:true,trimApplied:false};
+    p.rows=commonRows.map((r,i)=>({size:r.size,bender:r.bender,cc:i?r.cc:''}));
+    if(kind==='basic-90'){
+      p.rackType='basic-90';
+      p.basic90Direction=randomChoice(['up','left','right','down']);
+      p.rows=p.rows.map((r,i)=>({...r,oal:i===0?fmtR(q(68,92)):''}));
+      return p;
+    }
+    if(kind==='segmented'){
+      p.rackType='segmented';
+      p.segmentedReferenceMode=Math.random()<.55?'back':'start';
+      p.segmentedTurnDirection=Math.random()<.5?'left':'right';
+      p.rows=p.rows.map((r,i)=>({...r,desiredRadius:i===0?fmtR(q(28,52)):'',segmentedMeasurement:i===0?fmtR(p.segmentedReferenceMode==='back'?q(72,98):q(18,36)):''}));
+      return p;
+    }
+    if(kind==='straight'){
+      p.rackType='straight';
+      return p;
+    }
+    if(kind.startsWith('saddle-')){
+      p.rackType='saddle';
+      p.saddleType=kind.slice(7);
+      p.saddleOffsetRelation=Math.random()<.6?'same':'different';
+      p.saddleVerticalDirection=Math.random()<.5?'up':'down';
+      p.saddleHorizontalDirection=Math.random()<.5?'left':'right';
+      const angle=randomChoice(anglePool);
+      p.rows=p.rows.map((r,i)=>({...r,
+        critical:i===0?fmtR(q(20,40)):'',
+        oal:i===0?fmtR(q(108,134)):'',
+        rise:i===0?fmtR(q(4,10)):'',
+        offsetDistance:p.saddleType==='rolled'&&i===0?fmtR(q(4,10)):'',
+        bendAngle:i===0?String(angle):'',
+        middleDistance:i===0?fmtR(q(9,24)):'',
+        secondRise:p.saddleOffsetRelation==='different'&&i===0?fmtR(q(4,10)):'',
+        secondOffsetDistance:p.saddleType==='rolled'&&p.saddleOffsetRelation==='different'&&i===0?fmtR(q(4,10)):''
+      }));
+      return p;
+    }
+    if(kind.startsWith('offset-')){
+      p.rackType='offset';
+      p.offsetType=kind.slice(7);
+      p.offsetCriticalBend=Math.random()<.5?'first':'second';
+      p.offsetRackStart=Math.random()<.5?'left':'right';
+      p.offsetVerticalDirection=Math.random()<.5?'up':'down';
+      p.offsetHorizontalDirection=Math.random()<.5?'right':'left';
+      const angle=randomChoice(anglePool);
+      p.rows=p.rows.map((r,i)=>({...r,
+        critical:i===0?fmtR(q(20,44)):'',
+        oal:i===0?fmtR(q(108,136)):'',
+        rise:p.offsetType==='parallel'?'':(i===0?fmtR(q(4,12)):''),
+        offsetDistance:p.offsetType==='standard'?'':(i===0?fmtR(q(4,12)):''),
+        bendAngle:i===0?String(angle):''
+      }));
+      return p;
+    }
+    p.rackType='kicked-90';
+    p.turnDirection=Math.random()<.5?'left':'right';
+    p.kickDirection=Math.random()<.5?'up':'down';
+    p.kickPosition=Math.random()<.65?'before':'after';
+    p.referenceLength=Math.random()<.6?'longest':'shortest';
+    const setup=rackSetupFromReference(p.referenceLength,p.turnDirection);
+    p.direction=setup.direction;
+    p.startingSide=setup.startingSide;
+    const angle=randomChoice(anglePool),rise=q(5,13),hyp=Math.max(rise+8,q(rise+12,rise+27));
+    p.rows=p.rows.map((r,i)=>({...r,
+      strut:i===0?fmtR(q(2,9)):'',
+      oal:i===0?fmtR(q(66,90)):'',
+      rise:i===0?fmtR(rise):'',
+      hyp:i===0?fmtR(hyp):''
+    }));
+    return p;
+  };
+  const sections=[];
+  for(let i=0;i<sectionCount;i++){
+    const kind=i===0?randomChoice(typePool.filter(t=>t!=='straight')):randomChoice(typePool);
+    sections.push({project:sectionProject(kind),trimApplied:false});
+  }
+  if(isCustomRun)exitCustomRun();
+  activeLayoutMode='rack';
+  updateRackModeUI();
+  restoreCustomRun({customRun:true,activeCustomSection:0,flyMode:true,customSections:sections});
+  const badge=$('#viewerBadge');
+  if(badge){
+    badge.textContent=`RUN TEST · ${sectionCount} sections · ${conduitCount} conduits`;
+    badge.style.color='#bbf7d0';
+    badge.style.background='rgba(20,83,45,.9)';
+    badge.classList.remove('hidden');
+    clearTimeout(realisticRandomRunTest.badgeTimer);
+    realisticRandomRunTest.badgeTimer=setTimeout(()=>badge.classList.add('hidden'),3400);
+  }
+}
+
 function populateOffsetTestRack(randomize=false){
   closeMeasureKeypad(true);
   countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*5):6);
@@ -2503,7 +2665,7 @@ function sectionDirectionControlsMarkup(){
     if(activeOffsetType!=='parallel')cards+=card('Vertical Direction',['up','down'].map(v=>sectionDirectionButton('offset-vertical',v,v[0].toUpperCase()+v.slice(1),offsetVerticalDirection)).join(''),'A negative Rise input forces Down.');
     if(activeOffsetType!=='standard')cards+=card('Horizontal Direction',['left','right'].map(v=>sectionDirectionButton('offset-horizontal',v,v[0].toUpperCase()+v.slice(1),offsetHorizontalDirection)).join(''),'A negative Offset Distance forces Left.');
   }else if(activeRackType==='saddle'){
-    cards=card('First Offset Direction',['up','down'].map(v=>sectionDirectionButton('saddle-vertical',v,v==='up'?'Up First':'Down First',saddleVerticalDirection)).join(''),'A negative first offset height forces Down First.');
+    cards=card('Offset Direction',['up','down'].map(v=>sectionDirectionButton('saddle-vertical',v,v==='up'?'Up First':'Down First',saddleVerticalDirection)).join(''),'A negative first offset height forces Down First.');
     if(activeSaddleType==='rolled')cards+=card('First Horizontal Direction',['left','right'].map(v=>sectionDirectionButton('saddle-horizontal',v,v==='left'?'Left First':'Right First',saddleHorizontalDirection)).join(''),'A negative first offset distance forces Left First.');
   }else if(activeRackType==='segmented'){
     cards=card('90 Direction',['left','right'].map(v=>sectionDirectionButton('segmented',v,v[0].toUpperCase()+v.slice(1),segmentedTurnDirection)).join(''));
@@ -4290,7 +4452,7 @@ function setPresetView(v){
 function resetView(){setPresetView('free')}
 function fitToModel(){fitCurrentView();activeView='custom'}
 $$('[data-view]').forEach(b=>b.onclick=()=>setPresetView(b.dataset.view));
-$('#resetViewBtn').onclick=resetView;$('#randomTestBtn').onclick=randomRackTest;$('#viewerFixCTCBtn').onclick=fixAllCTCIssues;$('#captureViewBtn').onclick=()=>captureCurrentRackView().catch(error=>{console.error(error);showCaptureStatus('CAPTURE FAILED',true)});
+$('#randomTestBtn').onclick=randomRackTest;$('#viewerRandomTestBtn').onclick=randomRackTest;$('#viewerFixCTCBtn').onclick=fixAllCTCIssues;$('#captureViewBtn').onclick=()=>captureCurrentRackView().catch(error=>{console.error(error);showCaptureStatus('CAPTURE FAILED',true)});
 $('#panViewBtn').onclick=()=>setInteractionMode(interactionMode==='pan'?'rotate':'pan');
 $('#flyViewBtn').onclick=()=>setFlyMode(!flyMode);
 $('#fitViewBtn').onclick=fitToModel;
@@ -4355,25 +4517,112 @@ function pdfDisplayValue(value,fallback='—'){
 function cameraState(){return{yaw,pitch,zoom,viewShiftX,viewShiftY,activeView,interactionMode}}
 function applyCameraState(state){yaw=state.yaw;pitch=state.pitch;zoom=state.zoom;viewShiftX=state.viewShiftX;viewShiftY=state.viewShiftY;activeView=state.activeView;interactionMode=state.interactionMode||'rotate';updatePanButton()}
 let pdfViewSession=null;
+let pdfExportSession=null;
+const pdfTitleEl=$('#pdfViewTitle');
+const pdfHelpEl=document.querySelector('.pdf-view-help');
+const defaultPdfTitle=pdfTitleEl?.textContent||'Choose PDF Rack View';
+const defaultPdfHelp=pdfHelpEl?.textContent||'Rotate, pan, and zoom the rack exactly as you want it shown in the fabrication report.';
 function setPdfPresetActive(id,label){$$('.pdf-view-presets button').forEach(b=>b.classList.remove('active-preset'));if(id)$(id)?.classList.add('active-preset');$('#pdfViewMode').textContent=label}
 function usePdfSuggestedView(){activeView='free';viewShiftX=0;viewShiftY=0;chooseRackAwareIsometricView();fitCurrentView();activeView='custom';pdfViewSession.suggested=cameraState();setPdfPresetActive('#pdfSuggestedBtn','Suggested rack-aware view')}
 function usePdfElevationView(){const base=pdfViewSession?.suggested||cameraState();yaw=base.yaw;pitch=.055;viewShiftX=0;viewShiftY=0;activeView='custom';fitCurrentView();activeView='custom';setPdfPresetActive('#pdfElevationBtn','Elevation view')}
 function usePdfOppositeView(){const base=pdfViewSession?.suggested||cameraState();yaw=base.yaw+Math.PI;pitch=base.pitch;viewShiftX=0;viewShiftY=0;activeView='custom';fitCurrentView();activeView='custom';setPdfPresetActive('#pdfOppositeBtn','Opposite-side view')}
-function openPdfViewSelector(){
-  recalc(0);const rows=$$('#rows tr');if(!rows.length){alert('Build the conduit table before creating the PDF.');return}
-  const solved=modelData.filter(d=>activeRackType==='segmented'?d&&d.radius>0&&d.startMark!=null&&d.marks?.length===9:activeRackType==='saddle'?d&&d.oal!=null&&d.trueOffset1>0&&d.trueOffset2>0&&d.mark4!=null:activeRackType==='offset'?d&&d.oal!=null&&d.trueOffset>0&&d.angle!=null&&d.firstMark!=null:d&&d.oal!=null&&d.rise!=null&&d.hyp!=null&&d.angle!=null).length;if(!solved){alert('Enter enough rack data to solve at least one conduit before creating the PDF.');return}
+function setPdfPromptText(sectionLabel='',step=1,total=1){
+  if(pdfTitleEl)pdfTitleEl.textContent=sectionLabel?`${defaultPdfTitle} · ${sectionLabel}`:defaultPdfTitle;
+  if(pdfHelpEl){
+    const stepText=total>1?`Section ${step} of ${total}. `:'';
+    pdfHelpEl.textContent=stepText+defaultPdfHelp;
+  }
+}
+function resetPdfPromptText(){if(pdfTitleEl)pdfTitleEl.textContent=defaultPdfTitle;if(pdfHelpEl)pdfHelpEl.textContent=defaultPdfHelp}
+function sectionHasPdfSolvedRow(){
+  return modelData.some(d=>{
+    if(activeRackType==='segmented')return d&&d.radius>0&&d.startMark!=null&&d.marks?.length===9;
+    if(activeRackType==='saddle')return d&&d.oal!=null&&d.trueOffset1>0&&d.trueOffset2>0&&d.mark4!=null;
+    if(activeRackType==='offset')return d&&d.oal!=null&&d.trueOffset>0&&d.angle!=null&&d.firstMark!=null;
+    if(activeRackType==='basic-90')return d&&d.oal!=null&&d.bendMark!=null;
+    if(activeRackType==='straight')return d&&d.size;
+    return d&&d.oal!=null&&d.rise!=null&&d.hyp!=null&&d.angle!=null;
+  });
+}
+function openPdfViewSelector(sectionLabel='',step=1,total=1){
+  recalc(0);const rows=$$('#rows tr');if(!rows.length){alert('Build the conduit table before creating the PDF.');return false}
+  if(!sectionHasPdfSolvedRow()){alert('Enter enough rack data to solve at least one conduit before creating the PDF.');return false}
   closeMeasureKeypad();const selector=$('#pdfViewSelector'),host=$('#pdfPreviewHost');
+  setPdfPromptText(sectionLabel,step,total);
   pdfViewSession={mainCamera:cameraState(),parent:canvas.parentNode,next:canvas.nextSibling,scrollX:window.scrollX,scrollY:window.scrollY,suggested:null};
   host.appendChild(canvas);selector.classList.add('open');document.body.style.overflow='hidden';setInteractionMode('rotate');
   requestAnimationFrame(()=>{resize();usePdfSuggestedView()});
+  return true;
 }
 function closePdfViewSelector(restore=true){
   if(!pdfViewSession)return;const session=pdfViewSession;$('#pdfViewSelector').classList.remove('open');document.body.style.overflow='';
   if(session.next&&session.next.parentNode===session.parent)session.parent.insertBefore(canvas,session.next);else session.parent.appendChild(canvas);
-  if(restore)applyCameraState(session.mainCamera);pdfViewSession=null;requestAnimationFrame(()=>{resize();window.scrollTo(session.scrollX,session.scrollY)});
+  if(restore)applyCameraState(session.mainCamera);pdfViewSession=null;resetPdfPromptText();requestAnimationFrame(()=>{resize();window.scrollTo(session.scrollX,session.scrollY)});
 }
 function captureSelectedPdfView(){
   try{return renderPdfTechnicalView().toDataURL('image/jpeg',.94)}catch(error){console.error('Unable to render selected rack image',error);return''}
+}
+function currentPdfSectionTitle(sectionIndex,step){
+  if(isCustomRun&&Number.isInteger(sectionIndex)&&customSections[sectionIndex])return sectionLabel(customSections[sectionIndex],sectionIndex);
+  return `Section ${step}`;
+}
+function capturePdfSectionPayload(sectionIndex,imageData,step,total){
+  return{
+    sectionIndex,
+    step,
+    total,
+    sectionTitle:currentPdfSectionTitle(sectionIndex,step),
+    project:baseProjectObject(),
+    modelData:clonePlain(modelData),
+    imageData:imageData||''
+  };
+}
+async function preparePdfCaptureSection(sectionIndex){
+  if(isCustomRun&&Number.isInteger(sectionIndex)&&sectionIndex!==activeCustomSection){
+    selectCustomSection(sectionIndex,true,'viewer',$('#sectionSelector'));
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  }
+  recalc(0);
+}
+async function advancePdfCaptureWorkflow(){
+  if(!pdfExportSession)return;
+  if(pdfExportSession.position>=pdfExportSession.queue.length){
+    const completed=pdfExportSession.sections.slice();
+    const returnSection=pdfExportSession.returnSection;
+    pdfExportSession=null;
+    if(isCustomRun&&Number.isInteger(returnSection)&&returnSection!==activeCustomSection){
+      selectCustomSection(returnSection,true,'viewer',$('#sectionSelector'));
+    }
+    requestAnimationFrame(()=>createRackPdf(completed));
+    return;
+  }
+  const sectionIndex=pdfExportSession.queue[pdfExportSession.position];
+  await preparePdfCaptureSection(sectionIndex);
+  const step=pdfExportSession.position+1,total=pdfExportSession.queue.length;
+  const ok=openPdfViewSelector(currentPdfSectionTitle(sectionIndex,step),step,total);
+  if(!ok){
+    const returnSection=pdfExportSession.returnSection;
+    pdfExportSession=null;
+    if(isCustomRun&&Number.isInteger(returnSection)&&returnSection!==activeCustomSection){
+      selectCustomSection(returnSection,true,'viewer',$('#sectionSelector'));
+    }
+  }
+}
+function startPdfCaptureWorkflow(){
+  if(pdfExportSession)return;
+  const queue=isCustomRun?customSections.map((_,i)=>i):[null];
+  if(!queue.length){alert('Add at least one section before creating a PDF.');return}
+  if(isCustomRun)syncActiveCustomCalculatedState();
+  pdfExportSession={queue,position:0,sections:[],returnSection:isCustomRun?activeCustomSection:null};
+  advancePdfCaptureWorkflow();
+}
+function cancelPdfCaptureWorkflow(){
+  const returnSection=pdfExportSession?.returnSection;
+  pdfExportSession=null;
+  closePdfViewSelector(true);
+  if(isCustomRun&&Number.isInteger(returnSection)&&returnSection!==activeCustomSection){
+    selectCustomSection(returnSection,true,'viewer',$('#sectionSelector'));
+  }
 }
 function pointAlongSegment(a,b,t){return a.map((v,i)=>v+(b[i]-v)*t)}
 function slicePolylineByFraction(points,startFraction,endFraction){
@@ -4521,31 +4770,56 @@ function buildImagePdf(jpegPages){
   const xref=len;push(`xref\n0 ${objCount+1}\n0000000000 65535 f \n`);for(let i=1;i<=objCount;i++)push(String(offsets[i]).padStart(10,'0')+' 00000 n \n');push(`trailer\n<< /Size ${objCount+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
   return new Blob(parts,{type:'application/pdf'});
 }
-async function createRackPdf(imageData){
-  const rows=$$('#rows tr'),busy=$('#pdfBusy'),button=$('#createPdfBtn'),scrollX=window.scrollX,scrollY=window.scrollY;busy.classList.add('open');button.disabled=true;
+function buildPdfSectionReport(sectionPayload,projectName,dateText){
+  const project=sectionPayload.project||{},rows=project.rows||[],dataRows=sectionPayload.modelData||[],type=project.rackType||'kicked-90';
+  const sectionSettings=[['Section',sectionPayload.sectionTitle||`Section ${sectionPayload.step||1}`],['Bend',
+    type==='straight'?'Straight 120"':
+    type==='basic-90'?'Basic 90':
+    type==='offset'?`${offsetTypes[project.offsetType]?.label||'Standard'} Offset`:
+    type==='saddle'?`${saddleTypes[project.saddleType]?.label||'Standard'} Saddle`:
+    type==='segmented'?'Segmented 90':'Kicked 90']
+  ];
+  const countText=String(project.count||rows.length||dataRows.length||0);
+  if(type==='segmented'){
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(row.cc),d.radius==null?'—':fmt16(d.radius),d.backOal==null?'—':fmt16(d.backOal),d.startMark==null?'—':fmt16(d.startMark),d.spacing==null?'—':fmt16(d.spacing),d.marks?.length?d.marks.map(fmt16).join(' · '):'—']}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC','Radius','Back of 90','Start','Spacing','Bend Marks 1–9'],widths:[55,55,90,100,95,110,95,95,620],settings:[...sectionSettings,['Conduits',countText],['Reference',project.segmentedReferenceMode==='start'?'Start of Bend':'Back of 90 (OAL)'],['Direction',project.segmentedTurnDirection==='right'?'Right':'Left'],['Shots','9 × 10°']]},reportRows};
+  }
+  if(type==='saddle'){
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.rise),pdfDisplayValue(row.offsetDistance),pdfDisplayValue(row.secondRise),pdfDisplayValue(row.secondOffsetDistance),d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°',d.middleDistance==null?pdfDisplayValue(row.middleDistance):fmt16(d.middleDistance),d.mark1==null?'—':`${fmt16(d.mark1)} · ${fmt16(d.mark2)} · ${fmt16(d.mark3)} · ${fmt16(d.mark4)}`].filter(v=>v!==null)}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'First Offset','Offset Distance 1','Rise 2','Offset Distance 2','Angle','B2–B3','Bend Marks 1 · 2 · 3 · 4'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),100,110,90,110,80,100,540],settings:[...sectionSettings,['Conduits',countText],['Offsets',project.saddleOffsetRelation==='different'?'Both Different':'Both Same'],['Offset Direction',project.saddleVerticalDirection==='down'?'Down First':'Up First'],['Horizontal',project.saddleType==='rolled'?(project.saddleHorizontalDirection==='left'?'Left First':'Right First'):'Standard saddle']]},reportRows};
+  }
+  if(type==='offset'){
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size),isParallel=project.offsetType==='parallel';return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.critical),isParallel?'—':(d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise)),project.offsetType==='standard'?'—':(d.offsetDistance==null?pdfDisplayValue(row.offsetDistance):fmt16(d.offsetDistance)),d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°',d.trueOffset==null?'—':fmt16(d.trueOffset),d.travel==null?'—':fmt16(d.travel),d.shrink==null?'—':fmt16(d.shrink),isParallel?(d.gapAtOffsets==null?'—':fmt16(Math.max(0,d.gapAtOffsets))):null,d.firstMark==null?'—':`${fmt16(d.firstMark)} / ${fmt16(d.secondMark)}`].filter(v=>v!==null)}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'Critical',...(project.offsetType==='parallel'?[]:['Rise']),...(project.offsetType==='standard'?[]:['Offset Dist.']),'Angle','True Off.','Travel','Shrink',...(project.offsetType==='parallel'?['Gap at Offsets']:[]),'Bend 1 / 2'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),110,...(project.offsetType==='parallel'?[]:[90]),...(project.offsetType==='standard'?[]:[95]),80,105,105,95,...(project.offsetType==='parallel'?[115]:[]),230],settings:[...sectionSettings,['Conduits',countText],['Critical',project.offsetCriticalBend==='second'?'Second Bend':'First Bend'],['Start Side',project.offsetRackStart||'left'],['Direction',project.offsetType==='standard'?(project.offsetVerticalDirection||'up'):`${project.offsetHorizontalDirection||'right'}${project.offsetType==='rolled'?' / '+(project.offsetVerticalDirection||'up'):''}`]]},reportRows};
+  }
+  if(type==='basic-90'){
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size),gain=bendGainFor(size,d.bender||row.bender,90);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),d.oal==null?pdfDisplayValue(row.oal):fmt16(d.oal),d.bendMark==null?'—':fmt16(d.bendMark),gain==null?'—':fmt16(gain)]}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC','Back of 90 (OAL)','Bend Mark','90° Gain'],widths:[65,65,95,120,180,170,170],settings:[...sectionSettings,['Conduits',countText],['Direction',(project.basic90Direction||'left').replace(/^./,c=>c.toUpperCase())],['Reference',project.direction==='add'?'Shortest OAL':'Longest OAL']]},reportRows};
+  }
+  if(type==='straight'){
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),'120"']}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC','Stock Length'],widths:[80,80,140,180,220],settings:[...sectionSettings,['Conduits',countText],['Auto Space',project.autoSpaceActive===false?'Off':'On']]},reportRows};
+  }
+  const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),pdfDisplayValue(row.strut),d.oal==null?pdfDisplayValue(row.oal):fmt16(d.oal),d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise),d.hyp==null?pdfDisplayValue(row.hyp):fmt16(d.hyp),d.angle==null?'—':d.angle.toFixed(2)+'°',d.k==null?'—':fmtDecimal(d.k,3),d.shrink==null?'—':fmtDecimal(d.shrink,3)]}});
+  return{report:{projectName,dateText,headers:['#','Color','Size','CTC','Strut Dist.','OAL','Rise','Hypotenuse','Angle','Shrink Constant','Shrink'],widths:[55,55,90,100,105,95,90,110,80,120,90],settings:[...sectionSettings,['Conduits',countText],['90',(project.turnDirection||'left').replace(/^./,c=>c.toUpperCase())],['Kick',`${(project.kickDirection||'up').replace(/^./,c=>c.toUpperCase())} · ${(project.kickPosition==='after'?'After 90':'Before 90')}`],['Reference',project.direction==='add'?'Shortest OAL':'Longest OAL']]},reportRows};
+}
+async function createRackPdf(sectionPayloads){
+  const busy=$('#pdfBusy'),button=$('#createPdfBtn'),scrollX=window.scrollX,scrollY=window.scrollY;busy.classList.add('open');button.disabled=true;
   try{
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-    const rackImage=imageData?await loadDataImage(imageData):null,projectName=localProjectName.value.trim()||'Conduit Rack';
-    const reportRows=rows.map((tr,i)=>{
-      const d=modelData[i]||{},size=pdfDisplayValue(d.size||tr.querySelector('.size')?.value);
-      if(activeRackType==='segmented'){const values=[String(i+1),'',size,d.radius==null?'—':fmt16(d.radius),d.backOal==null?'—':fmt16(d.backOal),d.startMark==null?'—':fmt16(d.startMark),d.spacing==null?'—':fmt16(d.spacing),d.marks?.length?d.marks.map(fmt16).join(' · '):'—'];return{number:i+1,color:conduitColor(i),values}}
-      if(activeRackType==='saddle'){const values=[String(i+1),'',size];if(showRackOal)values.push(pdfDisplayValue(tr.querySelector('.oal')?.value));values.push(d.rise==null?'—':fmt16(d.rise),d.offsetDistance==null?'—':fmt16(d.offsetDistance),d.secondRise==null?'—':fmt16(d.secondRise),d.secondOffsetDistance==null?'—':fmt16(d.secondOffsetDistance),d.angle==null?'—':d.angle.toFixed(2)+'°',d.middleDistance==null?'—':fmt16(d.middleDistance),d.mark1==null?'—':`${fmt16(d.mark1)} · ${fmt16(d.mark2)} · ${fmt16(d.mark3)} · ${fmt16(d.mark4)}`);return{number:i+1,color:conduitColor(i),values}}
-      if(activeRackType==='offset'){const values=[String(i+1),'',size];if(showRackOal)values.push(pdfDisplayValue(tr.querySelector('.oal')?.value));values.push(pdfDisplayValue(tr.querySelector('.critical')?.value),d.rise==null?'—':fmt16(d.rise),d.offsetDistance==null?'—':fmt16(d.offsetDistance),d.angle==null?'—':d.angle.toFixed(2)+'°',d.trueOffset==null?'—':fmt16(d.trueOffset),d.travel==null?'—':fmt16(d.travel),d.firstMark==null?'—':`${fmt16(d.firstMark)} / ${fmt16(d.secondMark)}`);return{number:i+1,color:conduitColor(i),values}}
-      return{number:i+1,color:conduitColor(i),size,oal:pdfDisplayValue(tr.querySelector('.oal')?.value),rise:pdfDisplayValue(tr.querySelector('.rise')?.value),hyp:pdfDisplayValue(tr.querySelector('.hyp')?.value),angle:d.angle==null?'—':d.angle.toFixed(2)+'°',shrink:d.shrink==null?'—':fmtDecimal(d.shrink,3)};
-    });
-    const report=activeRackType==='segmented'
-      ?{projectName,dateText:new Date().toLocaleString(),headers:['#','Color','Size','Radius','Back of 90','Start','Spacing','Bend Marks 1–9'],widths:[65,65,95,110,130,110,110,625],settings:[['Bend','Segmented 90'],['Conduits',countEl.value],['Reference',segmentedReferenceMode==='back'?'Back of 90 (OAL)':'Start of Bend'],['Direction',segmentedTurnDirection==='left'?'Left':'Right'],['Shots','9 × 10°']]}
-      :activeRackType==='saddle'
-      ?{projectName,dateText:new Date().toLocaleString(),headers:['#','Color','Size',...(showRackOal?['OAL']:[]),'First Offset','Offset Distance 1','Rise 2','Offset Distance 2','Angle','B2–B3','Bend Marks 1 · 2 · 3 · 4'],widths:[65,65,95,...(showRackOal?[120]:[]),115,125,105,125,90,120,455],settings:[['Rack',`${saddleTypes[activeSaddleType]?.label||'Standard'} Saddle`],['Conduits',countEl.value],['Offsets',saddleOffsetRelation==='same'?'Both Same':'Both Different'],['First Direction',`${saddleVerticalDirection}${activeSaddleType==='rolled'?' / '+saddleHorizontalDirection:''}`]]}
-      :activeRackType==='offset'
-      ?{projectName,dateText:new Date().toLocaleString(),headers:['#','Color','Size',...(showRackOal?['OAL']:[]),'Critical','Rise','Offset','Angle','True Off.','Travel','Bend 1 / 2'],widths:[75,70,105,...(showRackOal?[135]:[]),145,120,120,105,145,145,280],settings:[['Rack',`${offsetTypes[activeOffsetType]?.label||'Standard'} Offset`],['Conduits',countEl.value],['Critical',offsetCriticalBend==='first'?'First Bend':'Second Bend'],['Start Side',offsetRackStart],['Direction',activeOffsetType==='standard'?offsetVerticalDirection:`${offsetHorizontalDirection}${activeOffsetType==='rolled'?' / '+offsetVerticalDirection:''}`]]}
-      :{projectName,dateText:new Date().toLocaleString(),settings:[['Conduits',countEl.value],['90',(getRadio('turnDirection')||'').replace(/^./,c=>c.toUpperCase())],['Kick',(getRadio('kickDirection')||'').replace(/^./,c=>c.toUpperCase())+' · '+(getRadio('kickPosition')==='after'?'After 90':'Before 90')],['Reference',rackReferenceLength==='shortest'?'Shortest OAL':'Longest OAL']]};
-    const onePageLimit=rackImage?11:18,chunks=[];if(reportRows.length<=onePageLimit)chunks.push(reportRows);else for(let i=0;i<reportRows.length;i+=18)chunks.push(reportRows.slice(i,i+18));
-    const pageCanvases=[];for(let i=0;i<chunks.length;i++){const c=document.createElement('canvas');c.width=1650;c.height=1275;drawPdfTablePage(c.getContext('2d'),report,chunks[i],i,chunks.length,rackImage,i===chunks.length-1);pageCanvases.push(c.toDataURL('image/jpeg',.92))}
+    const sections=Array.isArray(sectionPayloads)&&sectionPayloads.length?sectionPayloads:[capturePdfSectionPayload(null,'',1,1)];
+    const projectName=localProjectName.value.trim()||'Conduit Rack';
+    const dateText=new Date().toLocaleString();
+    const pageCanvases=[];
+    for(let i=0;i<sections.length;i++){
+      const payload=sections[i];
+      const {report,reportRows}=buildPdfSectionReport(payload,projectName,dateText);
+      const image=payload.imageData?await loadDataImage(payload.imageData):null;
+      const c=document.createElement('canvas');c.width=1650;c.height=1275;
+      drawPdfTablePage(c.getContext('2d'),report,reportRows,i,sections.length,image,Boolean(image));
+      pageCanvases.push(c.toDataURL('image/jpeg',.92));
+    }
     const blob=buildImagePdf(pageCanvases),safe=projectName.replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'')||'conduit-rack',file=new File([blob],`${safe}-fabrication-report.pdf`,{type:'application/pdf'});
-    busy.classList.remove('open');
-    // Native sharing is reserved for phones and tablets. On a computer this
-    // action is a Save operation and downloads the PDF directly.
     if(canUseNativeFileShare(file)){await navigator.share({files:[file],title:`${projectName} Fabrication Report`})}
     else{saveBlobToDownloads(blob,file.name)}
   }catch(error){if(error?.name!=='AbortError'){console.error(error);alert('The PDF could not be created. Please try again.')}}finally{busy.classList.remove('open');button.disabled=false;window.scrollTo(scrollX,scrollY);draw3D()}
@@ -4557,7 +4831,7 @@ if(projectStatusClose)projectStatusClose.addEventListener('click',event=>{event.
 if(projectStatusModal)projectStatusModal.addEventListener('click',event=>{if(event.target===projectStatusModal)closeProjectStatusModal()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&projectStatusModal?.classList.contains('open'))closeProjectStatusModal()});
 
-$('#buildBtn').onclick=()=>build(true);$('#addSectionBtn').onclick=addCustomSection;$('#trimRackBtn').onclick=()=>{if(activeLayoutMode==='single'||(isCustomRun&&activeCustomSection!==customSections.length-1))return;rememberUndo('Trim section');trimApplied=true;recalc(0)};$('#undoBtn').onclick=undoLastEdit;$('#loadLastBtn').onclick=loadLast;$('#autoSpaceBtn').onclick=toggleAutoSpace;$('#offsetOalBtn').onclick=toggleRackOal;$('#saddleOalBtn').onclick=toggleRackOal;$('#clearBtn').onclick=()=>{if(isCustomRun)exitCustomRun();autoSpaceActive=true;showRackOal=false;trimApplied=false;horizontalStrutSpacing=120;verticalStrutSpacing=240;strutOverrides=[];$('#horizontalStrutSpacing').value='120';$('#verticalStrutSpacing').value='240';updateAutoSpaceButton();updateOalVisibility();build(false);applyAllAutoSpacing();openSetupWizard()};$('#createPdfBtn').onclick=openPdfViewSelector;$('#rackDataToggle').onclick=()=>{const body=$('#rackDataBody'),panel=$('#rackDataPanel'),open=body.hasAttribute('hidden');if(open){body.removeAttribute('hidden');panel.classList.add('expanded')}else{body.setAttribute('hidden','');panel.classList.remove('expanded')}$('#rackDataToggle').setAttribute('aria-expanded',open?'true':'false')};$('#saveBtn').onclick=save;$('#loadBtn').onclick=()=>fileInput.click();fileInput.onchange=e=>{if(e.target.files[0])openFile(e.target.files[0]);e.target.value=''};$('#saveLocalBtn').onclick=saveLocalProject;$('#loadLocalBtn').onclick=loadLocalProject;$('#deleteLocalBtn').onclick=deleteLocalProject;$('#exportBackupBtn').onclick=()=>{const n=(localProjectName.value.trim()||'conduit-rack-project').replace(/[^a-z0-9_-]+/gi,'-');downloadProject(projectObject(),n+'.json')};localProjectList.onchange=()=>{const item=readLocalIndex().find(x=>x.id===localProjectList.value);if(item)localProjectName.value=item.name};
+$('#buildBtn').onclick=()=>build(true);$('#addSectionBtn').onclick=addCustomSection;$('#trimRackBtn').onclick=()=>{if(activeLayoutMode==='single'||(isCustomRun&&activeCustomSection!==customSections.length-1))return;rememberUndo('Trim section');trimApplied=true;recalc(0)};$('#undoBtn').onclick=undoLastEdit;$('#loadLastBtn').onclick=loadLast;$('#autoSpaceBtn').onclick=toggleAutoSpace;$('#randomRunTestBtn').onclick=realisticRandomRunTest;$('#offsetOalBtn').onclick=toggleRackOal;$('#saddleOalBtn').onclick=toggleRackOal;$('#clearBtn').onclick=()=>{if(isCustomRun)exitCustomRun();autoSpaceActive=true;showRackOal=false;trimApplied=false;horizontalStrutSpacing=120;verticalStrutSpacing=240;strutOverrides=[];$('#horizontalStrutSpacing').value='120';$('#verticalStrutSpacing').value='240';updateAutoSpaceButton();updateOalVisibility();build(false);applyAllAutoSpacing();openSetupWizard()};$('#createPdfBtn').onclick=startPdfCaptureWorkflow;$('#rackDataToggle').onclick=()=>{const body=$('#rackDataBody'),panel=$('#rackDataPanel'),open=body.hasAttribute('hidden');if(open){body.removeAttribute('hidden');panel.classList.add('expanded')}else{body.setAttribute('hidden','');panel.classList.remove('expanded')}$('#rackDataToggle').setAttribute('aria-expanded',open?'true':'false')};$('#saveBtn').onclick=save;$('#loadBtn').onclick=()=>fileInput.click();fileInput.onchange=e=>{if(e.target.files[0])openFile(e.target.files[0]);e.target.value=''};$('#saveLocalBtn').onclick=saveLocalProject;$('#loadLocalBtn').onclick=loadLocalProject;$('#deleteLocalBtn').onclick=deleteLocalProject;$('#exportBackupBtn').onclick=()=>{const n=(localProjectName.value.trim()||'conduit-rack-project').replace(/[^a-z0-9_-]+/gi,'-');downloadProject(projectObject(),n+'.json')};localProjectList.onchange=()=>{const item=readLocalIndex().find(x=>x.id===localProjectList.value);if(item)localProjectName.value=item.name};
 $('#redoBtn').onclick=redoLastEdit;
 $('#strutScheduleDetails > summary').addEventListener('click',e=>{
   e.preventDefault();
@@ -4661,8 +4935,21 @@ $('#pdfElevationBtn').onclick=usePdfElevationView;
 $('#pdfOppositeBtn').onclick=usePdfOppositeView;
 $('#pdfFitBtn').onclick=()=>{fitToModel();setPdfPresetActive(null,'Custom fitted view')};
 $('#pdfPanBtn').onclick=()=>{setInteractionMode(interactionMode==='pan'?'rotate':'pan');$('#pdfPanBtn').classList.toggle('toggle-active',interactionMode==='pan');$('#pdfPanBtn').setAttribute('aria-pressed',interactionMode==='pan'?'true':'false');setPdfPresetActive(null,interactionMode==='pan'?'Pan mode':'Rotate mode')};
-$('#pdfViewCancel').onclick=$('#pdfViewCancelTop').onclick=()=>closePdfViewSelector(true);
-$('#pdfUseView').onclick=()=>{const imageData=captureSelectedPdfView();closePdfViewSelector(true);requestAnimationFrame(()=>createRackPdf(imageData))};
+$('#pdfViewCancel').onclick=$('#pdfViewCancelTop').onclick=()=>cancelPdfCaptureWorkflow();
+$('#pdfUseView').onclick=()=>{
+  const imageData=captureSelectedPdfView();
+  if(pdfExportSession){
+    const step=pdfExportSession.position+1,total=pdfExportSession.queue.length,sectionIndex=pdfExportSession.queue[pdfExportSession.position];
+    pdfExportSession.sections.push(capturePdfSectionPayload(sectionIndex,imageData,step,total));
+    pdfExportSession.position++;
+    closePdfViewSelector(true);
+    requestAnimationFrame(()=>advancePdfCaptureWorkflow());
+    return;
+  }
+  const payload=capturePdfSectionPayload(isCustomRun?activeCustomSection:null,imageData,1,1);
+  closePdfViewSelector(true);
+  requestAnimationFrame(()=>createRackPdf([payload]));
+};
 
 function showStartupError(error){
   try{
