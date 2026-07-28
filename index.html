@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#07111f">
-<title>Conduit Rack Layout Calculator</title>
+<meta name="theme-color" content="#0c0a09">
+<title>Conduit Rack Layout Calculator · UI Playground</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -124,17 +124,134 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   #rows .conduit-input-toggle,#rows .conduit-output-toggle{font-size:.72rem;padding:7px 4px}
 }
 
+/* ── UI playground theme (experiment/ui-playground) ─────────────────────── */
+:root{
+  --bg:#0c0a09;--panel:#1c1917;--panel2:#292524;--input:#0c0a09;--border:#44403c;
+  --text:#fafaf9;--muted:#a8a29e;--accent:#f59e0b;--accent2:#38bdf8;
+  --good:#22c55e;--warn:#fbbf24;--bad:#f87171;
+  --shop:#292524;--shop-edge:#57534e;--copper:#d97706;
+}
+html,body{
+  background:
+    radial-gradient(1200px 600px at 10% -10%,rgba(217,119,6,.14),transparent 55%),
+    radial-gradient(900px 500px at 100% 0%,rgba(14,165,233,.10),transparent 50%),
+    linear-gradient(180deg,#0c0a09 0%,#1c1917 45%,#0c0a09 100%);
+}
+body{padding-top:0}
+.app{max-width:1480px}
+.app-header{
+  position:sticky;top:0;z-index:40;
+  margin:0 calc(-1 * max(10px,env(safe-area-inset-left))) 14px calc(-1 * max(10px,env(safe-area-inset-right)));
+  padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));
+  background:rgba(12,10,9,.88);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(87,83,78,.85);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.app-header-inner{max-width:1480px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.app-brand{min-width:0}
+.app-brand h1{margin:0;font-size:clamp(1.25rem,3.8vw,1.85rem);letter-spacing:-.02em;line-height:1.15}
+.app-brand .rack-chip{
+  display:inline-flex;align-items:center;gap:8px;margin-top:8px;
+  padding:6px 11px;border-radius:999px;background:rgba(217,119,6,.16);
+  border:1px solid rgba(245,158,11,.45);color:#fde68a;font-size:.84rem;font-weight:800;
+}
+.app-brand .rack-chip strong{color:#fff;font-weight:900}
+.header-badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.version-badge{background:linear-gradient(135deg,#d97706,#f59e0b);color:#1c1917;font-weight:900}
+.exp-badge{
+  display:inline-block;padding:3px 8px;border-radius:999px;font-size:.7rem;font-weight:900;
+  letter-spacing:.06em;text-transform:uppercase;color:#7dd3fc;
+  background:rgba(14,165,233,.12);border:1px solid rgba(56,189,248,.4);
+}
+.intro-sub{margin:0 0 14px;max-width:62ch}
+.intro-sub.collapsed{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.intro-toggle{
+  margin:-6px 0 16px;padding:0;min-height:0;background:none;color:#fbbf24;font-weight:800;font-size:.86rem;border:0;text-decoration:underline;cursor:pointer
+}
+.panel{
+  background:linear-gradient(180deg,rgba(28,25,23,.98),rgba(22,20,18,.98));
+  border-color:var(--shop-edge);border-radius:18px;
+  box-shadow:0 12px 36px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.top-run-controls{
+  position:sticky;top:72px;z-index:30;
+  border-color:rgba(245,158,11,.55)!important;
+  background:linear-gradient(90deg,rgba(217,119,6,.22),rgba(28,25,23,.97))!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.35);
+}
+@media(max-width:760px){.top-run-controls{top:64px}}
+.primary{background:linear-gradient(180deg,#f59e0b,#d97706);color:#1c1917;box-shadow:0 4px 14px rgba(217,119,6,.28)}
+.primary:active{filter:brightness(.95)}
+.secondary{background:#44403c;color:#fafaf9}
+.secondary.toggle-active,.segmented-control button.active{
+  background:linear-gradient(180deg,#f59e0b,#d97706)!important;color:#1c1917!important;
+  box-shadow:0 4px 14px rgba(217,119,6,.25)!important;
+}
+.segmented-control{background:#0c0a09;border-color:#57534e;border-radius:14px}
+.segmented-control button{color:#d6d3d1}
+.bend-type-panel,.offset-mode-panel{
+  border-color:rgba(245,158,11,.4)!important;
+  background:linear-gradient(90deg,rgba(217,119,6,.14),rgba(28,25,23,.96))!important;
+}
+.bend-type-panel label,.offset-mode-title{color:#fde68a!important}
+.strut-schedule-panel{border-color:#ea580c}
+.local-storage-panel{border-color:rgba(245,158,11,.55);background:linear-gradient(180deg,rgba(217,119,6,.12),rgba(28,25,23,.97))}
+.geometry-monitor{border-radius:14px}
+.viewer-wrap{border-radius:16px;border-color:#57534e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
+.viewer-badge{color:#fde68a}
+table{background:#0c0a09}
+th{background:#292524;color:#fde68a}
+td.output{background:#141210}
+.auto-filled{border-color:#d97706!important;background:#2a1a08!important}
+input:focus,select:focus{outline-color:#f59e0b}
+/* Wide desktop: two-column workspace (controls | sticky viewer) */
+.app-workspace{display:block}
+@media(min-width:1100px){
+  .app-workspace{
+    display:grid;
+    grid-template-columns:minmax(0,1.08fr) minmax(400px,.92fr);
+    gap:16px;
+    align-items:start;
+  }
+  .workspace-main{min-width:0}
+  .workspace-viewer{
+    position:sticky;top:92px;max-height:calc(100vh - 110px);overflow:auto;
+    padding-bottom:8px;
+  }
+  .workspace-viewer .viewer-panel{margin-bottom:0}
+  .workspace-viewer .viewer-wrap canvas{height:min(52vh,520px)}
+  .workspace-viewer .view-buttons{max-height:120px;overflow:auto}
+}
+@media(max-width:1099px){
+  .workspace-viewer{position:static;max-height:none;overflow:visible}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
-<h1>Conduit Rack Layout Calculator <span class="version-badge">PWA v1.63</span></h1><div class="sub" style="margin:6px 0 4px">Current rack: <strong id="activeRackTypeLabel">Kicked 90</strong></div>
-<div class="sub">Enter what you know. Calculated values update from the edited row downward without altering rows above it. General measurements display to the nearest 1/8 inch. Automatic conduit spacing is calculated to the next 1/16 inch using a true 9/16-inch shortest surface-to-surface clearance while respecting top or bottom alignment. The viewer renders full-size EMT using actual outside diameters and circular centerline bend radii.</div>
+<header class="app-header" role="banner">
+  <div class="app-header-inner">
+    <div class="app-brand">
+      <h1>Conduit Rack Layout Calculator</h1>
+      <div class="rack-chip">Current rack · <strong id="activeRackTypeLabel">Kicked 90</strong></div>
+    </div>
+    <div class="header-badges">
+      <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
+      <span class="version-badge">PWA v1.63</span>
+    </div>
+  </div>
+</header>
+<div class="sub intro-sub collapsed" id="introSub">Enter what you know. Values update downward from the edited row. General measurements to nearest 1/8&quot;; Auto Space uses 9/16&quot; surface-to-surface clearance (OD-aware CTC). Viewer uses true EMT ODs and circular bend radii.</div>
+<button type="button" class="intro-toggle" id="introToggle" aria-expanded="false">Show more about this app</button>
 
 <section id="topRunControls" class="panel top-run-controls">
   <div class="top-run-format"><label>Format</label><div id="topFormatHost"></div></div>
   <div id="topRunActions" class="top-run-actions"></div>
 </section>
+
+<div class="app-workspace">
+<div class="workspace-main">
 
 <section class="panel setup rack-parameters-panel hidden" aria-hidden="true">
 <details id="rackParametersDetails">
@@ -234,8 +351,13 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
 <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center<br><small>from previous</small></th><th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th></tr></thead><tbody id="rows"><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="0"></span><span>1</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" disabled placeholder="—"></td><td data-label="Distance from End of Strut"><input class="strut" type="text" placeholder="Optional start distance"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise" data-auto-rise="0" type="text" placeholder="Reference rise"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="1"></span><span>2</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="2"></span><span>3</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="3"></span><span>4</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="4"></span><span>5</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="5"></span><span>6</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr></tbody></table></div></section>
 
 <div id="projectStatusModal" class="project-status-modal" role="dialog" aria-modal="true" aria-labelledby="projectStatusTitle" aria-hidden="true"><div class="project-status-dialog"><div class="project-status-header"><div id="projectStatusTitle" class="project-status-title">Project Status</div><button id="projectStatusClose" class="project-status-close" type="button">Close</button></div><div class="project-status-body"><div id="status" class="status-grid"></div></div></div></div>
+</div><!-- /.workspace-main -->
 
-<section class="panel viewer-panel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper">Rendered EMT uses the selected trade size and actual outside diameter. Two full 3-D 1-5/8-inch square tubes are placed a few inches in from the conduit ends. Each strut independently follows its selected top or bottom contact and remains tangent and perpendicular to the conduit runs where they touch. The two struts are perpendicular to each other and are independently extended to support every conduit. Collisions are highlighted in red.</div></div><div class="view-buttons"><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">✥ Pan</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Isometric</button><button class="secondary" id="fitViewBtn" type="button">Fit to Model</button><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim Rack</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">↶ Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">↷ Redo</button></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
+<aside class="workspace-viewer" aria-label="3D viewer column">
+<section class="panel viewer-panel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper">True EMT ODs and circular bends. Struts are 1-5/8&quot; and stay off bend radii. Collisions show in red.</div></div><div class="view-buttons"><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">✥ Pan</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Isometric</button><button class="secondary" id="fitViewBtn" type="button">Fit to Model</button><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim Rack</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">↶ Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">↷ Redo</button></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
+</aside>
+</div><!-- /.app-workspace -->
+
 <section class="panel local-storage-panel setup rack-data-panel" id="rackDataPanel">
   <div class="rack-data-header">
     <button class="rack-data-toggle" id="rackDataToggle" type="button" aria-expanded="false" aria-controls="rackDataBody"><span class="rack-data-chevron" aria-hidden="true">›</span><span class="rack-data-title">Rack Data</span></button>
@@ -5450,6 +5572,19 @@ function showStartupError(error){
 
 function startIPhoneBuild(){
   const diagnostic=document.getElementById('jsDiagnostic');if(diagnostic)diagnostic.remove();
+  // UI playground: expand/collapse intro copy
+  try{
+    const intro=$('#introSub'),btn=$('#introToggle');
+    if(intro&&btn){
+      btn.onclick=()=>{
+        const open=intro.classList.toggle('collapsed')===false;
+        // classList.toggle returns true if class was added
+        const collapsed=intro.classList.contains('collapsed');
+        btn.setAttribute('aria-expanded',collapsed?'false':'true');
+        btn.textContent=collapsed?'Show more about this app':'Show less';
+      };
+    }
+  }catch(_e){}
   // Every fresh session begins with automatic spacing enabled. Saved projects
   // still restore their own saved Auto Space state when opened.
   autoSpaceActive=true;
