@@ -1,4 +1,22 @@
-PWA v1.55 Run Strut Schedule
+PWA v1.63 no embedded Grok
+
+v1.63: Removed in-app Grok chat, API key UI, and xAI proxy. App is local-first again. serve.py is a plain static file server only. Parallel offset mark progression restored to the established formula (see below).
+
+v1.63b: Offset mark families: Standard = pure vertical (shared critical). Parallel = pure horizontal (full CTC×tan(θ/2) + surface-gap stagger). Rolled = partial standard + partial parallel (stagger × |horizontal|/TO). Travel = TO/sinθ, shrink = TO×tan(θ/2). Never force identical marks on parallel or rolled.
+
+v1.62: (removed) Temporary Grok command-line experiment for live rack Q&A.
+
+v1.61: DOM/fields for 90 layout use class .bon (back of 90). Offset/saddle finished A-to-B overall length keeps class .oal. Project rows save bon/autoBon for 90 types (load still accepts legacy oal). Geometry reads dataBackOf90(d).
+
+v1.60: Severed OAL from Back of 90. OAL = finished linear A→B after bends (shortened by shrink); stick developed for offset/saddle = OAL + shrink when OAL is on. Back of 90 remains the 90 layout station (first-leg to outside of 90) for basic/kicked/segmented geometry and marks — labels no longer call it OAL.
+
+v1.59: Developed Length is STICK material length. A full stick stood on the floor is 120". Never stick+gain. Offset/saddle: when finished OAL is entered, developed = OAL + shrink (trade rule). 90-family: developed = centerline stick path (≤ progressive stick). After-bend floor legs (M1+M2) relate by gain: floor ≈ stick + gain — that is a check, not the cut length. 2×CTC still shortens stick from outside.
+
+v1.58: Developed length formula corrected toward stick budget (superseded by v1.59 stick + shrink rules).
+
+v1.57: Rack 90 free ends (basic and kicked) progress by 2×CTC from the outside conduit (1st leg + 2nd leg rule): outside longest second leg, each step inward shortens free end by 2×|Δpos|. Same-way multi-section 90s stack free-end stagger; opposite-way 90s cancel. Trim Mode (default ON) squares free ends per section; Trim Off column only when scrap is needed. Multi-section joint leads are stored and offset bend marks display from the coupling (layout mark + joint lead). Shared section frames and geometry monitor retained.
+
+v1.56: Geometry monitor continuously checks combined multi-section runs (joint gaps, frame roll, OD collisions, stock overlength). Multi-section composition now uses one shared traveling frame per section so later bends do not pick up per-conduit roll. Developed Length matches the field floor method (sum of both legs measured from a straight edge after the bend): L_out + OD gain, where L_out is the OD long-side path (centerline + Σ (OD/2)·θ). Gain is OD/long-side gain; stick check ≈ developed − gain. Trim Mode toggle in Format auto-squares every rack section to the shortest free end before struts and collisions; with Trim Mode off, full stick stubs remain for downstream strut placement. Offset verticalSign crash path fixed. Custom-run collision detection restored after section joins.
 
 v1.55: Replaced the visible Rack Parameters and Formulas panels with a compact top control bar for Format, Auto Space, and Test. Each active conduit card is titled by section number and contains its own conduit count, bend type, direction, and relevant bend settings. Added a collapsible Struts card with separate horizontal and vertical average spacing, automatic placement only on straight horizontal or vertical portions, calculated strut cut lengths, per-strut Top/Bottom selection, downstream propagation, and Edit Solo overrides. Build/Rebuild is no longer required because changing the section conduit count rebuilds automatically. Trim Rack is now named Trim Section and remains available only for the newest section so established downstream bends are never silently relocated. Mobile Capture now uses a more tolerant native file-sharing check so iOS/Android can present Save Image/Photos even when canShare reporting is inconsistent; desktop Capture continues downloading directly.
 

@@ -1,0 +1,10 @@
+# Secrets — never commit API keys
+.env
+.env.local
+.env.*.local
+*.pem
+xai.key
+
+# Local scratch / temp tools
+outputs/
+*.zip
