@@ -6,7 +6,7 @@ Local-first conduit rack layout, geometry, clearance, and 3D viewing tool.
 
 After Pages is enabled, open:
 
-**https://lutherfergus.github.io/conduit-rack-calculator/**
+**https://lutherfergus.github.io/conduit_rack/**
 
 (Use your own username/repo if different.)
 
@@ -15,7 +15,7 @@ Works offline after the first visit if you add it to your home screen (PWA).
 ## Run on your PC
 
 ```powershell
-cd path\to\conduit-rack-calculator
+cd path\to\conduit_rack
 python serve.py
 ```
 
