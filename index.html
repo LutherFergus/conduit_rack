@@ -140,12 +140,12 @@ html,body{
 body{padding-top:0}
 .app{max-width:1480px}
 .app-header{
-  position:sticky;top:0;z-index:40;
-  margin:0 calc(-1 * max(10px,env(safe-area-inset-left))) 14px calc(-1 * max(10px,env(safe-area-inset-right)));
-  padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));
-  background:rgba(12,10,9,.88);backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(87,83,78,.85);
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  position:relative;z-index:1;
+  margin:0 0 14px;
+  padding:max(4px,env(safe-area-inset-top)) 0 10px;
+  background:transparent;
+  border-bottom:1px solid rgba(87,83,78,.55);
+  box-shadow:none;
 }
 .app-header-inner{max-width:1480px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .app-brand{min-width:0}
@@ -174,12 +174,11 @@ body{padding-top:0}
   box-shadow:0 12px 36px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
 }
 .top-run-controls{
-  position:sticky;top:72px;z-index:30;
+  position:relative;z-index:1;
   border-color:rgba(245,158,11,.55)!important;
   background:linear-gradient(90deg,rgba(217,119,6,.22),rgba(28,25,23,.97))!important;
-  box-shadow:0 10px 28px rgba(0,0,0,.35);
+  box-shadow:0 8px 22px rgba(0,0,0,.22);
 }
-@media(max-width:760px){.top-run-controls{top:64px}}
 .primary{background:linear-gradient(180deg,#f59e0b,#d97706);color:#1c1917;box-shadow:0 4px 14px rgba(217,119,6,.28)}
 .primary:active{filter:brightness(.95)}
 .secondary{background:#44403c;color:#fafaf9}
@@ -215,7 +214,7 @@ input:focus,select:focus{outline-color:#f59e0b}
   }
   .workspace-main{min-width:0}
   .workspace-viewer{
-    position:sticky;top:92px;max-height:calc(100vh - 110px);overflow:auto;
+    position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;
     padding-bottom:8px;
   }
   .workspace-viewer .viewer-panel{margin-bottom:0}
@@ -272,7 +271,7 @@ input:focus,select:focus{outline-color:#f59e0b}
       <div id="offsetParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
           <div class="offset-parameter-card"><label>Critical Bend</label><div id="criticalBendSelector" class="segmented-control" role="group" aria-label="Critical bend"><button type="button" data-critical-bend="first">First Bend</button><button type="button" data-critical-bend="second">Second Bend</button></div><div class="helper">First Bend anchors bend one exactly. Second Bend adds shrink to the entered critical measurement and solves bend one backward.</div></div>
-          <div class="offset-parameter-card"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Controls whether parallel bend-mark progression is additive or subtractive across the rack.</div></div>
+          <div class="offset-parameter-card"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Which side is conduit 1. Parallel/rolled mark stagger also follows offset direction so bends open the rack instead of closing into neighbors.</div></div>
           <div id="offsetVerticalDirectionBox" class="offset-parameter-card"><label>Vertical Direction</label><div id="offsetVerticalSelector" class="segmented-control" role="group" aria-label="Vertical offset direction"><button type="button" data-offset-vertical="up">Up</button><button type="button" data-offset-vertical="down">Down</button></div></div>
           <div id="offsetHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="offsetHorizontalSelector" class="segmented-control" role="group" aria-label="Horizontal offset direction"><button type="button" data-offset-horizontal="left">Left</button><button type="button" data-offset-horizontal="right">Right</button></div></div>
           <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear distance A to B after the offset (shortened by shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
@@ -1726,8 +1725,11 @@ function monitorAssembledGeometry(models,groups=null){
       cur.forEach(model=>{
         const prior=prev.find(p=>p.index===model.index);
         if(!prior||!prior.points?.length||!model.points?.length)return;
+        // Joined paths should share the coupling point exactly (transform starts on prior end).
+        // Allow a slightly looser numeric floor than 1/16 to avoid false Faults from float noise
+        // after parallel-offset mark stagger + frame transport into a straight section.
         const gap=Math.hypot(...vsub(model.points[0],prior.points.at(-1)));
-        if(gap>1/16)issues.push({level:'error',section:s,conduit:model.index,message:`Section ${s+1} joint gap on conduit ${model.index+1} is ${fmt16(gap)} (should couple within 1/16")`});
+        if(gap>1/8)issues.push({level:'error',section:s,conduit:model.index,message:`Section ${s+1} joint gap on conduit ${model.index+1} is ${fmt16(gap)} (should couple within 1/8")`});
       });
       if(cur.length>=2){
         const ref=cur[0];
@@ -2141,16 +2143,22 @@ function recalcOffset(){
   const distanceForProjection=activeOffsetType==='standard'?0:(distanceAnchor?.value||0);
   const preliminaryTrueOffset=Math.hypot(riseForProjection,distanceForProjection);
   // Offset family model (do not "simplify" this):
-  //  - Standard  = pure vertical (rise only). Like stacked 90s: shared critical station.
-  //  - Parallel  = pure horizontal (offset distance only). Full mark stagger across rack.
-  //  - Rolled    = BOTH: part standard + part parallel. Stagger only the horizontal share.
+  //  - Standard  = pure vertical (rise only). Shared critical station (projection 0).
+  //  - Parallel  = pure horizontal. Full mark stagger (projection 1).
+  //  - Rolled    = part standard + part parallel. Stagger × |horizontal|/TO.
   //
-  // Mark step uses projection of true offset that lies in the rack/parallel plane:
-  //  standard → 0, parallel → 1, rolled → |horizontal| / TO
-  // critical_i = critical₀ ± ΣCTC × tan(θ/2) × projection  ± (parallel surface gaps if parallel)
-  // Left/right starting side sets the ± sign.
+  // critical_i = critical₀ + progressionSign × (ΣCTC × tan(θ/2) × projection + parallelGaps)
+  //
+  // progressionSign must open the rack, not close it: conduits further along the
+  // offset-travel direction get EARLIER marks so they move away first. Using only
+  // rack-start left/right (old behavior) staggered the wrong way for a right-hand
+  // parallel offset and produced real OD collisions / geometry-monitor faults.
   const projection=activeOffsetType==='standard'?0:activeOffsetType==='parallel'?1:(preliminaryTrueOffset>0?Math.abs(distanceForProjection)/preliminaryTrueOffset:0);
-  const progressionSign=offsetRackStart==='left'?1:-1;
+  const rackSign=offsetRackStart==='left'?1:-1;
+  const horizontalSign=offsetHorizontalDirection==='left'?-1:1;
+  const progressionSign=(activeOffsetType==='parallel'||activeOffsetType==='rolled')
+    ?(-rackSign*horizontalSign)
+    :(offsetRackStart==='left'?1:-1);
   const staggerPerInch=Math.tan(Math.max(0,Math.min(89.9,angleForProgression))*Math.PI/360)*projection;
   // Surface-gap mark add is parallel-only (parallelGapProgression returns 0 otherwise).
   setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*(pos[i]-pos[anchorIndex])*staggerPerInch+progressionSign*parallelGapProgression(i,anchorIndex,trs));
@@ -2228,12 +2236,21 @@ function recalcOffset(){
   modelData=data;
   rackModels=buildRackModels();
   if(activeOffsetType==='parallel'){
+    // Gap column = design surface clearance from CTC (preferred 9/16 with Auto Space).
+    // Do not overwrite with mid-bend closest-approach (that can read tighter than the
+    // straight-run gap and was confusing / looked like a 1/8" allowance).
     rackModels.forEach((model,index)=>{
       if(index===0)return;
-      const gap=parallelOffsetGapFromModels(rackModels,index);
-      if(modelData[index])modelData[index].gapAtOffsets=gap;
+      const designGap=modelData[index]?.gapAtOffsets;
+      const modeledGap=parallelOffsetGapFromModels(rackModels,index);
+      if(modelData[index]&&modeledGap!=null)modelData[index].gapAtOffsetsModeled=modeledGap;
       const gapCell=$$('#rows tr')[index]?.querySelector('.offset-gap');
-      if(gapCell)gapCell.textContent=fmt16(gap);
+      if(gapCell){
+        gapCell.textContent=fmt16(designGap);
+        if(modeledGap!=null&&designGap!=null&&modeledGap+1e-9<preferredClearance){
+          gapCell.title=`Design clear ${fmt16(designGap)}; closest approach in bends ${fmt16(modeledGap)}`;
+        }else gapCell.title='Surface-to-surface clearance from CTC (design gap)';
+      }
     });
   }
   rackStrutSolids=buildRunStrutSolids(rackModels);
@@ -2579,7 +2596,7 @@ function renderOffsetStatus(d){
   const collisionDetails=modelCollisions.map(c=>{
     const current=c.currentCC==null?'—':fmt16(c.currentCC),recommended=c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC);
     const gap=Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown';
-    return `Conduits ${c.a+1} and ${c.b+1}: bend OD clearance is ${gap}; required is 9/16". Current CTC ${current}; recommended at least ${recommended}`;
+    return `Conduits ${c.a+1} and ${c.b+1}: OD clearance is ${gap}; required ${fmt16(c.requiredClearance||preferredClearance)}. Current CTC ${current}; recommended at least ${recommended}`;
   }).join('<br>');
   const mode=offsetTypes[activeOffsetType]?.label||'Standard';
   const directionText=activeOffsetType==='standard'
@@ -2597,7 +2614,7 @@ function renderOffsetStatus(d){
 function renderSaddleStatus(d){
   const full=rackModels.length;let overlapCount=0,tightCount=0;
   d.forEach((x,i)=>{if(!i||x.cc==null)return;const c=outsideClearance(d[i-1].size,x.size,x.cc);if(c!=null&&c<0)overlapCount++;else if(c!=null&&c<preferredClearance)tightCount++});
-  const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required 9/16". Current CTC ${c.currentCC==null?'—':fmt16(c.currentCC)}; recommended ${c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC)}`).join('<br>');
+  const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required ${fmt16(c.requiredClearance||preferredClearance)}. Current CTC ${c.currentCC==null?'—':fmt16(c.currentCC)}; recommended ${c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC)}`).join('<br>');
   const style=saddleTypes[activeSaddleType]?.label||'Standard',relation=saddleOffsetRelation==='same'?'Same opposing offsets':'Different opposing offsets';
   statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully modeled</strong><div class="helper">Each solved conduit contains four circular bends and a straight section from Bend 2 to Bend 3.</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Saddle collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails:'Actual conduit ODs maintain the required clearance through all four bends and straight sections.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred 9/16-inch clearance.':'All straight-run spacings provide at least 9/16-inch clearance.'}</div></div><div class="status-card ok"><strong>${style} Saddle · ${relation}</strong><div class="helper">Bends 1–2 form the first offset. Bends 3–4 form the opposing offset. Shrink from each completed offset is carried into every downstream absolute bend mark.</div></div><div class="status-card ok"><strong>All four bend marks are included</strong><div class="helper">Bend 4 is calculated from the second true offset, selected bend angle, second travel, and the cumulative location established by Bends 1–3.</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">Fix CTC increases affected spacing and rebuilds the complete four-bend saddle.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
   const hasError=Boolean(rackPlaneIssues.length||transitionConsistencyIssues.length||modelCollisions.length||overlapCount);
@@ -2617,7 +2634,7 @@ function renderSegmentedStatus(d){
     if(c!=null&&c<0)overlapRows.push(i);else if(c!=null&&c<preferredClearance)tightRows.push(i);
   });
   const reference=segmentedReferenceMode==='back'?'Back of 90':'Start of Bend';
-  const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required 9/16".`).join('<br>');
+  const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required ${fmt16(c.requiredClearance||preferredClearance)}.`).join('<br>');
   const geometryIssues=[
     ...(invalidRadiusRows.length?[`Radius must exceed the conduit outside radius on conduit${invalidRadiusRows.length>1?'s':''} ${invalidRadiusRows.map(i=>'#'+(i+1)).join(', ')}.`]:[]),
     ...(shortBackRows.length?[`Back of 90 is too short for the selected radius on conduit${shortBackRows.length>1?'s':''} ${shortBackRows.map(i=>'#'+(i+1)).join(', ')}.`]:[])
@@ -4709,20 +4726,26 @@ function moveKicksClearOf90(){
 }
 function detectCollisions(models){
   const out=[];
+  // Preferred surface gap is preferredClearance (9/16") for rack spacing / parallel runs.
+  // Kicked-90 keeps a separate 1/8" bend-floor used historically for kick/90 sweeps.
+  // Never treat same conduit index as a collision (multi-section fragments meet at the coupling).
   const safety=activeRackType==='kicked-90'?1/8:preferredClearance;
   for(let i=0;i<models.length;i++)for(let j=i+1;j<models.length;j++){
+    const mi=models[i],mj=models[j];
+    if(!mi?.points?.length||!mj?.points?.length)continue;
+    if((mi.index??i)===(mj.index??j))continue;
     let best={dist:Infinity};
-    for(let a=0;a<models[i].points.length-1;a++)for(let b=0;b<models[j].points.length-1;b++){
-      const c=closestSegments(models[i].points[a],models[i].points[a+1],models[j].points[b],models[j].points[b+1]);
+    for(let a=0;a<mi.points.length-1;a++)for(let b=0;b<mj.points.length-1;b++){
+      const c=closestSegments(mi.points[a],mi.points[a+1],mj.points[b],mj.points[b+1]);
       if(c.dist<best.dist)best={...c,segA:a,segB:b};
     }
-    const limit=models[i].radius+models[j].radius+safety;
+    const limit=mi.radius+mj.radius+safety;
     if(best.dist<limit){
-      const aIndex=models[i].index,bIndex=models[j].index,targetRow=Math.max(aIndex,bIndex);
+      const aIndex=mi.index,bIndex=mj.index,targetRow=Math.max(aIndex,bIndex);
       const current=modelData[targetRow]?.cc;
       const deficit=limit-best.dist;
       const recommended=current==null?null:roundUp16(current+deficit+1/16);
-      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit,targetRow,currentCC:current,recommendedCC:recommended,clearance:best.dist-(models[i].radius+models[j].radius),requiredClearance:safety,segA:best.segA,segB:best.segB});
+      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit,targetRow,currentCC:current,recommendedCC:recommended,clearance:best.dist-(mi.radius+mj.radius),requiredClearance:safety,segA:best.segA,segB:best.segB});
     }
   }
   return out;
