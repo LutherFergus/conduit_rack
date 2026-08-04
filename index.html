@@ -318,7 +318,7 @@ input:focus,select:focus{outline-color:#d97706}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.64d</span>
+      <span class="version-badge">PWA v1.66</span>
     </div>
   </div>
 </header>
@@ -1048,6 +1048,7 @@ function requiredBendCenterSpacing(size,key,angleDeg){
 function refreshBenderMode(){const trs=$$('#rows tr');if(!trs.length)return;const selectedSizes=trs.map(tr=>tr.querySelector('.size').value).filter(Boolean);const mixed=new Set(selectedSizes).size>1;$$('.bender-col').forEach(el=>el.classList.toggle('hidden',!mixed));$('#globalBenderBox').classList.toggle('hidden',mixed);if(!mixed){const size=selectedSizes[0]||'';globalBenderEl.innerHTML=benderOptions(size,globalBenderEl.value);const selected=globalBenderEl.value||defaultBenderForSize(size);trs.forEach(tr=>{const b=tr.querySelector('.bender');b.innerHTML=benderOptions(tr.querySelector('.size').value,selected);b.value=selected});}else{trs.forEach(tr=>{const b=tr.querySelector('.bender'),size=tr.querySelector('.size').value,old=b.value;b.innerHTML=benderOptions(size,old);if(!b.value)b.value=defaultBenderForSize(size)})}}
 
 const preferredClearance=9/16; // surface-to-surface gap (was 5/8)
+const bendOdClearance=1/4; // minimum OD-to-OD clear through kicked-90 / bend sweeps (was 1/8)
 // CTC is measured directly along the strut between conduit center locations.
 // Top/bottom alignment changes only the model elevation; it does not change the
 // rack spacing measurement. Maintain 9/16-inch side-to-side clearance along strut.
@@ -2540,7 +2541,7 @@ function fixBendCollisionSpacing(iteration=0){
     const current=parseM(ccEl?.value);
     if(current==null)return;
     // The collision engine measures centerline separation against the sum of
-    // both outside radii plus the required 1/8-inch clear gap. Add the exact
+    // both outside radii plus the required bend OD clear gap. Add the exact
     // deficit, then round upward to the next 1/16 inch so the corrected value
     // cannot round back into contact.
     const deficit=(Number.isFinite(c.limit)&&Number.isFinite(c.distance))
@@ -2567,7 +2568,7 @@ function fixBendCollisionSpacing(iteration=0){
   clearAutoFrom(firstChanged);
   recalc(firstChanged);
   // One CTC change can expose the next neighboring bend conflict. Continue
-  // until every sampled bend OD has at least 1/8 inch clearance.
+  // until every sampled bend OD has at least bendOdClearance clearance.
   if(modelCollisions.length)setTimeout(()=>fixBendCollisionSpacing(iteration+1),0);
 }
 
@@ -2756,9 +2757,9 @@ function renderStatus(d){
     const current=c.currentCC==null?'—':fmt16(c.currentCC);
     const recommended=c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC);
     const gap=Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown';
-    return `Conduits ${c.a+1} and ${c.b+1}: bend OD clearance is ${gap}; minimum is 1/8\". Current CTC ${current}; recommended at least ${recommended}`;
+    return `Conduits ${c.a+1} and ${c.b+1}: bend OD clearance is ${gap}; minimum is ${fmt16(c.requiredClearance||bendOdClearance)}. Current CTC ${current}; recommended at least ${recommended}`;
   }).join('<br>');
-  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully solved</strong><div class="helper">The table is fully dynamic. Enter back of 90, rise, hypotenuse, or strut distance in any row and every row above and below is recalculated from that anchor. Back of 90 is not OAL (finished A to B).</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Bend-radius collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails+'<br><br>The bend outside diameters do not maintain the required 1/8-inch minimum gap. Keep the rack planes fixed and increase only the affected CTC spacing, or use the correction below.': 'Straight sections, kick sweeps, and densely sampled 90 sweeps maintain at least 1/8-inch OD-to-OD clearance at bends.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?overlapCount+' impossible spacing'+(overlapCount>1?'s':''):tightCount?tightCount+' spacing warning'+(tightCount>1?'s':''):'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements are smaller than the combined outside radii of the adjacent conduits.':tightCount?'One or more straight gaps provide less than the preferred 9/16-inch clearance.':'All entered straight-section spacings provide at least 9/16-inch clear space.'}</div></div><div class="status-card ok"><strong>${rackReferenceLength==='longest'?'Longest OAL first':'Shortest OAL first'} · 90s ${getRadio('turnDirection')} · kicks ${getRadio('kickDirection')} ${getRadio('kickPosition')} 90 · struts ${getRadio('firstStrutSide')} → ${getRadio('secondStrutSide')}</strong><div class="helper">Each strut uses one exact selected-surface contact plane and is cut to 125% of the total conduit-and-gap rack width, centered with equal extra length on both ends.</div></div><div class="status-card ${rackModels.some(m=>m.overLength)?'bad':'ok'}"><strong>${rackModels.some(m=>m.overLength)?'120-inch stick length exceeded':'All modeled conduits use a full 120-inch stick'}</strong><div class="helper">${rackModels.some(m=>m.overLength)?'Required developed length exceeds 120 inches: '+rackModels.filter(m=>m.overLength).map(m=>'#'+(m.index+1)+' ('+fmt16(m.requiredLength)+')').join(', ')+'.':'Each valid model is extended after the 90 so its complete developed centerline length equals 120 inches.'}</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">One correction will increase each affected CTC enough to resolve both straight-spacing requirements and identified bend-radius collisions.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
+  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully solved</strong><div class="helper">The table is fully dynamic. Enter back of 90, rise, hypotenuse, or strut distance in any row and every row above and below is recalculated from that anchor. Back of 90 is not OAL (finished A to B).</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Bend-radius collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails+'<br><br>The bend outside diameters do not maintain the required '+fmt16(bendOdClearance)+' minimum gap. Keep the rack planes fixed and increase only the affected CTC spacing, or use the correction below.': 'Straight sections, kick sweeps, and densely sampled 90 sweeps maintain at least '+fmt16(bendOdClearance)+' OD-to-OD clearance at bends.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?overlapCount+' impossible spacing'+(overlapCount>1?'s':''):tightCount?tightCount+' spacing warning'+(tightCount>1?'s':''):'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements are smaller than the combined outside radii of the adjacent conduits.':tightCount?'One or more straight gaps provide less than the preferred 9/16-inch clearance.':'All entered straight-section spacings provide at least 9/16-inch clear space.'}</div></div><div class="status-card ok"><strong>${rackReferenceLength==='longest'?'Longest OAL first':'Shortest OAL first'} · 90s ${getRadio('turnDirection')} · kicks ${getRadio('kickDirection')} ${getRadio('kickPosition')} 90 · struts ${getRadio('firstStrutSide')} → ${getRadio('secondStrutSide')}</strong><div class="helper">Each strut uses one exact selected-surface contact plane and is cut to 125% of the total conduit-and-gap rack width, centered with equal extra length on both ends.</div></div><div class="status-card ${rackModels.some(m=>m.overLength)?'bad':'ok'}"><strong>${rackModels.some(m=>m.overLength)?'120-inch stick length exceeded':'All modeled conduits use a full 120-inch stick'}</strong><div class="helper">${rackModels.some(m=>m.overLength)?'Required developed length exceeds 120 inches: '+rackModels.filter(m=>m.overLength).map(m=>'#'+(m.index+1)+' ('+fmt16(m.requiredLength)+')').join(', ')+'.':'Each valid model is extended after the 90 so its complete developed centerline length equals 120 inches.'}</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">One correction will increase each affected CTC enough to resolve both straight-spacing requirements and identified bend-radius collisions.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
   const hasError=Boolean(rackPlaneIssues.length||transitionConsistencyIssues.length||modelCollisions.length||overlapCount||rackModels.some(m=>m.overLength));
   const hasWarning=Boolean(!hasError&&(full!==d.length||tightCount));
   const errorSignature=hasError?JSON.stringify({rackPlane:rackPlaneIssues.length,transition:transitionConsistencyIssues.length,collisions:modelCollisions.map(c=>[c.a,c.b,Math.round((c.distance||0)*1000)]),overlapCount,overLength:rackModels.filter(m=>m.overLength).map(m=>m.index)}):'';
@@ -3055,7 +3056,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:67,build:'PWA v1.63',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:67,build:'PWA v1.65',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4810,12 +4811,18 @@ function moveKicksClearOf90(){
   }
   if(hypotenuseConflicts.length)alert('The kick-to-90 clearance could not be resolved within the adjustment limit.');
 }
+function pairCollisionSafety(mi,mj){
+  // Bent kicks allow bendOdClearance through sweeps. Straight rack runs use
+  // preferredClearance (9/16"). In multi-section custom runs the active section
+  // type alone must not raise the whole assembled path to 9/16" and false-fault
+  // Auto-Spaced kick geometry that was clear before Add Section.
+  const types=[mi?.rackType,mj?.rackType,activeRackType];
+  if(types.includes('kicked-90'))return bendOdClearance;
+  return preferredClearance;
+}
 function detectCollisions(models){
   const out=[];
-  // Preferred surface gap is preferredClearance (9/16") for rack spacing / parallel runs.
-  // Kicked-90 keeps a separate 1/8" bend-floor used historically for kick/90 sweeps.
   // Never treat same conduit index as a collision (multi-section fragments meet at the coupling).
-  const safety=activeRackType==='kicked-90'?1/8:preferredClearance;
   for(let i=0;i<models.length;i++)for(let j=i+1;j<models.length;j++){
     const mi=models[i],mj=models[j];
     if(!mi?.points?.length||!mj?.points?.length)continue;
@@ -4825,13 +4832,17 @@ function detectCollisions(models){
       const c=closestSegments(mi.points[a],mi.points[a+1],mj.points[b],mj.points[b+1]);
       if(c.dist<best.dist)best={...c,segA:a,segB:b};
     }
-    const limit=mi.radius+mj.radius+safety;
-    if(best.dist<limit){
+    const safety=pairCollisionSafety(mi,mj);
+    // Outer-skin clearance: centerline separation minus both OD radii.
+    // Require a true deficit past float/chord sampling noise (~1e-4 in) before
+    // flagging — exact preferredClearance (clear 9/16, need 9/16) must not Fault.
+    const odClearance=best.dist-(mi.radius+mj.radius);
+    if(odClearance+1e-4<safety){
       const aIndex=mi.index,bIndex=mj.index,targetRow=Math.max(aIndex,bIndex);
       const current=modelData[targetRow]?.cc;
-      const deficit=limit-best.dist;
+      const deficit=safety-odClearance;
       const recommended=current==null?null:roundUp16(current+deficit+1/16);
-      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit,targetRow,currentCC:current,recommendedCC:recommended,clearance:best.dist-(mi.radius+mj.radius),requiredClearance:safety,segA:best.segA,segB:best.segB});
+      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit:mi.radius+mj.radius+safety,targetRow,currentCC:current,recommendedCC:recommended,clearance:odClearance,requiredClearance:safety,segA:best.segA,segB:best.segB});
     }
   }
   return out;
@@ -4841,7 +4852,7 @@ function correctRadiusCollisions(){
   autoCollisionCorrectionBusy=true;
   // Preserve the normal straight-run CTC safeguard here. Radius conflicts are
   // corrected separately by Fix Radius CTC, which increases only the affected
-  // CTC values until the swept bend ODs maintain at least 1/8 inch clearance.
+  // CTC values until the swept bend ODs maintain at least bendOdClearance.
   // No conduit is moved onto another elevation plane to escape a collision.
   let changed=false;
   const trs=$$('#rows tr');
