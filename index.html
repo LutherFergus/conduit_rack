@@ -318,7 +318,7 @@ input:focus,select:focus{outline-color:#d97706}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.64d</span>
+      <span class="version-badge">PWA v1.64e</span>
     </div>
   </div>
 </header>
@@ -405,11 +405,11 @@ input:focus,select:focus{outline-color:#d97706}
 <div id="conduitLayoutHome"></div><div id="customSectionsAccordion" class="custom-section-accordion hidden"></div>
 <section class="panel" id="conduitLayoutPanel">
 <div id="conduitCardControls" class="conduit-card-controls">
-  <div id="sectionCardMeta" class="section-card-meta"><div id="conduitCountCardHost"></div><div class="helper">Conduit count belongs to this section. Single mode remains locked to one conduit.</div></div>
   <section class="panel bend-type-panel" aria-label="Bend type selection">
     <label for="bendTypeSelect">Bend Type</label>
     <select id="bendTypeSelect" aria-label="Bend Type"></select>
   </section>
+  <div id="sectionCardMeta" class="section-card-meta"><div id="conduitCountCardHost"></div><div class="helper">Conduit count belongs to this section. Single mode remains locked to one conduit.</div></div>
   <section id="offsetModePanel" class="panel offset-mode-panel hidden" aria-label="Offset style">
     <div><div class="offset-mode-title">Offset Style</div><div class="helper">Switch styles without leaving this section.</div></div>
     <div id="offsetModeSelector" class="segmented-control" role="group" aria-label="Offset style">
@@ -619,6 +619,11 @@ function initializeRunControlLayout(){
   if(countBox&&countHost&&!countHost.contains(countBox))countHost.appendChild(countBox);
   const controls=$('#conduitCardControls');
   [$('#offsetParameters'),$('#saddleParameters'),$('#segmentedParameters'),$('#globalBenderBox')].forEach(panel=>{if(panel&&controls&&!controls.contains(panel))controls.appendChild(panel)});
+  // Keep Bend Type above count, and put Conduit Count directly under Bender Profile.
+  const countMeta=$('#sectionCardMeta'), benderBox=$('#globalBenderBox');
+  if(countMeta&&benderBox&&controls){
+    if(benderBox.nextSibling!==countMeta) benderBox.after(countMeta);
+  }
   updateTrimModeButton();
 }
 function updateSectionCardHeader(){
@@ -5708,12 +5713,14 @@ function showStartupError(error){
 function isMobileViewerLayout(){return window.matchMedia('(max-width:1099px)').matches}
 function setMobileViewerOpen(open){
   const on=!!open && isMobileViewerLayout();
+  const wasOpen=document.body.classList.contains('mobile-viewer-open');
   document.body.classList.toggle('mobile-viewer-open', on);
   const btn=$('#mobileViewerToggle'), hint=$('#mobileViewerHint');
   if(btn){btn.setAttribute('aria-expanded', on?'true':'false')}
   if(hint)hint.textContent=on?'Tap outside to collapse':'Expand';
-  requestAnimationFrame(()=>{try{resize()}catch(_e){}});
-  if(on) setTimeout(()=>{try{resize()}catch(_e){}}, 240);
+  const refit=()=>{try{resize();if(on)fitToModel()}catch(_e){}};
+  requestAnimationFrame(refit);
+  if(on) setTimeout(refit, 240);
 }
 function toggleMobileViewer(){setMobileViewerOpen(!document.body.classList.contains('mobile-viewer-open'))}
 function collapseMobileViewer(){if(document.body.classList.contains('mobile-viewer-open'))setMobileViewerOpen(false)}
