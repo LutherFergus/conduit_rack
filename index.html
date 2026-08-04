@@ -237,7 +237,7 @@ input:focus,select:focus{outline-color:#f59e0b}
     </div>
     <div class="header-badges">
       <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
-      <span class="version-badge">PWA v1.66</span>
+      <span class="version-badge">PWA v1.67</span>
     </div>
   </div>
 </header>
@@ -274,7 +274,7 @@ input:focus,select:focus{outline-color:#f59e0b}
           <div class="offset-parameter-card"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Which side is conduit 1. Parallel/rolled mark stagger also follows offset direction so bends open the rack instead of closing into neighbors.</div></div>
           <div id="offsetVerticalDirectionBox" class="offset-parameter-card"><label>Vertical Direction</label><div id="offsetVerticalSelector" class="segmented-control" role="group" aria-label="Vertical offset direction"><button type="button" data-offset-vertical="up">Up</button><button type="button" data-offset-vertical="down">Down</button></div></div>
           <div id="offsetHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="offsetHorizontalSelector" class="segmented-control" role="group" aria-label="Horizontal offset direction"><button type="button" data-offset-horizontal="left">Left</button><button type="button" data-offset-horizontal="right">Right</button></div></div>
-          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear distance A to B after the offset (shortened by shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
+          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished A to B after the bends (end of the conduit). Stick cut = OAL + shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
       <div id="saddleParameters" class="hidden" style="grid-column:1/-1">
@@ -282,12 +282,12 @@ input:focus,select:focus{outline-color:#f59e0b}
           <div class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Different enables a separate height for the second opposing offset.</div></div>
           <div class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
           <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div></div>
-          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear A→B after the saddle (shortened by total shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
+          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished A to B after the bends (end of the conduit). Stick cut = OAL + total shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
       <div id="segmentedParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
-          <div class="offset-parameter-card"><label>Measurement Reference</label><div id="segmentedReferenceSelector" class="segmented-control" role="group" aria-label="Segmented bend measurement reference"><button type="button" data-segmented-reference="back">Back of 90</button><button type="button" data-segmented-reference="start">Start of Bend</button></div><div class="helper">Back of 90 is the finished outside of the 90 (layout station) — not OAL. OAL means finished A to B overall after shrink. Start of Bend anchors the sweep tangent.</div></div>
+          <div class="offset-parameter-card"><label>Measurement Reference</label><div id="segmentedReferenceSelector" class="segmented-control" role="group" aria-label="Segmented bend measurement reference"><button type="button" data-segmented-reference="back">Back of 90</button><button type="button" data-segmented-reference="start">Start of Bend</button></div><div class="helper">Back of 90 is the finished outside of the 90 (layout station). Overall Length is finished A to B after the bends. Start of Bend anchors the sweep tangent.</div></div>
           <div class="offset-parameter-card"><label>90 Direction</label><div id="segmentedTurnSelector" class="segmented-control" role="group" aria-label="Segmented 90 direction"><button type="button" data-segmented-turn="left">Left</button><button type="button" data-segmented-turn="right">Right</button></div><div class="helper">Rack radii change concentrically so the entered CTC and conduit OD gaps remain constant through the sweep.</div></div>
           <div class="offset-parameter-card"><label>Automatic Layout</label><div class="helper">The 90 is divided into nine equal 10-degree shots. Marks are centered within nine equal developed-arc sections.</div></div>
         </div>
@@ -498,9 +498,9 @@ const wizardSteps=[
   {question:'Are you kicking up or kicking down?',help:'Choose the direction the kicked section travels away from the orange starting strut.',choices:[['up','Kicking Up'],['down','Kicking Down']]},
   {question:'Are you bending your 90 left or right?',help:'Choose the direction the 90 turns when looking from the orange starting strut toward the bend.',choices:[['left','90 Left'],['right','90 Right']]},
   {question:'Is the kick before or after the 90?',help:'Before 90 places the kick on the orange-strut side. After 90 places the kick on the yellow-strut side.',choices:[['before','Kick Before 90'],['after','Kick After 90']]},
-  {question:'Which back-of-90 is the reference conduit?',help:'Choose whether conduit 1 is the longest or shortest first-leg length to the back of the 90 (not finished A to B OAL).',choices:[['longest','Longest back of 90'],['shortest','Shortest back of 90']]},
+  {question:'Which back-of-90 is the reference conduit?',help:'Choose whether conduit 1 is the longest or shortest first-leg length to the back of the 90 (layout to the 90 — not Overall Length A to B).',choices:[['longest','Longest back of 90'],['shortest','Shortest back of 90']]},
   {question:'Are all conduits the same size?',help:'Choose Yes to select one conduit size for the entire rack. Choose No to enter sizes manually in the rack table.',choices:[['yes','Yes'],['no','No']]},
-  {question:'Enter the reference conduit dimensions',help:'Enter back of 90 (first-leg layout to the outside of the 90), rise, and hypotenuse. OAL is finished A to B after bends and is separate.',input:'dimensions'}
+  {question:'Enter the reference conduit dimensions',help:'Enter back of 90 (first-leg layout to the outside of the 90), rise, and hypotenuse. Overall Length is finished A to B after the bends (end of the conduit).',input:'dimensions'}
 ];
 function rackSetupFromReference(referenceLength,turnDirection){
   const direction=referenceLength==='longest'?'subtract':'add';
@@ -1246,18 +1246,19 @@ function trimColumnApplicable(anyTrimNeeded=null){
 function ensureLengthColumns(anyTrimNeeded=null){
   const header=document.querySelector('.table-wrap thead tr');
   const showTrim=trimColumnApplicable(anyTrimNeeded);
+  const lengthLabel=lengthResultColumnLabel();
   if(header&&!header.querySelector('.gain-heading')){
-    header.insertAdjacentHTML('beforeend','<th class="gain-heading">Gain<br><small>OD / long side</small></th><th class="developed-heading">Developed Length<br><small>stick · offset uses shrink</small></th><th class="trim-heading">Trim Off<br><small>free end / 2nd leg</small></th>');
+    header.insertAdjacentHTML('beforeend',`<th class="gain-heading">Gain<br><small>OD / long side</small></th><th class="developed-heading">${lengthLabel.heading}</th><th class="trim-heading">Trim Off<br><small>free end / 2nd leg</small></th>`);
   }else if(header){
     const developedHeading=header.querySelector('.developed-heading');
-    if(developedHeading&&!/stick|shrink/i.test(developedHeading.innerHTML))developedHeading.innerHTML='Developed Length<br><small>stick · offset uses shrink</small>';
+    if(developedHeading)developedHeading.innerHTML=lengthLabel.heading;
     const trimHeading=header.querySelector('.trim-heading');
     if(trimHeading&&!/2nd leg|free end/i.test(trimHeading.innerHTML))trimHeading.innerHTML='Trim Off<br><small>free end / 2nd leg</small>';
   }
   $$('#rows tr').forEach(tr=>{
-    if(!tr.querySelector('.gain-output'))tr.insertAdjacentHTML('beforeend','<td class="output result-cell gain-output" data-label="Gain (OD long side)">—</td><td class="output result-cell developed-output" data-label="Developed Length (stick)">—</td><td class="output result-cell trim-output" data-label="Trim Off (free end / 2nd leg)">—</td>');
+    if(!tr.querySelector('.gain-output'))tr.insertAdjacentHTML('beforeend',`<td class="output result-cell gain-output" data-label="Gain (OD long side)">—</td><td class="output result-cell developed-output" data-label="${lengthLabel.dataLabel}">—</td><td class="output result-cell trim-output" data-label="Trim Off (free end / 2nd leg)">—</td>`);
     else{
-      const dev=tr.querySelector('.developed-output');if(dev)dev.setAttribute('data-label','Developed Length (stick)');
+      const dev=tr.querySelector('.developed-output');if(dev)dev.setAttribute('data-label',lengthLabel.dataLabel);
       const gain=tr.querySelector('.gain-output');if(gain)gain.setAttribute('data-label','Gain (OD long side)');
       const trim=tr.querySelector('.trim-output');if(trim)trim.setAttribute('data-label','Trim Off (free end / 2nd leg)');
     }
@@ -1454,16 +1455,9 @@ function applyDoubleCtcFreeEndProgression(models,data=modelData){
   return models;
 }
 function stickDevelopedLength(d,model){
-  // Developed length = stick length (material). A full stick stood on the floor is 120".
-  // It is never centerline + gain + extras past the stick.
-  //
-  // 90 / kick / segmented: stick = centerline path of the modeled piece (≤ progressive stick).
-  // Offset / saddle: trade rule uses SHRINK — when finished OAL is entered,
-  //   stick developed = OAL + total shrink (cut longer than finished overall by shrink).
-  //   When OAL is off, the modeled centerline path is already the stick.
-  //
-  // Floor check for a 90 (after bending): M1+M2 ≈ stick + OD-gain (legs from the floor).
-  // That after-bend floor sum is NOT the cut stick length.
+  // Cut stick length (material). Full stick = 120".
+  // Offset / saddle with OAL on: stick = finished OAL + shrink (cut longer than A→B).
+  // 90-family: stick follows the modeled centerline (≤ progressive 2×CTC budget).
   if(!d)return null;
   if(activeRackType==='offset'||activeRackType==='saddle'){
     const shrink=Number.isFinite(d.shrink)?d.shrink:0;
@@ -1484,6 +1478,25 @@ function stickDevelopedLength(d,model){
     return Lcl;
   }
   return Number.isFinite(model?.stickLength)?model.stickLength:null;
+}
+function overallLengthAB(d,model){
+  // Overall Length = finished A→B on this stick after bends (and after trim on a rack).
+  // Same idea for 90, kicked 90, offset, and saddle: end A to end B.
+  // Offset/saddle with OAL on: entered finished overall. Stick cut = OAL + shrink.
+  if(!d)return null;
+  if(activeRackType==='offset'||activeRackType==='saddle'){
+    if(showRackOal&&d.oal!=null&&Number.isFinite(d.oal))return d.oal;
+    if(model?.points?.length)return polylineLength(model.points);
+    return null;
+  }
+  if(model?.points?.length)return polylineLength(model.points);
+  if(Number.isFinite(d.centerlineLength))return d.centerlineLength;
+  if(Number.isFinite(d.finishedLength))return d.finishedLength;
+  return stickDevelopedLength(d,model);
+}
+function lengthResultColumnLabel(){
+  // One result column: Overall Length (finished A→B) for every bend type.
+  return{heading:'Overall Length<br><small>finished A to B</small>',dataLabel:'Overall Length (finished A to B)'};
 }
 function floorLegSumAfterBend(d,model){
   // After-bend floor check only (not cut length): M1+M2 ≈ L_cl + Σ(OD/2·θ) + OD-gain.
@@ -1597,16 +1610,15 @@ function localSectionModels(models=rackModels){
   return (models||[]).filter(m=>m?.points?.length>1&&(m.sectionIndex==null||m.sectionIndex===undefined)&&!m.customFragment);
 }
 function updateLengthMetrics(){
-  // Order: gains → optional square-cut trim → developed (STICK length).
-  // Developed Length = stick material. Full stick on the floor = 120".
-  // Offset/saddle use shrink: finished OAL + shrink when OAL is on.
-  // 90-family: stick centerline (never stick+gain). After-bend floor legs ≈ stick+gain.
+  // Order: gains → optional square-cut trim → stick cut → Overall Length (finished A→B).
+  // Overall Length = end A to end B after bends (and after trim on a rack).
+  // Stick = cut material (offset/saddle with OAL on: OAL + shrink).
   if(trimModeActive&&activeLayoutMode==='rack')trimApplied=true;
   ensureLengthColumns(null);
   modelData.forEach((d)=>{
     d.gain=sectionGainFor(d);
     d.outsideGain=d.gain;
-    d.trim=0;d.developedLength=null;d.finishedLength=null;d.centerlineLength=null;d.longSidePath=null;d.stickLength=null;d.floorLegSum=null;
+    d.trim=0;d.developedLength=null;d.overallLength=null;d.finishedLength=null;d.centerlineLength=null;d.longSidePath=null;d.stickLength=null;d.floorLegSum=null;
   });
   const locals=localSectionModels();
   if(sectionUsesEndTrim())applySectionEndTrim(locals,modelData);
@@ -1614,20 +1626,22 @@ function updateLengthMetrics(){
     const model=locals.find(m=>m.index===i)||rackModels.find(m=>m.index===i&&!m.customFragment);
     if(!model?.points?.length){
       d.centerlineLength=activeRackType==='straight'?STICK_LENGTH:null;
-      d.stickLength=d.centerlineLength;
-      d.developedLength=stickDevelopedLength(d,model);
-      d.finishedLength=d.developedLength;
+      d.stickLength=stickDevelopedLength(d,model)??d.centerlineLength;
+      d.developedLength=d.stickLength;
+      d.overallLength=overallLengthAB(d,model)??d.stickLength;
+      d.finishedLength=d.overallLength;
       return;
     }
     const centerline=polylineLength(model.points);
     model.length=centerline;
     d.centerlineLength=centerline;
-    d.stickLength=Number.isFinite(model.stickLength)?model.stickLength:centerline;
+    d.stickLength=stickDevelopedLength(d,model);
+    if(!Number.isFinite(d.stickLength))d.stickLength=Number.isFinite(model.stickLength)?model.stickLength:centerline;
+    d.developedLength=d.stickLength;
     d.longSidePath=centerline+outsideLongSideExtra(d.size,sectionBendAnglesDeg(d));
     d.floorLegSum=floorLegSumAfterBend(d,model);
-    // Stick developed — full stick stands 120"; offset uses shrink when OAL is finished length.
-    d.developedLength=stickDevelopedLength(d,model);
-    d.finishedLength=d.developedLength;
+    d.overallLength=overallLengthAB(d,model);
+    d.finishedLength=d.overallLength;
     if(!Number.isFinite(d.trim))d.trim=0;
   });
   // Only show Trim Off when at least one conduit actually needs free-end scrap.
@@ -1642,7 +1656,7 @@ function updateLengthMetrics(){
     const d=modelData[i]||{};
     const gainEl=tr.querySelector('.gain-output'),devEl=tr.querySelector('.developed-output'),trimEl=tr.querySelector('.trim-output');
     if(gainEl)gainEl.textContent=fmt16(d.gain);
-    if(devEl)devEl.textContent=fmt16(d.developedLength);
+    if(devEl)devEl.textContent=fmt16(d.overallLength);
     if(trimEl)trimEl.textContent=fmt16(d.trim);
   });
   updateTrimButton();
@@ -2677,7 +2691,7 @@ function renderStatus(d){
     const gap=Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown';
     return `Conduits ${c.a+1} and ${c.b+1}: bend OD clearance is ${gap}; minimum is 1/8\". Current CTC ${current}; recommended at least ${recommended}`;
   }).join('<br>');
-  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully solved</strong><div class="helper">The table is fully dynamic. Enter back of 90, rise, hypotenuse, or strut distance in any row and every row above and below is recalculated from that anchor. Back of 90 is not OAL (finished A to B).</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Bend-radius collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails+'<br><br>The bend outside diameters do not maintain the required 1/8-inch minimum gap. Keep the rack planes fixed and increase only the affected CTC spacing, or use the correction below.': 'Straight sections, kick sweeps, and densely sampled 90 sweeps maintain at least 1/8-inch OD-to-OD clearance at bends.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?overlapCount+' impossible spacing'+(overlapCount>1?'s':''):tightCount?tightCount+' spacing warning'+(tightCount>1?'s':''):'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements are smaller than the combined outside radii of the adjacent conduits.':tightCount?'One or more straight gaps provide less than the preferred 9/16-inch clearance.':'All entered straight-section spacings provide at least 9/16-inch clear space.'}</div></div><div class="status-card ok"><strong>${rackReferenceLength==='longest'?'Longest OAL first':'Shortest OAL first'} · 90s ${getRadio('turnDirection')} · kicks ${getRadio('kickDirection')} ${getRadio('kickPosition')} 90 · struts ${getRadio('firstStrutSide')} → ${getRadio('secondStrutSide')}</strong><div class="helper">Each strut uses one exact selected-surface contact plane and is cut to 125% of the total conduit-and-gap rack width, centered with equal extra length on both ends.</div></div><div class="status-card ${rackModels.some(m=>m.overLength)?'bad':'ok'}"><strong>${rackModels.some(m=>m.overLength)?'120-inch stick length exceeded':'All modeled conduits use a full 120-inch stick'}</strong><div class="helper">${rackModels.some(m=>m.overLength)?'Required developed length exceeds 120 inches: '+rackModels.filter(m=>m.overLength).map(m=>'#'+(m.index+1)+' ('+fmt16(m.requiredLength)+')').join(', ')+'.':'Each valid model is extended after the 90 so its complete developed centerline length equals 120 inches.'}</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">One correction will increase each affected CTC enough to resolve both straight-spacing requirements and identified bend-radius collisions.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
+  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully solved</strong><div class="helper">The table is fully dynamic. Enter back of 90, rise, hypotenuse, or strut distance in any row and every row above and below is recalculated from that anchor. Back of 90 is not OAL (finished A to B).</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Bend-radius collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails+'<br><br>The bend outside diameters do not maintain the required 1/8-inch minimum gap. Keep the rack planes fixed and increase only the affected CTC spacing, or use the correction below.': 'Straight sections, kick sweeps, and densely sampled 90 sweeps maintain at least 1/8-inch OD-to-OD clearance at bends.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?overlapCount+' impossible spacing'+(overlapCount>1?'s':''):tightCount?tightCount+' spacing warning'+(tightCount>1?'s':''):'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements are smaller than the combined outside radii of the adjacent conduits.':tightCount?'One or more straight gaps provide less than the preferred 9/16-inch clearance.':'All entered straight-section spacings provide at least 9/16-inch clear space.'}</div></div><div class="status-card ok"><strong>${rackReferenceLength==='longest'?'Longest OAL first':'Shortest OAL first'} · 90s ${getRadio('turnDirection')} · kicks ${getRadio('kickDirection')} ${getRadio('kickPosition')} 90 · struts ${getRadio('firstStrutSide')} → ${getRadio('secondStrutSide')}</strong><div class="helper">Each strut uses one exact selected-surface contact plane and is cut to 125% of the total conduit-and-gap rack width, centered with equal extra length on both ends.</div></div><div class="status-card ${rackModels.some(m=>m.overLength)?'bad':'ok'}"><strong>${rackModels.some(m=>m.overLength)?'120-inch stick length exceeded':'All modeled conduits use a full 120-inch stick'}</strong><div class="helper">${rackModels.some(m=>m.overLength)?'Required Overall Length exceeds 120 inches: '+rackModels.filter(m=>m.overLength).map(m=>'#'+(m.index+1)+' ('+fmt16(m.requiredLength)+')').join(', ')+'.':'Each valid model is extended after the 90 so its Overall Length (finished A to B) uses the stick budget.'}</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">One correction will increase each affected CTC enough to resolve both straight-spacing requirements and identified bend-radius collisions.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
   const hasError=Boolean(rackPlaneIssues.length||transitionConsistencyIssues.length||modelCollisions.length||overlapCount||rackModels.some(m=>m.overLength));
   const hasWarning=Boolean(!hasError&&(full!==d.length||tightCount));
   const errorSignature=hasError?JSON.stringify({rackPlane:rackPlaneIssues.length,transition:transitionConsistencyIssues.length,collisions:modelCollisions.map(c=>[c.a,c.b,Math.round((c.distance||0)*1000)]),overlapCount,overLength:rackModels.filter(m=>m.overLength).map(m=>m.index)}):'';
@@ -2974,7 +2988,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:67,build:'PWA v1.63',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:70,build:'PWA v1.67',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
