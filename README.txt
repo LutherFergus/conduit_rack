@@ -1,3 +1,7 @@
+PWA v1.65 strut station plane
+
+v1.65: Scheduled struts sample every conduit on the shared plane perpendicular to the run (not fraction-of-length), so mixed-CLR 90s stay square to the strut instead of looking canted above it.
+
 PWA v1.64d simplified UI + mobile docked viewer
 
 v1.64d: Added Bottom and Back preset view buttons beside Front/Right/Left/Top/Iso on the 3D viewer.
