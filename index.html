@@ -5865,6 +5865,33 @@ function startIPhoneBuild(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startIPhoneBuild,{once:true});
 else startIPhoneBuild();
 
+// Test/debug hook for headless viewer geometry audits.
+window.__conduitTest={
+  switchBendType,populateOffsetTestRack,populateSaddleTestRack,populateBasic90TestRack,
+  populateSegmentedTestRack,populateTestRack,randomRackTest,loadLast,recalc,build,
+  applyAllAutoSpacing,updateRackModeUI,updateAutoSpaceButton,setRadioValue,rackSetupFromReference,
+  detectCollisions,closestSegments,fitCurrentView,draw3D,setPresetView,cameraState,
+  get state(){return{
+    activeLayoutMode,activeRackType,activeOffsetType,activeSaddleType,
+    offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,offsetCriticalBend,
+    saddleVerticalDirection,saddleHorizontalDirection,saddleOffsetRelation,
+    segmentedTurnDirection,segmentedReferenceMode,basic90Direction,
+    autoSpaceActive,preferredClearance,showRackOal,trimModeActive,
+    modelData,rackModels,modelCollisions,rackPlaneIssues,hypotenuseConflicts,
+    transitionConsistencyIssues,geometryMonitor,scheduledStruts,rackStrutSolids,yaw,pitch
+  }},
+  set(partial){
+    if(!partial||typeof partial!=='object')return;
+    if('activeLayoutMode' in partial)activeLayoutMode=partial.activeLayoutMode;
+    if('activeRackType' in partial)activeRackType=partial.activeRackType;
+    if('activeOffsetType' in partial)activeOffsetType=partial.activeOffsetType;
+    if('activeSaddleType' in partial)activeSaddleType=partial.activeSaddleType;
+    if('saddleVerticalDirection' in partial)saddleVerticalDirection=partial.saddleVerticalDirection;
+    if('saddleHorizontalDirection' in partial)saddleHorizontalDirection=partial.saddleHorizontalDirection;
+    if('saddleOffsetRelation' in partial)saddleOffsetRelation=partial.saddleOffsetRelation;
+  }
+};
+
 })();
 </script>
 
