@@ -2003,9 +2003,13 @@ function riseOffsetFromRowZero(rowIndex,trs){
   return kickSign*(secondSign-firstSign)*(referenceRadius-currentRadius);
 }
 function parallelGapProgression(rowIndex,anchorIndex,trs){
-  // Parallel offset mark step: accumulate surface-to-surface clearance between
-  // the anchor conduit and this row (OD-aware gap at each CTC).
-  if(activeOffsetType!=='parallel'||rowIndex===anchorIndex)return 0;
+  // Rack-plane surface-gap mark add for Parallel and Rolled offsets/saddles.
+  // Standard (pure vertical) keeps a shared critical station — no gap stagger.
+  // Caller scales by projection (|horizontal|/TO); parallel uses projection 1.
+  if(rowIndex===anchorIndex)return 0;
+  if(activeRackType==='offset'&&activeOffsetType==='standard')return 0;
+  if(activeRackType==='saddle'&&activeSaddleType==='standard')return 0;
+  if(activeRackType!=='offset'&&activeRackType!=='saddle')return 0;
   const step=rowIndex>anchorIndex?1:-1;
   let total=0;
   for(let i=anchorIndex+step;step>0?i<=rowIndex:i>=rowIndex;i+=step){
@@ -2078,6 +2082,10 @@ function recalcSaddle(){
   const secondDistanceAnchor=saddleOffsetRelation==='different'&&activeSaddleType==='rolled'?findManualAnchor(trs,'second-offset-distance'):null;
   if(riseAnchor?.value<0){saddleVerticalDirection='down';setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection)}
   if(distanceAnchor?.value<0){saddleHorizontalDirection='left';setSegmentedState('#saddleHorizontalSelector','saddleHorizontal',saddleHorizontalDirection)}
+  // Shared To Bend 1: rolled saddle is out-and-back. One-way mark stagger opens
+  // the outbound then scissors the return (OD skins close at non-corresponding
+  // stations). Straight Auto Space CTC is not enough for rack-plane travel pinch;
+  // maybeAutoFixOdCollisions widens CTC while Auto Space is ON.
   setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'oal',oalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'bend-angle',angleAnchor,value=>value);
@@ -2128,6 +2136,7 @@ function recalcSaddle(){
     data.forEach(d=>{d.oal=commonOal});
   }
   modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels);transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels);applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();
+  maybeAutoFixOdCollisions();
 }
 function recalcOffset(){
   const trs=$$('#rows tr'),pos=cumulativePositions(trs),data=[];
@@ -2160,8 +2169,8 @@ function recalcOffset(){
     ?(-rackSign*horizontalSign)
     :(offsetRackStart==='left'?1:-1);
   const staggerPerInch=Math.tan(Math.max(0,Math.min(89.9,angleForProgression))*Math.PI/360)*projection;
-  // Surface-gap mark add is parallel-only (parallelGapProgression returns 0 otherwise).
-  setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*(pos[i]-pos[anchorIndex])*staggerPerInch+progressionSign*parallelGapProgression(i,anchorIndex,trs));
+  // Surface-gap mark add follows the rack-plane share (full for parallel, ×projection for rolled).
+  setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*((pos[i]-pos[anchorIndex])*staggerPerInch+projection*parallelGapProgression(i,anchorIndex,trs)));
   setOffsetFieldFromAnchor(trs,'oal',oalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'bend-angle',angleAnchor,value=>value);
   if(riseAnchor){
@@ -2333,13 +2342,52 @@ function recalcSegmented(){
   applyCollisionValidation();finishCalculatedSection();renderStatus(data);
   if(activeView!=='custom')fitCurrentView();else draw3D();
   scheduleAutoSave();
+  maybeAutoFixOdCollisions();
 }
 let autoDirectionBusy=false;
 let autoCollisionCorrectionBusy=false;
+let autoOdFixBusy=false;
 let hypotenuseConflicts=[];
 let rackPlaneIssues=[];
 let transitionConsistencyIssues=[];
 const KICK_TO_90_SAFE_STRAIGHT=2; // absolute fallback; profile-specific clearance normally controls
+function maybeAutoFixOdCollisions(){
+  // When Auto Space is ON, straight-run CTC (9/16") is not always enough for
+  // swept OD clearance: rolled saddles pinch at non-corresponding stations along
+  // rack-plane travel, and mixed-CLR 90/kick sweeps can close skins mid-arc.
+  // Widen affected CTC the same way Fix CTC does, without a modal prompt.
+  if(!autoSpaceActive||autoOdFixBusy||autoCollisionCorrectionBusy||!modelCollisions.length)return;
+  const trs=$$('#rows tr');
+  const targets=new Map();
+  modelCollisions.forEach(c=>{
+    const row=Number.isInteger(c.targetRow)?c.targetRow:Math.max(c.a,c.b);
+    if(row<=0||row>=trs.length)return;
+    const ccEl=trs[row].querySelector('.cc');
+    const current=parseM(ccEl?.value);
+    if(current==null)return;
+    const deficit=Number.isFinite(c.clearance)&&Number.isFinite(c.requiredClearance)
+      ?Math.max(0,c.requiredClearance-c.clearance)
+      :(Number.isFinite(c.limit)&&Number.isFinite(c.distance)?Math.max(0,c.limit-c.distance):1/16);
+    const target=roundUp16(Math.max(c.recommendedCC||0,current+deficit+1/16));
+    targets.set(row,Math.max(targets.get(row)||0,target));
+  });
+  if(!targets.size)return;
+  let changed=false;
+  targets.forEach((target,row)=>{
+    const ccEl=trs[row].querySelector('.cc');if(!ccEl)return;
+    const current=parseM(ccEl.value);
+    if(current==null||current<target-1e-7){
+      ccEl.value=fmt16Input(target);
+      ccEl.dataset.autoSpace='1';
+      ccEl.dataset.override='1';
+      ccEl.classList.add('auto-filled');
+      changed=true;
+    }
+  });
+  if(!changed)return;
+  autoOdFixBusy=true;
+  try{recalc(0)}finally{autoOdFixBusy=false;}
+}
 function collisionDirectionScore(){
   return modelCollisions.reduce((sum,c)=>sum+1000+Math.max(0,c.limit-c.distance)*100,0);
 }
@@ -2408,7 +2456,7 @@ function recalc(start=0){
 // If no value changed, continue and render the collision status from this same
 // modelCollisions array. The old unconditional return left the viewer marker
 // red while Project Status still displayed the previous green result.
-renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave()}
+renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();maybeAutoFixOdCollisions()}
 function recalcBasic90(){
   const trs=$$('#rows tr'),pos=cumulativePositions(trs),data=[];
   const sign=basic90Direction==='left'?-1:basic90Direction==='right'?1:0;
@@ -2427,6 +2475,7 @@ function recalcBasic90(){
   });
   modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=[];transitionConsistencyIssues=[];
   applyCollisionValidation();finishCalculatedSection();renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();
+  maybeAutoFixOdCollisions();
 }
 function recalcStraight(){
   const data=$$('#rows tr').map((tr,i)=>{
@@ -2897,27 +2946,46 @@ function realisticRandomRunTest(){
 function populateOffsetTestRack(randomize=false){
   closeMeasureKeypad(true);
   countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*5):6);
-  offsetRackStart=randomize&&Math.random()>.5?'right':'left';
-  offsetVerticalDirection=randomize&&Math.random()>.5?'down':'up';
-  offsetHorizontalDirection=randomize&&Math.random()>.5?'left':'right';
-  offsetCriticalBend=randomize&&Math.random()>.5?'second':'first';
+  if(randomize){
+    offsetRackStart=Math.random()>.5?'right':'left';
+    offsetVerticalDirection=Math.random()>.5?'down':'up';
+    offsetHorizontalDirection=Math.random()>.5?'left':'right';
+    offsetCriticalBend=Math.random()>.5?'second':'first';
+  }
   updateRackModeUI();build(false);
   const sizesToUse=['3/4"','3/4"','1"','1"','1-1/4"','1-1/4"','1-1/2"','2"'];
   const trs=$$('#rows tr');
   trs.forEach((tr,i)=>{tr.querySelector('.size').value=sizesToUse[i%sizesToUse.length];const b=tr.querySelector('.bender');b.innerHTML=benderOptions(tr.querySelector('.size').value,defaultBenderForSize(tr.querySelector('.size').value));b.value=defaultBenderForSize(tr.querySelector('.size').value)});
   const first=trs[0];
   if(first){
-    first.querySelector('.critical').value=randomize?fmt16Input(20+Math.round(Math.random()*80)/4):'24';
-    first.querySelector('.oal').value=randomize?fmt16Input(108+Math.round(Math.random()*32)/4):'120';
-    if(first.querySelector('.rise'))first.querySelector('.rise').value=randomize?fmt16Input(5+Math.round(Math.random()*28)/4):(activeOffsetType==='rolled'?'6':'8');
-    if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(5+Math.round(Math.random()*28)/4):'8';
-    first.querySelector('.bend-angle').value=randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30';
+    const angle=randomize?Number(['15','22.5','30','45'][Math.floor(Math.random()*4)]):30;
+    const rise=activeOffsetType==='parallel'?0:(randomize?5+Math.round(Math.random()*28)/4:(activeOffsetType==='rolled'?6:8));
+    const dist=activeOffsetType==='standard'?0:(randomize?5+Math.round(Math.random()*28)/4:8);
+    const trueOffset=Math.hypot(rise,dist);
+    const theta=angle*Math.PI/180;
+    const travel=trueOffset>0&&theta?trueOffset/Math.sin(theta):0;
+    const shrink=trueOffset>0&&theta?trueOffset*Math.tan(theta/2):0;
+    // Second-bend-critical: firstMark = critical+shrink−travel. Keep firstMark clear of the shoe.
+    const size0=first.querySelector('.size').value,bender0=first.querySelector('.bender').value;
+    const clr=profileCLR(size0,bender0)||emtGeometry[size0]?.clr||5;
+    const tangent=clr*Math.tan(theta/2);
+    let critical=randomize?20+Math.round(Math.random()*80)/4:24;
+    if(offsetCriticalBend==='second')critical=Math.max(critical,Math.ceil((travel-shrink+tangent+2)*8)/8);
+    first.querySelector('.critical').value=fmt16Input(critical);
+    first.querySelector('.oal').value=randomize?fmt16Input(Math.max(108,critical+travel+24)):fmt16Input(120);
+    if(first.querySelector('.rise'))first.querySelector('.rise').value=activeOffsetType==='parallel'?'':fmt16Input(rise);
+    if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=activeOffsetType==='standard'?'':fmt16Input(dist);
+    first.querySelector('.bend-angle').value=String(angle);
   }
   refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
 function populateSaddleTestRack(randomize=false){
   closeMeasureKeypad(true);countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*4):5);
-  saddleOffsetRelation=randomize&&Math.random()>.5?'different':'same';saddleVerticalDirection=randomize&&Math.random()>.5?'down':'up';saddleHorizontalDirection=randomize&&Math.random()>.5?'left':'right';
+  if(randomize){
+    saddleOffsetRelation=Math.random()>.5?'different':'same';
+    saddleVerticalDirection=Math.random()>.5?'down':'up';
+    saddleHorizontalDirection=Math.random()>.5?'left':'right';
+  }
   updateRackModeUI();build(false);
   const testSizes=['3/4"','3/4"','1"','1"','1-1/4"','1-1/4"','1-1/2"'];
   const trs=$$('#rows tr');trs.forEach((tr,i)=>{tr.querySelector('.size').value=testSizes[i%testSizes.length];const b=tr.querySelector('.bender');b.innerHTML=benderOptions(tr.querySelector('.size').value,defaultBenderForSize(tr.querySelector('.size').value));b.value=defaultBenderForSize(tr.querySelector('.size').value)});
@@ -2932,8 +3000,10 @@ function populateSaddleTestRack(randomize=false){
 function populateSegmentedTestRack(randomize=false){
   closeMeasureKeypad(true);
   countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*5):6);
-  segmentedReferenceMode=randomize&&Math.random()>.5?'start':'back';
-  segmentedTurnDirection=randomize&&Math.random()>.5?'right':'left';
+  if(randomize){
+    segmentedReferenceMode=Math.random()>.5?'start':'back';
+    segmentedTurnDirection=Math.random()>.5?'right':'left';
+  }
   updateRackModeUI();build(false);
   const testSizes=['3/4"','3/4"','1"','1"','1-1/4"','1-1/4"','1-1/2"'];
   const trs=$$('#rows tr');
@@ -2969,7 +3039,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:67,build:'PWA v1.63',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:68,build:'PWA v1.64',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4739,13 +4809,17 @@ function detectCollisions(models){
       const c=closestSegments(mi.points[a],mi.points[a+1],mj.points[b],mj.points[b+1]);
       if(c.dist<best.dist)best={...c,segA:a,segB:b};
     }
+    // Outer-skin clearance: centerline separation minus both OD radii.
+    // Require a true deficit past float/chord sampling noise (~1e-4 in) before
+    // flagging — exact preferredClearance must not round-trip as a false Fault.
     const limit=mi.radius+mj.radius+safety;
-    if(best.dist<limit){
+    const odClearance=best.dist-(mi.radius+mj.radius);
+    if(odClearance+1e-4<safety){
       const aIndex=mi.index,bIndex=mj.index,targetRow=Math.max(aIndex,bIndex);
       const current=modelData[targetRow]?.cc;
-      const deficit=limit-best.dist;
+      const deficit=safety-odClearance;
       const recommended=current==null?null:roundUp16(current+deficit+1/16);
-      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit,targetRow,currentCC:current,recommendedCC:recommended,clearance:best.dist-(mi.radius+mj.radius),requiredClearance:safety,segA:best.segA,segB:best.segB});
+      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit,targetRow,currentCC:current,recommendedCC:recommended,clearance:odClearance,requiredClearance:safety,segA:best.segA,segB:best.segB});
     }
   }
   return out;
@@ -5632,6 +5706,69 @@ function startIPhoneBuild(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startIPhoneBuild,{once:true});
 else startIPhoneBuild();
+
+// Test/debug hook for headless viewer geometry audits (outer-skin / OD clearance).
+window.__conduitTest={
+  switchBendType,populateOffsetTestRack,populateSaddleTestRack,populateBasic90TestRack,
+  populateSegmentedTestRack,populateTestRack,randomRackTest,loadLast,recalc,build,
+  applyAllAutoSpacing,updateRackModeUI,updateAutoSpaceButton,setRadioValue,rackSetupFromReference,
+  detectCollisions,closestSegments,fixAllCTCIssues,fitCurrentView,draw3D,
+  get state(){return{
+    activeLayoutMode,activeRackType,activeOffsetType,activeSaddleType,
+    offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,offsetCriticalBend,
+    saddleVerticalDirection,saddleHorizontalDirection,saddleOffsetRelation,
+    segmentedTurnDirection,segmentedReferenceMode,basic90Direction,
+    autoSpaceActive,preferredClearance,showRackOal,trimModeActive,
+    modelData,rackModels,modelCollisions,rackPlaneIssues,hypotenuseConflicts,
+    transitionConsistencyIssues,geometryMonitor
+  }},
+  set(partial){
+    if(!partial||typeof partial!=='object')return;
+    if('activeLayoutMode' in partial)activeLayoutMode=partial.activeLayoutMode;
+    if('activeRackType' in partial)activeRackType=partial.activeRackType;
+    if('activeOffsetType' in partial)activeOffsetType=partial.activeOffsetType;
+    if('activeSaddleType' in partial)activeSaddleType=partial.activeSaddleType;
+    if('offsetRackStart' in partial)offsetRackStart=partial.offsetRackStart;
+    if('offsetVerticalDirection' in partial)offsetVerticalDirection=partial.offsetVerticalDirection;
+    if('offsetHorizontalDirection' in partial)offsetHorizontalDirection=partial.offsetHorizontalDirection;
+    if('offsetCriticalBend' in partial)offsetCriticalBend=partial.offsetCriticalBend;
+    if('saddleVerticalDirection' in partial)saddleVerticalDirection=partial.saddleVerticalDirection;
+    if('saddleHorizontalDirection' in partial)saddleHorizontalDirection=partial.saddleHorizontalDirection;
+    if('saddleOffsetRelation' in partial)saddleOffsetRelation=partial.saddleOffsetRelation;
+    if('segmentedTurnDirection' in partial)segmentedTurnDirection=partial.segmentedTurnDirection;
+    if('segmentedReferenceMode' in partial)segmentedReferenceMode=partial.segmentedReferenceMode;
+    if('basic90Direction' in partial)basic90Direction=partial.basic90Direction;
+    if('autoSpaceActive' in partial)autoSpaceActive=partial.autoSpaceActive;
+    if('showRackOal' in partial)showRackOal=partial.showRackOal;
+  },
+  seedRandom(seed){
+    let a=(seed>>>0)||1;
+    Math.random=function(){
+      a|=0;a=(a+0x6d2b79f5)|0;
+      let t=Math.imul(a^(a>>>15),1|a);
+      t=(t+Math.imul(t^(t>>>7),61|t))^t;
+      return ((t^(t>>>14))>>>0)/4294967296;
+    };
+  },
+  odCollisions(models,safety){
+    const list=models||rackModels||[];
+    const gap=safety==null?(activeRackType==='kicked-90'?1/8:preferredClearance):safety;
+    const out=[];
+    for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
+      const mi=list[i],mj=list[j];
+      if(!mi?.points?.length||!mj?.points?.length)continue;
+      if((mi.index??i)===(mj.index??j))continue;
+      let best=Infinity;
+      for(let a=0;a<mi.points.length-1;a++)for(let b=0;b<mj.points.length-1;b++){
+        const hit=closestSegments(mi.points[a],mi.points[a+1],mj.points[b],mj.points[b+1]);
+        if(hit.dist<best)best=hit.dist;
+      }
+      const odClear=best-mi.radius-mj.radius;
+      if(odClear+1e-4<gap)out.push({a:(mi.index??i)+1,b:(mj.index??j)+1,centerlineDist:best,odClearance:odClear,required:gap,radiusA:mi.radius,radiusB:mj.radius,odA:mi.diameter,odB:mj.diameter});
+    }
+    return out;
+  }
+};
 
 })();
 </script>
