@@ -318,7 +318,7 @@ input:focus,select:focus{outline-color:#d97706}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.71</span>
+      <span class="version-badge">PWA v1.72</span>
     </div>
   </div>
 </header>
@@ -419,10 +419,10 @@ input:focus,select:focus{outline-color:#d97706}
     </div>
   </section>
   <section id="saddleModePanel" class="panel offset-mode-panel hidden" aria-label="Saddle style">
-    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Switch this section between a 4 Point or Rolling four-bend saddle.</div></div>
+    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Switch this section between a 4 Point or Rolling 4 Point saddle.</div></div>
     <div id="saddleModeSelector" class="segmented-control" role="group" aria-label="Saddle style">
       <button type="button" data-saddle-mode="standard">4 Point</button>
-      <button type="button" data-saddle-mode="rolled">Rolling</button>
+      <button type="button" data-saddle-mode="rolled">Rolling 4 Point</button>
     </div>
   </section>
   <div id="conduitDirectionControls"></div>
@@ -563,7 +563,7 @@ const rackTypes={
   'basic-90':{label:'Basic 90',description:'A single 90-degree bend with no kick.',available:true},
   'kicked-90':{label:'Kicked 90',description:'A rack with a kick and a 90-degree bend.',available:true},
   'offset':{label:'Offset Rack',description:'Standard, parallel, and rolled offsets across a conduit rack.',available:true},
-  'saddle':{label:'Saddle Rack',description:'4 Point and Rolling four-bend saddles across an obstruction.',available:true},
+  'saddle':{label:'Saddle Rack',description:'4 Point and Rolling 4 Point saddles across an obstruction.',available:true},
   'segmented':{label:'Segmented Bend',description:'A large-radius 90 formed from nine equal shots.',available:true},
   'straight':{label:'Straight Stick',description:'A straight 120-inch conduit section.',available:true,internal:true},
   'custom':{label:'Custom Run',description:'Build a run from a sequence of straights and bends.',available:true,internal:true}
@@ -575,7 +575,7 @@ const offsetTypes={
 };
 const saddleTypes={
   'standard':{label:'4 Point',description:'A four-point saddle made from two opposing vertical offsets.'},
-  'rolled':{label:'Rolling',description:'A rolling four-point saddle whose opposing offsets move vertically and horizontally.'}
+  'rolled':{label:'Rolling 4 Point',description:'A rolling four-point saddle whose opposing offsets move vertically and horizontally.'}
 };
 const wizardState={layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null};
 let rackReferenceLength='longest';
@@ -664,7 +664,7 @@ function updateBendTypeSelect(){
     ...(activeLayoutMode==='rack'?[['offset-parallel','Parallel Offset']]:[]),
     ['offset-rolled','Rolled Offset'],
     ['saddle-standard','4 Point Saddle'],
-    ['saddle-rolled','Rolling Saddle'],
+    ['saddle-rolled','Rolling 4 Point Saddle'],
     ['segmented-90','Segmented 90']
   ];
   select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
@@ -802,7 +802,7 @@ function renderSaddleTypeScreen(){
   wizardState.layoutTypeScreen=false;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=true;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
   $('#wizardStepLabel').textContent='Saddle Rack';
   $('#wizardQuestion').textContent='What type of saddle rack?';
-  $('#wizardHelp').textContent='Parallel is not needed for saddle geometry. Choose a 4 Point or Rolling four-bend saddle.';
+  $('#wizardHelp').textContent='Parallel is not needed for saddle geometry. Choose a 4 Point or Rolling 4 Point saddle.';
   const opts=$('#wizardOptions');opts.classList.add('rack-type-options');
   opts.innerHTML=Object.entries(saddleTypes).map(([key,type])=>`<button type="button" class="rack-type-button available" data-saddle-type="${key}"><span><span class="rack-type-name">${type.label}</span><span class="rack-type-desc">${type.description}</span></span><span class="rack-type-status">Select</span></button>`).join('');
   $('#wizardResult').classList.add('wizard-hidden');$('#wizardBack').classList.remove('wizard-hidden');
@@ -3055,7 +3055,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:72,build:'PWA v1.71',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:73,build:'PWA v1.72',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -3153,7 +3153,7 @@ function sectionTypeOptions(project){
     ['offset-standard','Standard Offset'],
     ...(activeLayoutMode==='rack'?[['offset-parallel','Parallel Offset']]:[]),
     ['offset-rolled','Rolled Offset'],['saddle-standard','4 Point Saddle'],
-    ['saddle-rolled','Rolling Saddle'],['segmented','Segmented 90']
+    ['saddle-rolled','Rolling 4 Point Saddle'],['segmented','Segmented 90']
   ];
   return options.map(([value,label])=>`<option value="${value}" ${value===current?'selected':''}>${label}</option>`).join('');
 }
@@ -4881,7 +4881,7 @@ function detectSaddleTransitionConsistencyIssues(models){
     const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
     const expectedX=activeSaddleType==='rolled'?horizontalSign*((d.offsetDistance||0)-(d.secondOffsetDistance||0)):0;
     if(Math.abs((m.centerRise||0)-expectedY)>tolerance)issues.push({index:m.index,field:'second-rise',message:`Rendered final elevation change (${fmt16(m.centerRise)}) does not match the two opposing saddle offsets (${fmt16(expectedY)})`});
-    if(Math.abs((m.horizontalOffset||0)-expectedX)>tolerance)issues.push({index:m.index,field:'second-offset-distance',message:`Rendered final horizontal change (${fmt16(m.horizontalOffset)}) does not match the rolled saddle offsets (${fmt16(expectedX)})`});
+    if(Math.abs((m.horizontalOffset||0)-expectedX)>tolerance)issues.push({index:m.index,field:'second-offset-distance',message:`Rendered final horizontal change (${fmt16(m.horizontalOffset)}) does not match the rolling saddle offsets (${fmt16(expectedX)})`});
     const a=m.points[m.finalStraightStartIndex],b=m.points.at(-1);
     if(a&&b&&(Math.abs(b[0]-a[0])>tolerance||Math.abs(b[1]-a[1])>tolerance))issues.push({index:m.index,field:'critical',message:'Final straight is not parallel after Bend 4'});
     // Crown between bends 2–3 must stay parallel to the supported run plane
