@@ -70,11 +70,29 @@ async function collect(page) {
       const start = m.points[0],
         end = m.points.at(-1);
       const trueDisp = Math.hypot(end[0] - start[0], end[1] - start[1]);
+      let crownParallelErr = null,
+        crownPitch = null;
+      if (s.activeRackType === 'saddle' && m.secondBend && m.thirdBend && m.points.length > 1) {
+        const a = m.startStraightEnd || m.points[1];
+        const sx = a[0] - start[0],
+          sy = a[1] - start[1],
+          sz = a[2] - start[2];
+        const sm = Math.hypot(sx, sy, sz) || 1;
+        const ex = m.thirdBend[0] - m.secondBend[0],
+          ey = m.thirdBend[1] - m.secondBend[1],
+          ez = m.thirdBend[2] - m.secondBend[2];
+        const em = Math.hypot(ex, ey, ez) || 1;
+        const dot = (sx / sm) * (ex / em) + (sy / sm) * (ey / em) + (sz / sm) * (ez / em);
+        crownParallelErr = Math.abs(Math.abs(dot) - 1);
+        crownPitch = Math.abs(ey);
+      }
       return {
         index: m.index + 1,
         trueDisp,
         expected: s.activeRackType === 'offset' ? d?.trueOffset : null,
         overLength: !!m.overLength,
+        crownParallelErr,
+        crownPitch,
       };
     });
     return {
@@ -94,6 +112,7 @@ async function collect(page) {
       geometryChecks,
       planeIssues: (s.rackPlaneIssues || []).length,
       hypIssues: (s.hypotenuseConflicts || []).length,
+      transitionIssues: (s.transitionConsistencyIssues || []).length,
     };
   });
 }
@@ -111,6 +130,15 @@ function formulaErrors(state) {
     if (state.rackType === 'offset' && g.expected != null && Math.abs(g.trueDisp - g.expected) > 0.15) {
       errs.push({ row: g.index, field: 'endpointDisp', err: Math.abs(g.trueDisp - g.expected), trueDisp: g.trueDisp, expected: g.expected });
     }
+    if (state.rackType === 'saddle' && g.crownParallelErr != null && g.crownParallelErr > 1e-3) {
+      errs.push({ row: g.index, field: 'crownParallel', err: g.crownParallelErr });
+    }
+    if (state.rackType === 'saddle' && g.crownPitch != null && g.crownPitch > 1 / 16) {
+      errs.push({ row: g.index, field: 'crownPitch', err: g.crownPitch });
+    }
+  }
+  if (state.rackType === 'saddle' && (state.transitionIssues || 0) > 0) {
+    errs.push({ row: 0, field: 'saddleTransition', err: state.transitionIssues });
   }
   return errs;
 }
