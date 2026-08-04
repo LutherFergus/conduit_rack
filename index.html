@@ -237,7 +237,7 @@ input:focus,select:focus{outline-color:#f59e0b}
     </div>
     <div class="header-badges">
       <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
-      <span class="version-badge">PWA v1.63</span>
+      <span class="version-badge">PWA v1.66</span>
     </div>
   </div>
 </header>
@@ -931,12 +931,17 @@ const emtOD={'1/2"':.706,'3/4"':.922,'1"':1.163,'1-1/4"':1.510,'1-1/2"':1.740,'2
 // straight tangent required between the end of the kick and the start of the 90.
 // The safety values are intentionally conservative field clearances and remain
 // separate from the mathematical conduit-to-conduit collision test.
+// Bender shoe data audited against manufacturer charts (see conduit-math-tests.cjs).
+// Ideal: industry-standard hand take-up / CLR. Klein: product-page CLR. Milwaukee: distributor CLR for 3/4 & 1.
+// Sidewinder: B2555 EMT shoe radius + Chart B deduct (not hand-bender take-ups; not Rigid shoe radii).
+// Table CLR: Greenlee 777/880 PVC (matching rigid) shoe family. Table deduct still uses field placeholders —
+// they do not match 881 Cam Track EMT Table 2 (21-1/2, 24, 27-3/4, 32-1/4); keep testing until shoe-family deducts are confirmed.
 const benderProfiles={
   ideal:{label:'Ideal hand bender',family:'hand',sizes:['1/2"','3/4"','1"'],clr:{'1/2"':4.0,'3/4"':4.5,'1"':5.75},deduct:{'1/2"':5,'3/4"':6,'1"':8},shoeExtra:2},
-  klein:{label:'Klein hand bender',family:'hand',sizes:['1/2"','3/4"','1"'],clr:{'1/2"':4.625,'3/4"':5.5,'1"':7.0},deduct:{'1/2"':5,'3/4"':6,'1"':8},shoeExtra:2},
-  milwaukee:{label:'Milwaukee hand bender',family:'hand',sizes:['1/2"','3/4"','1"'],clr:{'1/2"':4.5,'3/4"':5.5,'1"':7.0},deduct:{'1/2"':5,'3/4"':6,'1"':8},shoeExtra:2},
-  sidewinder:{label:'Greenlee Sidewinder',family:'power',sizes:['1-1/4"','1-1/2"','2"'],clr:{'1-1/4"':8.75,'1-1/2"':8.25,'2"':9.5},deduct:{'1-1/4"':11,'1-1/2"':13,'2"':15},shoeExtra:4},
-  table:{label:'Greenlee table bender',family:'table',sizes:['2-1/2"','3"','3-1/2"','4"'],clr:{'2-1/2"':11.4375,'3"':13.75,'3-1/2"':15,'4"':16},deduct:{'2-1/2"':18,'3"':21,'3-1/2"':24,'4"':27},shoeExtra:6}
+  klein:{label:'Klein hand bender',family:'hand',sizes:['1/2"','3/4"','1"'],clr:{'1/2"':4.625,'3/4"':5.5,'1"':7.375},deduct:{'1/2"':5,'3/4"':6,'1"':8},shoeExtra:2},
+  milwaukee:{label:'Milwaukee hand bender',family:'hand',sizes:['1/2"','3/4"','1"'],clr:{'1/2"':4.5,'3/4"':5.25,'1"':6.5},deduct:{'1/2"':5,'3/4"':6,'1"':8},shoeExtra:2},
+  sidewinder:{label:'Greenlee Sidewinder',family:'power',sizes:['1-1/4"','1-1/2"','2"'],clr:{'1-1/4"':8.75,'1-1/2"':8.28125,'2"':9.1875},deduct:{'1-1/4"':13.125,'1-1/2"':13.875,'2"':15.375},shoeExtra:4},
+  table:{label:'Greenlee table bender',family:'table',sizes:['2-1/2"','3"','3-1/2"','4"'],clr:{'2-1/2"':11.4375,'3"':13.75,'3-1/2"':16,'4"':18.25},deduct:{'2-1/2"':18,'3"':21,'3-1/2"':24,'4"':27},shoeExtra:6}
 };
 function defaultBenderForSize(size){if(['1/2"','3/4"','1"'].includes(size))return'ideal';if(['1-1/4"','1-1/2"','2"'].includes(size))return'sidewinder';if(['2-1/2"','3"','3-1/2"','4"'].includes(size))return'table';return''}
 function supportedBenders(size){return Object.entries(benderProfiles).filter(([,p])=>p.sizes.includes(size))}
@@ -3443,21 +3448,20 @@ const CONDUIT_COLORS=[
 function conduitColor(index){
   return CONDUIT_COLORS[((index%CONDUIT_COLORS.length)+CONDUIT_COLORS.length)%CONDUIT_COLORS.length];
 }
-// EMT physical geometry in inches. OD and nominal wall thickness follow standard EMT dimensions.
-// CLR is the modeled centerline bend radius used for the circular sweeps. These are
-// practical standard-radius values; an individual bender shoe can differ, so the
-// geometry is kept in one table for a future selectable bender/shoe profile.
+// EMT physical geometry in inches. OD and wall follow ANSI C80.3 / UL 797.
+// CLR fallback matches the default benderProfiles shoe for that trade size so
+// geometry never disagrees when a row has no explicit bender selection.
 const emtGeometry={
   '1/2"':   {od:.706, wall:.042, clr:4.00},
   '3/4"':   {od:.922, wall:.049, clr:4.50},
   '1"':     {od:1.163,wall:.057, clr:5.75},
-  '1-1/4"': {od:1.510,wall:.065, clr:7.25},
-  '1-1/2"': {od:1.740,wall:.065, clr:8.25},
-  '2"':     {od:2.197,wall:.065, clr:9.50},
-  '2-1/2"': {od:2.875,wall:.072, clr:10.50},
-  '3"':     {od:3.500,wall:.072, clr:13.00},
-  '3-1/2"': {od:4.000,wall:.083, clr:15.00},
-  '4"':     {od:4.500,wall:.083, clr:16.00}
+  '1-1/4"': {od:1.510,wall:.065, clr:8.75},
+  '1-1/2"': {od:1.740,wall:.065, clr:8.28125},
+  '2"':     {od:2.197,wall:.065, clr:9.1875},
+  '2-1/2"': {od:2.875,wall:.072, clr:11.4375},
+  '3"':     {od:3.500,wall:.072, clr:13.75},
+  '3-1/2"': {od:4.000,wall:.083, clr:16.00},
+  '4"':     {od:4.500,wall:.083, clr:18.25}
 };
 const conduitOD=Object.fromEntries(Object.entries(emtGeometry).map(([k,v])=>[k,v.od]));
 const bendRadius=Object.fromEntries(Object.entries(emtGeometry).map(([k,v])=>[k,v.clr]));
