@@ -1,3 +1,7 @@
+PWA v1.64d simplified UI + mobile docked viewer
+
+v1.64d: Added Bottom and Back preset view buttons beside Front/Right/Left/Top/Iso on the 3D viewer.
+
 PWA v1.64c simplified UI + mobile docked viewer
 
 v1.64c: Added Copy on the 3D viewer toolbar to put a PNG screenshot on the clipboard (Capture still saves/shares).
