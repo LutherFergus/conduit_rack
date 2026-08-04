@@ -4126,13 +4126,48 @@ function scheduledSideAt(index,count){
   }
   return side;
 }
+function pointOnModelAtRunStation(model,planePoint,planeNormal){
+  // Hit the same run station on every conduit: the plane through the reference
+  // sample with normal = run tangent. Fraction-of-length sampling drifts on mixed
+  // CLR 90s so some pipes are still on the bend (angled) while the reference is
+  // already on the straight — the rack then looks canted above the strut.
+  const pts=model?.points||[];
+  if(pts.length<2)return(planePoint||[0,0,0]).slice();
+  const n=unit(planeNormal||[0,0,1]),origin=planePoint||pts[0];
+  let best=null,bestDist=Infinity;
+  const consider=p=>{
+    const d=Math.hypot(...vsub(p,origin));
+    if(d<bestDist){bestDist=d;best=p.slice()}
+  };
+  for(let i=1;i<pts.length;i++){
+    const a=pts[i-1],b=pts[i],ab=vsub(b,a);
+    const da=dot(vsub(a,origin),n),denom=dot(ab,n);
+    if(Math.abs(denom)<1e-10){
+      if(Math.abs(da)<1e-5){
+        const ab2=Math.max(1e-12,dot(ab,ab));
+        const t=Math.max(0,Math.min(1,dot(vsub(origin,a),ab)/ab2));
+        consider(vadd(a,vmul(ab,t)));
+      }
+      continue;
+    }
+    const t=-da/denom;
+    if(t<-1e-6||t>1+1e-6)continue;
+    consider(vadd(a,vmul(ab,Math.max(0,Math.min(1,t)))));
+  }
+  if(best)return best;
+  pts.forEach(p=>consider(vsub(p,vmul(n,dot(vsub(p,origin),n)))));
+  return best||pts[0].slice();
+}
 function buildScheduledStrutSolid(item,index,count,models){
   const ref=item.interval.model,local=item.station-item.interval.runOffset,refSample=pointAndTangentAlongModel(ref,local);
   const sectionIndex=ref.sectionIndex??null,sectionModels=models.filter(m=>(m.sectionIndex??null)===sectionIndex);
-  const refLength=refSample.total||1,fraction=Math.max(0,Math.min(1,local/refLength)),centers=sectionModels.map(model=>pointAndTangentAlongModel(model,(modelCumulativeLengths(model).at(-1)||0)*fraction).point);
   const tangent=refSample.tangent,side=scheduledSideAt(index,count),sign=side==='top'?1:-1;
+  // Shared station plane — every conduit sampled where it crosses the same
+  // plane perpendicular to the run, so the strut stays square to the pipes.
+  const centers=sectionModels.map(model=>pointOnModelAtRunStation(model,refSample.point,tangent));
   let baseAway=Math.abs(tangent[1])>.985?[0,0,1]:[0,1,0];
   baseAway=unit(vsub(baseAway,vmul(tangent,dot(baseAway,tangent))));
+  if(Math.hypot(...baseAway)<.01)baseAway=Math.abs(tangent[0])<.9?[1,0,0]:[0,0,1];
   const away=vmul(baseAway,sign),lengthDir=unit(cross3(tangent,away));
   const projections=centers.map((point,i)=>({value:dot(point,lengthDir),radius:sectionModels[i]?.radius||.5}));
   const min=Math.min(...projections.map(p=>p.value-p.radius)),max=Math.max(...projections.map(p=>p.value+p.radius)),rackWidth=Math.max(1,max-min),strutLength=rackWidth*1.25,mid=(min+max)/2;
