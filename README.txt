@@ -1,3 +1,7 @@
+PWA v1.64c simplified UI + mobile docked viewer
+
+v1.64c: Added Copy on the 3D viewer toolbar to put a PNG screenshot on the clipboard (Capture still saves/shares).
+
 PWA v1.64b simplified UI + mobile docked viewer
 
 v1.64b: Restored the second Test button on the 3D viewer toolbar (top-bar Test remains).
