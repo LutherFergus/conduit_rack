@@ -1,3 +1,7 @@
+PWA v1.64 simplified UI + mobile docked viewer
+
+v1.64: Simplified chrome (less helper text by default, Help toggle, quieter panels, grouped viewer toolbar). On mobile/tablet the 3D viewer is a persistent bottom dock: collapsed peek by default, expands in place, collapses when tapping outside the viewer (or when the keypad/wizard opens).
+
 PWA v1.63 no embedded Grok
 
 v1.63: Removed in-app Grok chat, API key UI, and xAI proxy. App is local-first again. serve.py is a plain static file server only. Parallel offset mark progression restored to the established formula (see below).

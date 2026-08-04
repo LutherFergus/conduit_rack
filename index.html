@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0c0a09">
-<title>Conduit Rack Layout Calculator · UI Playground</title>
+<meta name="theme-color" content="#141210">
+<title>Conduit Rack Layout Calculator</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -124,86 +124,89 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   #rows .conduit-input-toggle,#rows .conduit-output-toggle{font-size:.72rem;padding:7px 4px}
 }
 
-/* ── UI playground theme (experiment/ui-playground) ─────────────────────── */
+/* ── Simplified shop UI + mobile docked viewer ───────────────────────────── */
 :root{
-  --bg:#0c0a09;--panel:#1c1917;--panel2:#292524;--input:#0c0a09;--border:#44403c;
-  --text:#fafaf9;--muted:#a8a29e;--accent:#f59e0b;--accent2:#38bdf8;
+  --bg:#141210;--panel:#1c1917;--panel2:#292524;--input:#0c0a09;--border:#44403c;
+  --text:#fafaf9;--muted:#a8a29e;--accent:#d97706;--accent2:#38bdf8;
   --good:#22c55e;--warn:#fbbf24;--bad:#f87171;
-  --shop:#292524;--shop-edge:#57534e;--copper:#d97706;
+  --shop-edge:#57534e;--copper:#d97706;
+  --mobile-viewer-handle:48px;--mobile-viewer-peek:80px;--mobile-viewer-expanded:min(48vh,380px);
 }
 html,body{
   background:
-    radial-gradient(1200px 600px at 10% -10%,rgba(217,119,6,.14),transparent 55%),
-    radial-gradient(900px 500px at 100% 0%,rgba(14,165,233,.10),transparent 50%),
-    linear-gradient(180deg,#0c0a09 0%,#1c1917 45%,#0c0a09 100%);
+    radial-gradient(900px 480px at 8% -8%,rgba(217,119,6,.10),transparent 55%),
+    linear-gradient(180deg,#141210 0%,#1a1714 50%,#141210 100%);
 }
 body{padding-top:0}
 .app{max-width:1480px}
 .app-header{
   position:relative;z-index:1;
-  margin:0 0 14px;
-  padding:max(4px,env(safe-area-inset-top)) 0 10px;
-  background:transparent;
-  border-bottom:1px solid rgba(87,83,78,.55);
-  box-shadow:none;
+  margin:0 0 10px;
+  padding:max(4px,env(safe-area-inset-top)) 0 8px;
+  border-bottom:1px solid rgba(87,83,78,.45);
 }
-.app-header-inner{max-width:1480px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.app-header-inner{max-width:1480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .app-brand{min-width:0}
-.app-brand h1{margin:0;font-size:clamp(1.25rem,3.8vw,1.85rem);letter-spacing:-.02em;line-height:1.15}
+.app-brand h1{margin:0;font-size:clamp(1.15rem,3.6vw,1.65rem);letter-spacing:-.02em;line-height:1.15}
 .app-brand .rack-chip{
-  display:inline-flex;align-items:center;gap:8px;margin-top:8px;
-  padding:6px 11px;border-radius:999px;background:rgba(217,119,6,.16);
-  border:1px solid rgba(245,158,11,.45);color:#fde68a;font-size:.84rem;font-weight:800;
+  display:inline-flex;align-items:center;gap:6px;margin-top:6px;
+  padding:4px 9px;border-radius:8px;background:rgba(217,119,6,.14);
+  border:1px solid rgba(245,158,11,.35);color:#fde68a;font-size:.8rem;font-weight:750;
 }
-.app-brand .rack-chip strong{color:#fff;font-weight:900}
+.app-brand .rack-chip strong{color:#fff;font-weight:850}
 .header-badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.version-badge{background:linear-gradient(135deg,#d97706,#f59e0b);color:#1c1917;font-weight:900}
-.exp-badge{
-  display:inline-block;padding:3px 8px;border-radius:999px;font-size:.7rem;font-weight:900;
-  letter-spacing:.06em;text-transform:uppercase;color:#7dd3fc;
-  background:rgba(14,165,233,.12);border:1px solid rgba(56,189,248,.4);
+.version-badge{background:#d97706;color:#1c1917;font-weight:850;border-radius:8px}
+.help-toggle{
+  min-height:34px;padding:6px 10px;border-radius:8px;font-size:.78rem;font-weight:800;
+  background:#292524;color:#e7e5e4;border:1px solid #57534e;
 }
-.intro-sub{margin:0 0 14px;max-width:62ch}
-.intro-sub.collapsed{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.intro-toggle{
-  margin:-6px 0 16px;padding:0;min-height:0;background:none;color:#fbbf24;font-weight:800;font-size:.86rem;border:0;text-decoration:underline;cursor:pointer
-}
+.help-toggle[aria-pressed="true"]{background:rgba(217,119,6,.22);border-color:rgba(245,158,11,.55);color:#fde68a}
+body:not(.show-help) .helper{display:none!important}
+body:not(.show-help) .legend{display:none}
+.intro-sub,.intro-toggle{display:none!important}
 .panel{
-  background:linear-gradient(180deg,rgba(28,25,23,.98),rgba(22,20,18,.98));
-  border-color:var(--shop-edge);border-radius:18px;
-  box-shadow:0 12px 36px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);
+  background:rgba(28,25,23,.97);
+  border-color:var(--shop-edge);border-radius:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
 }
 .top-run-controls{
-  position:relative;z-index:1;
-  border-color:rgba(245,158,11,.55)!important;
-  background:linear-gradient(90deg,rgba(217,119,6,.22),rgba(28,25,23,.97))!important;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);
+  position:relative;z-index:1;padding:10px 12px;
+  border-color:rgba(245,158,11,.4)!important;
+  background:rgba(217,119,6,.12)!important;
+  box-shadow:none;
 }
-.primary{background:linear-gradient(180deg,#f59e0b,#d97706);color:#1c1917;box-shadow:0 4px 14px rgba(217,119,6,.28)}
+.primary{background:#d97706;color:#1c1917;box-shadow:none}
 .primary:active{filter:brightness(.95)}
 .secondary{background:#44403c;color:#fafaf9}
 .secondary.toggle-active,.segmented-control button.active{
-  background:linear-gradient(180deg,#f59e0b,#d97706)!important;color:#1c1917!important;
-  box-shadow:0 4px 14px rgba(217,119,6,.25)!important;
+  background:#d97706!important;color:#1c1917!important;box-shadow:none!important;
 }
-.segmented-control{background:#0c0a09;border-color:#57534e;border-radius:14px}
+.segmented-control{background:#0c0a09;border-color:#57534e;border-radius:10px}
 .segmented-control button{color:#d6d3d1}
+.conduit-card-controls>.panel,
 .bend-type-panel,.offset-mode-panel{
-  border-color:rgba(245,158,11,.4)!important;
-  background:linear-gradient(90deg,rgba(217,119,6,.14),rgba(28,25,23,.96))!important;
+  border:1px solid rgba(87,83,78,.65)!important;
+  background:rgba(12,10,9,.45)!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+  padding:10px 12px!important;
 }
-.bend-type-panel label,.offset-mode-title{color:#fde68a!important}
+.bend-type-panel label,.offset-mode-title{color:#fde68a!important;font-size:.95rem!important}
 .strut-schedule-panel{border-color:#ea580c}
-.local-storage-panel{border-color:rgba(245,158,11,.55);background:linear-gradient(180deg,rgba(217,119,6,.12),rgba(28,25,23,.97))}
-.geometry-monitor{border-radius:14px}
-.viewer-wrap{border-radius:16px;border-color:#57534e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
+.local-storage-panel{border-color:rgba(245,158,11,.4);background:rgba(217,119,6,.08)}
+.geometry-monitor{border-radius:10px;padding:8px 10px;font-size:.8rem}
+.viewer-wrap{border-radius:12px;border-color:#57534e}
 .viewer-badge{color:#fde68a}
 table{background:#0c0a09}
 th{background:#292524;color:#fde68a}
 td.output{background:#141210}
 .auto-filled{border-color:#d97706!important;background:#2a1a08!important}
-input:focus,select:focus{outline-color:#f59e0b}
-/* Wide desktop: two-column workspace (controls | sticky viewer) */
+input:focus,select:focus{outline-color:#d97706}
+.offset-parameter-card{background:rgba(12,10,9,.4);border-color:rgba(87,83,78,.6)}
+.view-toolbar{display:grid;gap:8px;width:100%}
+.view-toolbar-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.view-toolbar-row .row-label{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-right:2px}
+.mobile-viewer-handle{display:none}
 .app-workspace{display:block}
 @media(min-width:1100px){
   .app-workspace{
@@ -219,10 +222,80 @@ input:focus,select:focus{outline-color:#f59e0b}
   }
   .workspace-viewer .viewer-panel{margin-bottom:0}
   .workspace-viewer .viewer-wrap canvas{height:min(52vh,520px)}
-  .workspace-viewer .view-buttons{max-height:120px;overflow:auto}
+  .workspace-viewer .view-buttons{max-height:none}
 }
+/* Mobile / tablet: persistent bottom-docked viewer */
 @media(max-width:1099px){
-  .workspace-viewer{position:static;max-height:none;overflow:visible}
+  body{
+    padding-bottom:calc(var(--mobile-viewer-handle) + var(--mobile-viewer-peek) + env(safe-area-inset-bottom) + 10px);
+  }
+  .workspace-viewer{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    z-index:850;
+    display:flex;flex-direction:column;
+    max-height:none;
+    overflow:visible;
+    padding:0;
+    pointer-events:none;
+  }
+  .workspace-viewer > *{pointer-events:auto}
+  .mobile-viewer-handle{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    position:relative;flex:0 0 auto;
+    width:100%;min-height:var(--mobile-viewer-handle);margin:0;
+    padding:14px 14px 8px;
+    border:0;border-radius:16px 16px 0 0;
+    background:#1c1917;color:#fafaf9;font:inherit;font-weight:850;
+    box-shadow:0 -8px 28px rgba(0,0,0,.35);
+    border-top:1px solid rgba(245,158,11,.35);
+    cursor:pointer;
+  }
+  .mobile-viewer-handle-main{display:flex;align-items:center;gap:10px;min-width:0}
+  .mobile-viewer-grip{
+    width:36px;height:4px;border-radius:999px;background:#78716c;
+    position:absolute;left:50%;top:7px;transform:translateX(-50%);
+  }
+  .mobile-viewer-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mobile-viewer-hint{color:#a8a29e;font-size:.78rem;font-weight:700}
+  .workspace-viewer .viewer-panel{
+    margin:0;border-radius:0;border-left:0;border-right:0;border-bottom:0;border-top:0;
+    box-shadow:none;
+    padding:0 10px calc(8px + env(safe-area-inset-bottom));
+    background:#1c1917;
+    max-height:calc(var(--mobile-viewer-peek) + env(safe-area-inset-bottom));
+    overflow:hidden;
+    transition:max-height .22s ease;
+  }
+  body.mobile-viewer-open .workspace-viewer .viewer-panel{
+    max-height:calc(var(--mobile-viewer-expanded) + 220px + env(safe-area-inset-bottom));
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-top:4px;
+  }
+  .workspace-viewer .toolbar-title{display:none}
+  body.mobile-viewer-open .workspace-viewer .toolbar-title{display:flex;margin-bottom:6px}
+  .workspace-viewer .toolbar-title > div > h2{font-size:1.05rem}
+  .workspace-viewer .viewer-wrap{margin-top:0!important;border-radius:10px}
+  .workspace-viewer .viewer-wrap canvas{
+    height:var(--mobile-viewer-peek);
+    transition:height .22s ease;
+  }
+  body.mobile-viewer-open .workspace-viewer .viewer-wrap canvas{
+    height:var(--mobile-viewer-expanded);
+  }
+  .workspace-viewer .section-selector,
+  .workspace-viewer .geometry-monitor{display:none!important}
+  body.mobile-viewer-open .workspace-viewer .section-selector:not(.hidden){display:flex!important}
+  body.mobile-viewer-open .workspace-viewer .geometry-monitor{display:block!important}
+  .workspace-viewer .view-buttons{display:none}
+  body.mobile-viewer-open .workspace-viewer .view-buttons{display:grid}
+  /* Scrim when expanded — tap outside collapses */
+  body.mobile-viewer-open::before{
+    content:"";
+    position:fixed;inset:0;z-index:840;
+    background:rgba(2,6,23,.42);
+  }
 }
 
 </style>
@@ -236,8 +309,8 @@ input:focus,select:focus{outline-color:#f59e0b}
       <div class="rack-chip">Current rack · <strong id="activeRackTypeLabel">Kicked 90</strong></div>
     </div>
     <div class="header-badges">
-      <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
-      <span class="version-badge">PWA v1.63</span>
+      <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
+      <span class="version-badge">PWA v1.64</span>
     </div>
   </div>
 </header>
@@ -352,8 +425,13 @@ input:focus,select:focus{outline-color:#f59e0b}
 <div id="projectStatusModal" class="project-status-modal" role="dialog" aria-modal="true" aria-labelledby="projectStatusTitle" aria-hidden="true"><div class="project-status-dialog"><div class="project-status-header"><div id="projectStatusTitle" class="project-status-title">Project Status</div><button id="projectStatusClose" class="project-status-close" type="button">Close</button></div><div class="project-status-body"><div id="status" class="status-grid"></div></div></div></div>
 </div><!-- /.workspace-main -->
 
-<aside class="workspace-viewer" aria-label="3D viewer column">
-<section class="panel viewer-panel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper">True EMT ODs and circular bends. Struts are 1-5/8&quot; and stay off bend radii. Collisions show in red.</div></div><div class="view-buttons"><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">✥ Pan</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">⚗ Test</button><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Isometric</button><button class="secondary" id="fitViewBtn" type="button">Fit to Model</button><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim Rack</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">↶ Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">↷ Redo</button></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
+<aside class="workspace-viewer" id="workspaceViewer" aria-label="3D viewer column">
+<button type="button" class="mobile-viewer-handle" id="mobileViewerToggle" aria-expanded="false" aria-controls="viewerPanel">
+  <span class="mobile-viewer-grip" aria-hidden="true"></span>
+  <span class="mobile-viewer-handle-main"><span class="mobile-viewer-title">3D Viewer</span></span>
+  <span class="mobile-viewer-hint" id="mobileViewerHint">Expand</span>
+</button>
+<section class="panel viewer-panel" id="viewerPanel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper" id="viewerHelpText">True EMT ODs and circular bends. Struts are 1-5/8&quot; and stay off bend radii. Collisions show in red.</div></div><div class="view-buttons view-toolbar"><div class="view-toolbar-row" role="group" aria-label="Camera mode"><span class="row-label">Mode</span><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">Pan</button><button class="secondary" id="fitViewBtn" type="button">Fit</button></div><div class="view-toolbar-row" role="group" aria-label="Camera presets"><span class="row-label">View</span><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="free" type="button">Iso</button></div><div class="view-toolbar-row" role="group" aria-label="Rack actions"><span class="row-label">Rack</span><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">Redo</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">Test</button></div></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
 </aside>
 </div><!-- /.app-workspace -->
 
@@ -654,7 +732,7 @@ function updateRackModeUI(){
   renderConduitCardControls();
   updateOalVisibility();
   const layoutTable=document.querySelector('.table-wrap table');if(layoutTable){layoutTable.classList.toggle('offset-layout',isOffset||isSegmented);layoutTable.classList.toggle('saddle-layout',isSaddle)}
-  const viewerHelp=document.querySelector('.viewer-panel .helper');
+  const viewerHelp=$('#viewerHelpText')||document.querySelector('.viewer-panel .helper');
   if(viewerHelp)viewerHelp.textContent=isSegmented
     ?'The viewer shows the nine individual 10-degree shots. Rack conduits use concentric centerline radii so actual EMT outside diameters preserve the selected CTC spacing throughout the sweep.'
     :isSaddle
@@ -823,7 +901,7 @@ function renderSetupWizard(){
 function resetWizardState(){
   Object.assign(wizardState,{layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null});
 }
-function openSetupWizard(){closeMeasureKeypad();resetWizardState();renderLayoutTypeScreen();$('#setupWizard').classList.add('open')}
+function openSetupWizard(){closeMeasureKeypad();resetWizardState();renderLayoutTypeScreen();try{collapseMobileViewer()}catch(_e){}$('#setupWizard').classList.add('open')}
 function applyWizardValues(){
   countEl.value=Math.max(1,Math.min(100,parseInt(wizardState.conduitCount,10)||1));
   build(false);
@@ -1124,7 +1202,7 @@ function openMeasureKeypad(el){
   el.inputMode='none';
   el.setAttribute('readonly','readonly');
   $('#measureKeypadLabel').textContent=measurementLabel(el);refreshMeasureKeypad();
-  $('#measureKeypad').classList.add('open');$('#measureKeypadBackdrop').classList.add('open');
+  $('#measureKeypad').classList.add('open');$('#measureKeypadBackdrop').classList.add('open');try{collapseMobileViewer()}catch(_e){}
   try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(_e){}
 }
 function commitMeasureKeypad(){
@@ -5083,7 +5161,7 @@ function setPresetView(v){
 function resetView(){setPresetView('free')}
 function fitToModel(){fitCurrentView();activeView='custom'}
 $$('[data-view]').forEach(b=>b.onclick=()=>setPresetView(b.dataset.view));
-$('#randomTestBtn').onclick=randomRackTest;$('#viewerRandomTestBtn').onclick=randomRackTest;$('#viewerFixCTCBtn').onclick=fixAllCTCIssues;$('#captureViewBtn').onclick=()=>captureCurrentRackView().catch(error=>{console.error(error);showCaptureStatus('CAPTURE FAILED',true)});
+$('#randomTestBtn').onclick=randomRackTest;$('#viewerFixCTCBtn').onclick=fixAllCTCIssues;$('#captureViewBtn').onclick=()=>captureCurrentRackView().catch(error=>{console.error(error);showCaptureStatus('CAPTURE FAILED',true)});
 $('#panViewBtn').onclick=()=>setInteractionMode(interactionMode==='pan'?'rotate':'pan');
 $('#flyViewBtn').onclick=()=>setFlyMode(!flyMode);
 $('#fitViewBtn').onclick=fitToModel;
@@ -5593,21 +5671,55 @@ function showStartupError(error){
 }
 
 
+
+function isMobileViewerLayout(){return window.matchMedia('(max-width:1099px)').matches}
+function setMobileViewerOpen(open){
+  const on=!!open && isMobileViewerLayout();
+  document.body.classList.toggle('mobile-viewer-open', on);
+  const btn=$('#mobileViewerToggle'), hint=$('#mobileViewerHint');
+  if(btn){btn.setAttribute('aria-expanded', on?'true':'false')}
+  if(hint)hint.textContent=on?'Tap outside to collapse':'Expand';
+  requestAnimationFrame(()=>{try{resize()}catch(_e){}});
+  if(on) setTimeout(()=>{try{resize()}catch(_e){}}, 240);
+}
+function toggleMobileViewer(){setMobileViewerOpen(!document.body.classList.contains('mobile-viewer-open'))}
+function collapseMobileViewer(){if(document.body.classList.contains('mobile-viewer-open'))setMobileViewerOpen(false)}
+function initMobileViewerDock(){
+  const toggle=$('#mobileViewerToggle'), dock=$('#workspaceViewer');
+  if(toggle) toggle.onclick=(e)=>{e.stopPropagation();toggleMobileViewer()};
+  if(dock) dock.addEventListener('click', e=>{
+    if(!isMobileViewerLayout()||document.body.classList.contains('mobile-viewer-open'))return;
+    if(e.target.closest?.('#mobileViewerToggle'))return;
+    setMobileViewerOpen(true);
+  });
+  document.addEventListener('pointerdown', e=>{
+    if(!document.body.classList.contains('mobile-viewer-open')||!isMobileViewerLayout())return;
+    const t=e.target;
+    if(dock && dock.contains(t))return;
+    if(t.closest?.('.setup-wizard,.project-status-modal,.measure-keypad,.measure-keypad-backdrop,.pdf-view-selector,.pdf-busy'))return;
+    collapseMobileViewer();
+  }, true);
+  window.addEventListener('resize', ()=>{
+    if(!isMobileViewerLayout()) document.body.classList.remove('mobile-viewer-open');
+    else if(!document.body.classList.contains('mobile-viewer-open')){
+      const hint=$('#mobileViewerHint'); if(hint) hint.textContent='Expand';
+    }
+    requestAnimationFrame(()=>{try{resize()}catch(_e){}});
+  });
+}
+function initHelpToggle(){
+  const btn=$('#helpToggle'); if(!btn)return;
+  btn.onclick=()=>{
+    const on=document.body.classList.toggle('show-help');
+    btn.setAttribute('aria-pressed', on?'true':'false');
+    btn.textContent=on?'Help: ON':'Help';
+  };
+}
+
 function startIPhoneBuild(){
   const diagnostic=document.getElementById('jsDiagnostic');if(diagnostic)diagnostic.remove();
-  // UI playground: expand/collapse intro copy
-  try{
-    const intro=$('#introSub'),btn=$('#introToggle');
-    if(intro&&btn){
-      btn.onclick=()=>{
-        const open=intro.classList.toggle('collapsed')===false;
-        // classList.toggle returns true if class was added
-        const collapsed=intro.classList.contains('collapsed');
-        btn.setAttribute('aria-expanded',collapsed?'false':'true');
-        btn.textContent=collapsed?'Show more about this app':'Show less';
-      };
-    }
-  }catch(_e){}
+  try{initHelpToggle()}catch(_e){}
+  try{initMobileViewerDock()}catch(_e){}
   // Every fresh session begins with automatic spacing enabled. Saved projects
   // still restore their own saved Auto Space state when opened.
   autoSpaceActive=true;
