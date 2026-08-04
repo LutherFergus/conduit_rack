@@ -298,17 +298,17 @@ input:focus,select:focus{outline-color:#d97706}
   body.mobile-viewer-open .workspace-viewer .view-buttons{display:grid}
   body.mobile-viewer-open .workspace-viewer .view-toolbar-row .row-label{display:none}
   body.mobile-viewer-open .workspace-viewer .view-toolbar-row button{min-height:38px;min-width:0;padding:7px 9px;font-size:.82rem}
-  /* Scrim when expanded — tap outside collapses */
-  body.mobile-viewer-open::before{
-    content:"";
-    position:fixed;inset:0;z-index:840;
-    background:rgba(2,6,23,.42);
+  .mobile-viewer-scrim{
+    display:none;position:fixed;inset:0;z-index:840;
+    background:rgba(2,6,23,.42);border:0;padding:0;margin:0;cursor:pointer;
   }
+  body.mobile-viewer-open .mobile-viewer-scrim{display:block}
 }
 
 </style>
 </head>
 <body>
+<button type="button" class="mobile-viewer-scrim" id="mobileViewerScrim" aria-label="Collapse 3D viewer" tabindex="-1"></button>
 <div class="app">
 <header class="app-header" role="banner">
   <div class="app-header-inner">
@@ -5693,8 +5693,9 @@ function setMobileViewerOpen(open){
 function toggleMobileViewer(){setMobileViewerOpen(!document.body.classList.contains('mobile-viewer-open'))}
 function collapseMobileViewer(){if(document.body.classList.contains('mobile-viewer-open'))setMobileViewerOpen(false)}
 function initMobileViewerDock(){
-  const toggle=$('#mobileViewerToggle'), dock=$('#workspaceViewer');
+  const toggle=$('#mobileViewerToggle'), dock=$('#workspaceViewer'), scrim=$('#mobileViewerScrim');
   if(toggle) toggle.onclick=(e)=>{e.stopPropagation();toggleMobileViewer()};
+  if(scrim) scrim.onclick=(e)=>{e.preventDefault();collapseMobileViewer()};
   if(dock) dock.addEventListener('click', e=>{
     if(!isMobileViewerLayout()||document.body.classList.contains('mobile-viewer-open'))return;
     if(e.target.closest?.('#mobileViewerToggle'))return;
@@ -5704,7 +5705,8 @@ function initMobileViewerDock(){
     if(!document.body.classList.contains('mobile-viewer-open')||!isMobileViewerLayout())return;
     const t=e.target;
     if(dock && dock.contains(t))return;
-    if(t.closest?.('.setup-wizard,.project-status-modal,.measure-keypad,.measure-keypad-backdrop,.pdf-view-selector,.pdf-busy'))return;
+    if(t===scrim||t?.id==='mobileViewerScrim'){collapseMobileViewer();return}
+    if(t.closest?.('.setup-wizard,.project-status-modal,.measure-keypad,.measure-keypad-backdrop,.pdf-view-selector,.pdf-busy,#mobileViewerScrim'))return;
     collapseMobileViewer();
   }, true);
   window.addEventListener('resize', ()=>{
