@@ -237,7 +237,7 @@ input:focus,select:focus{outline-color:#f59e0b}
     </div>
     <div class="header-badges">
       <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
-      <span class="version-badge">PWA v1.65</span>
+      <span class="version-badge">PWA v1.66</span>
     </div>
   </div>
 </header>
@@ -1341,6 +1341,21 @@ function sectionGainFor(d){
   if(activeRackType==='segmented')return bendGainFor(d.size,d.bender,90,'outside');
   return 0;
 }
+function stickGainAllowance(d){
+  if(!d)return 0;
+  if(Number.isFinite(d.gain))return Math.max(0,d.gain);
+  return Math.max(0,sectionGainFor(d));
+}
+function maxStickLengthForConduit(d){
+  // Stick budget for Fault checks: start at 120", add OD gain for this size/bender,
+  // then shrink is already applied in kicked/offset/saddle layout before compare.
+  // A path may read past 120" once gain is counted; Fault only when past 120"+gain.
+  return STICK_LENGTH+stickGainAllowance(d);
+}
+function conduitExceedsStick(d,usedLength,stickBudget=null){
+  const budget=Number.isFinite(stickBudget)?stickBudget:maxStickLengthForConduit(d);
+  return Number.isFinite(usedLength)&&usedLength>budget+1e-6;
+}
 function trimModelAtPlane(model,planePoint,planeNormal,minKeepIndex=null){
   const pts=model?.points;if(!pts||pts.length<2)return 0;
   const endDistance=dot(vsub(pts.at(-1),planePoint),planeNormal);
@@ -1437,6 +1452,7 @@ function applyDoubleCtcFreeEndProgression(models,data=modelData){
   usable.forEach(m=>{
     const deltaPos=Math.abs((pos[m.index]||0)-outPos);
     // Outside = full stick; each CTC of rack width inward removes 2× that from stick.
+    // Cut/progression budget stays on 120"; Fault uses absolute 120"+gain only.
     const stickTarget=Math.max(0,STICK_LENGTH-2*deltaPos);
     const toBendEnd=pathLengthToFreeEndStart(m);
     const freeEnd=Math.max(0,stickTarget-toBendEnd);
@@ -1444,7 +1460,7 @@ function applyDoubleCtcFreeEndProgression(models,data=modelData){
     m.doubleCtcFreeEnd=true;
     m.stickLength=stickTarget;
     m.freeEndTarget=freeEnd;
-    m.overLength=toBendEnd>stickTarget+1e-6;
+    m.overLength=conduitExceedsStick(data[m.index],toBendEnd);
   });
   return models;
 }
@@ -1709,7 +1725,7 @@ function monitorAssembledGeometry(models,groups=null){
     return{ok:true,level:'ok',issues:[],summary:'No conduits modeled yet'};
   }
   list.forEach(m=>{
-    if(m.overLength)issues.push({level:'error',section:m.sectionIndex??0,conduit:m.index,message:`Conduit ${m.index+1} exceeds stick length in section ${(m.sectionIndex??0)+1}`});
+    if(m.overLength)issues.push({level:'error',section:m.sectionIndex??0,conduit:m.index,message:`Conduit ${m.index+1} exceeds stick length (120" + gain) in section ${(m.sectionIndex??0)+1}`});
     const pts=m.points||[];
     for(let i=1;i<pts.length;i++){
       if(Math.hypot(...vsub(pts[i],pts[i-1]))<1e-9){
@@ -3039,7 +3055,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:69,build:'PWA v1.65',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:69,build:'PWA v1.66',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4480,7 +4496,7 @@ function buildBasic90RackModels(){
     const points=[start];if(straight>1e-7)points.push(tangent);arc.slice(1).forEach(p=>points.push(p));
     const finalStraightStartIndex=points.length-1,used=polylineLength(points),remaining=Math.max(0,STICK_LENGTH-used);
     const end=points.at(-1);if(remaining>1e-7)points.push(vadd(end,vmul(turnBasis,remaining)));
-    return{index:i,points,radius:geo.od/2,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,rackType:'basic-90',startStraightEnd:tangent,startStraightEndIndex:1,finalStraightStartIndex,arcStart:tangent,back90:arc.at(-1),kickCenter:tangent,kickEnd:arc.at(-1),firstContactPlane:0,finalContactPlane:0,centerRise:0,length:polylineLength(points),requiredLength:back90,remainingStub:remaining,overLength:used>STICK_LENGTH+1e-7};
+    return{index:i,points,radius:geo.od/2,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,rackType:'basic-90',startStraightEnd:tangent,startStraightEndIndex:1,finalStraightStartIndex,arcStart:tangent,back90:arc.at(-1),kickCenter:tangent,kickEnd:arc.at(-1),firstContactPlane:0,finalContactPlane:0,centerRise:0,length:polylineLength(points),requiredLength:back90,remainingStub:remaining,overLength:conduitExceedsStick(d,used)};
   }).filter(Boolean);
   // 2×CTC free-end progression (outside longest 2nd leg). Trim mode squares later.
   return applyDoubleCtcFreeEndProgression(models,modelData);
@@ -4607,7 +4623,7 @@ function buildRackModels(){
       const end=pts[pts.length-1];
       if(remainingStub>1e-6)pts.push([end[0]+turnDir[0]*remainingStub,end[1],end[2]]);
       const totalLength=polylineLength(pts);
-      return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,kickPosition:'after',startPlaneY:baseY,finalPlaneY:finalCenterY,startStraightEnd:P90,startStraightEndIndex:pts.findIndex(p=>p===P90),finalStraightStartIndex:Math.max(0,pts.length-2),kickCenter:C,kickEnd:kickArc[kickArc.length-1],back90:final90,arcStart:P90,straightBefore90:Math.hypot(...vsub(kickStart,final90)),bendCenterTo90:Math.hypot(...vsub(C,final90)),firstContactPlane:0,finalContactPlane:secondContactPlane,centerRise,length:totalLength,requiredLength:developedToEndOfKick,remainingStub,overLength:developedToEndOfKick>STICK_LENGTH+1e-6};
+      return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,kickPosition:'after',startPlaneY:baseY,finalPlaneY:finalCenterY,startStraightEnd:P90,startStraightEndIndex:pts.findIndex(p=>p===P90),finalStraightStartIndex:Math.max(0,pts.length-2),kickCenter:C,kickEnd:kickArc[kickArc.length-1],back90:final90,arcStart:P90,straightBefore90:Math.hypot(...vsub(kickStart,final90)),bendCenterTo90:Math.hypot(...vsub(C,final90)),firstContactPlane:0,finalContactPlane:secondContactPlane,centerRise,length:totalLength,requiredLength:developedToEndOfKick,remainingStub,overLength:conduitExceedsStick(d,developedToEndOfKick)};
     }
     // KICK BEFORE 90 — align the kick centers across the rack by including
     // each conduit's exact shrink in the layout station. Since
@@ -4675,7 +4691,7 @@ function buildRackModels(){
     end[1]=finalCenterY;
     if(remainingStub>1e-6)pts.push([end[0]+turnDir[0]*remainingStub,finalCenterY,end[2]]);
     const totalLength=polylineLength(pts);
-    return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,startPlaneY:baseY,finalPlaneY:finalCenterY,startStraightEnd:kickStart,startStraightEndIndex:pts.findIndex(p=>p===kickStart),finalStraightStartIndex:Math.max(0,pts.length-2),kickCenter:C,kickEnd:kickArc[kickArc.length-1],back90:finalTangent,arcStart:P90,straightBefore90:Math.hypot(...vsub(P90,kickArc[kickArc.length-1])),bendCenterTo90:Math.hypot(...vsub(P90,C)),firstContactPlane:0,finalContactPlane:secondContactPlane,centerRise,length:totalLength,requiredLength:developedToEndOf90,remainingStub,overLength:developedToEndOf90>STICK_LENGTH+1e-6};
+    return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,startPlaneY:baseY,finalPlaneY:finalCenterY,startStraightEnd:kickStart,startStraightEndIndex:pts.findIndex(p=>p===kickStart),finalStraightStartIndex:Math.max(0,pts.length-2),kickCenter:C,kickEnd:kickArc[kickArc.length-1],back90:finalTangent,arcStart:P90,straightBefore90:Math.hypot(...vsub(P90,kickArc[kickArc.length-1])),bendCenterTo90:Math.hypot(...vsub(P90,C)),firstContactPlane:0,finalContactPlane:secondContactPlane,centerRise,length:totalLength,requiredLength:developedToEndOf90,remainingStub,overLength:conduitExceedsStick(d,developedToEndOf90)};
   }).filter(Boolean);
   // 2×CTC free-end progression (outside longest 2nd leg). Trim mode squares later.
   return applyDoubleCtcFreeEndProgression(modelsKicked,modelData);
