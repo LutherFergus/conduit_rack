@@ -1,3 +1,7 @@
+PWA v1.65 low-light night-shop theme
+
+v1.65: Replaced warm brown/copper “hot chocolate” UI with a cooler charcoal + steel-cyan palette for dim jobsite reading. Kept docked viewer and control layout.
+
 PWA v1.64e simplified UI + mobile docked viewer
 
 v1.64e: Expanding the mobile viewer auto-fits the rack (Fit button kept). Bend Type sits above Conduit Count; Conduit Count is placed under Bender Profile.
