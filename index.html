@@ -2674,7 +2674,7 @@ function fixAllCTCIssues(iteration=0,sectionIndex=isCustomRun?activeCustomSectio
 }
 
 let lastShownProjectErrorSignature='';
-function openProjectStatusModal(){const modal=$('#projectStatusModal');if(!modal)return;modal.classList.add('open');modal.setAttribute('aria-hidden','false');setTimeout(()=>$('#projectStatusClose')?.focus(),0)}
+function openProjectStatusModal(){const modal=$('#projectStatusModal');if(!modal)return;try{collapseMobileViewer()}catch(_e){}modal.classList.add('open');modal.setAttribute('aria-hidden','false');setTimeout(()=>$('#projectStatusClose')?.focus(),0)}
 function closeProjectStatusModal(){const modal=$('#projectStatusModal');if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
 function renderOffsetStatus(d){
   const full=rackModels.length,overlapRows=[],tightRows=[];
