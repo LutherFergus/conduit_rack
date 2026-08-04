@@ -266,17 +266,21 @@ input:focus,select:focus{outline-color:#d97706}
     max-height:calc(var(--mobile-viewer-peek) + env(safe-area-inset-bottom));
     overflow:hidden;
     transition:max-height .22s ease;
+    display:flex;flex-direction:column;gap:6px;
   }
   body.mobile-viewer-open .workspace-viewer .viewer-panel{
-    max-height:calc(var(--mobile-viewer-expanded) + 220px + env(safe-area-inset-bottom));
+    max-height:calc(var(--mobile-viewer-expanded) + 200px + env(safe-area-inset-bottom));
     overflow:auto;
     -webkit-overflow-scrolling:touch;
     padding-top:4px;
   }
-  .workspace-viewer .toolbar-title{display:none}
-  body.mobile-viewer-open .workspace-viewer .toolbar-title{display:flex;margin-bottom:6px}
-  .workspace-viewer .toolbar-title > div > h2{font-size:1.05rem}
-  .workspace-viewer .viewer-wrap{margin-top:0!important;border-radius:10px}
+  .workspace-viewer .viewer-wrap{order:1;margin-top:0!important;border-radius:10px}
+  .workspace-viewer .toolbar-title{order:2;display:none;margin:0}
+  body.mobile-viewer-open .workspace-viewer .toolbar-title{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+  .workspace-viewer .toolbar-title > div > h2{font-size:1rem;margin:0}
+  body.mobile-viewer-open .workspace-viewer .toolbar-title > div:first-child{display:none}
+  .workspace-viewer .section-selector{order:3}
+  .workspace-viewer .geometry-monitor{order:4}
   .workspace-viewer .viewer-wrap canvas{
     height:var(--mobile-viewer-peek);
     transition:height .22s ease;
@@ -284,12 +288,16 @@ input:focus,select:focus{outline-color:#d97706}
   body.mobile-viewer-open .workspace-viewer .viewer-wrap canvas{
     height:var(--mobile-viewer-expanded);
   }
+  .workspace-viewer .viewer-badge{display:none!important}
+  body.mobile-viewer-open .workspace-viewer .viewer-badge:not(.hidden){display:block!important}
   .workspace-viewer .section-selector,
   .workspace-viewer .geometry-monitor{display:none!important}
   body.mobile-viewer-open .workspace-viewer .section-selector:not(.hidden){display:flex!important}
   body.mobile-viewer-open .workspace-viewer .geometry-monitor{display:block!important}
   .workspace-viewer .view-buttons{display:none}
   body.mobile-viewer-open .workspace-viewer .view-buttons{display:grid}
+  body.mobile-viewer-open .workspace-viewer .view-toolbar-row .row-label{display:none}
+  body.mobile-viewer-open .workspace-viewer .view-toolbar-row button{min-height:38px;min-width:0;padding:7px 9px;font-size:.82rem}
   /* Scrim when expanded — tap outside collapses */
   body.mobile-viewer-open::before{
     content:"";
