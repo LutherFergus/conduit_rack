@@ -1,4 +1,6 @@
-PWA v1.63 no embedded Grok
+PWA v1.65 saddle crown square to plane
+
+v1.65: Standard/rolled saddle crowns (bends 2–3) are validated parallel to the supported run so the elevated flat stays square to the plane instead of reading as a continuation of the incline. Saddle isometric views prefer a near-elevation side angle so a level crown stays visually level. Mid-run level straights (saddle crowns) are valid strut stations again, with struts kept square to the support plane. v1.64: Rolled-offset mark stagger includes surface-gap×projection (with CTC×tan(θ/2)×|horiz|/TO) so rack-plane travel keeps OD skins clear. Collision checks use outer-skin clearance (centerline − rA − rB) with 1e-4" tolerance. When Auto Space is ON, swept OD collisions (rolled saddle pinch at non-corresponding stations, mixed-CLR 90/kick/segmented sweeps) automatically widen affected CTC like Fix CTC. Fixed populate*TestRack ternary bug that forced directions to defaults whenever randomize was false.
 
 v1.63: Removed in-app Grok chat, API key UI, and xAI proxy. App is local-first again. serve.py is a plain static file server only. Parallel offset mark progression restored to the established formula (see below).
 
