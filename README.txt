@@ -1,4 +1,6 @@
-PWA v1.63 no embedded Grok
+PWA v1.66 conduit math data audit
+
+v1.66: Audited bender shoe data against published charts. Corrected Klein 1" CLR (7.375), Milwaukee 3/4" & 1" CLR (5.25 / 6.5), Sidewinder EMT CLR/deduct (B2555 chart), table CLR for 3-1/2" & 4" (777/PVC family), and synced emtGeometry CLR fallbacks to default shoes. Added conduit-math-tests.cjs regression harness. Table deducts (18/21/24/27) remain flagged — they do not match Greenlee 881 Cam Track EMT deducts.
 
 v1.63: Removed in-app Grok chat, API key UI, and xAI proxy. App is local-first again. serve.py is a plain static file server only. Parallel offset mark progression restored to the established formula (see below).
 
