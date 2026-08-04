@@ -1,3 +1,7 @@
+PWA v1.64b simplified UI + mobile docked viewer
+
+v1.64b: Restored the second Test button on the 3D viewer toolbar (top-bar Test remains).
+
 PWA v1.64 simplified UI + mobile docked viewer
 
 v1.64: Simplified chrome (less helper text by default, Help toggle, quieter panels, grouped viewer toolbar). On mobile/tablet the 3D viewer is a persistent bottom dock: collapsed peek by default, expands in place, collapses when tapping outside the viewer (or when the keypad/wizard opens).
