@@ -318,7 +318,7 @@ input:focus,select:focus{outline-color:#d97706}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.67</span>
+      <span class="version-badge">PWA v1.68</span>
     </div>
   </div>
 </header>
@@ -3055,7 +3055,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:68,build:'PWA v1.67',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:69,build:'PWA v1.68',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -3846,11 +3846,41 @@ function traceProjected(points,blendPx=0,diameterPx=4,preserveGeometry=false){
   else{ctx.beginPath();p2.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));}
 }
 function drawTubeEnd(model,point,color,isCollision=false){
-  const r=canvas.getBoundingClientRect(),p=proj(point,r.width,r.height);
-  const pxPerInch=6*zoom,outer=Math.max(2.25,model.diameter*pxPerInch),wall=Math.max(1,(model.wall||.05)*pxPerInch);
-  ctx.save();ctx.translate(p[0],p[1]);ctx.scale(1,.42);
-  ctx.beginPath();ctx.arc(0,0,outer/2,0,Math.PI*2);ctx.fillStyle=isCollision?'#b91c1c':color;ctx.fill();
-  const inner=Math.max(0,outer/2-wall);if(inner>1){ctx.beginPath();ctx.arc(0,0,inner,0,Math.PI*2);ctx.fillStyle='#111827';ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.stroke()}
+  // Project the true open-end circle (plane ⊥ pipe tangent). The old fixed
+  // scale(1,.42) oval was always face-on to the screen, so head-on elevation
+  // views of vertical drops looked "rolled" toward the camera even when the
+  // centerline was square to the strut.
+  const pts=model?.points;if(!pts||pts.length<2||!point)return;
+  const atStart=Math.hypot(...vsub(point,pts[0]))<=Math.hypot(...vsub(point,pts.at(-1)));
+  const tangent=unit(atStart?vsub(pts[1],pts[0]):vsub(pts.at(-1),pts[pts.length-2]));
+  if(Math.hypot(...tangent)<1e-8)return;
+  let axisA=Math.abs(tangent[1])<.9?[0,1,0]:[1,0,0];
+  axisA=unit(vsub(axisA,vmul(tangent,dot(axisA,tangent))));
+  if(Math.hypot(...axisA)<1e-8)axisA=unit(cross3(tangent,Math.abs(tangent[0])<.9?[1,0,0]:[0,0,1]));
+  const axisB=unit(cross3(tangent,axisA));
+  const radius=model.diameter/2,r=canvas.getBoundingClientRect();
+  const c=proj(point,r.width,r.height);
+  const pa=proj(vadd(point,vmul(axisA,radius)),r.width,r.height);
+  const pb=proj(vadd(point,vmul(axisB,radius)),r.width,r.height);
+  const ax=[pa[0]-c[0],pa[1]-c[1]],bx=[pb[0]-c[0],pb[1]-c[1]];
+  const area=Math.abs(ax[0]*bx[1]-ax[1]*bx[0]);
+  // Edge-on (side elevation of a vertical/horizontal run): skip — round line caps
+  // already finish the silhouette. Drawing a face here invents a mouth aimed at
+  // the camera and reads as roll.
+  if(area<2.2)return;
+  const wall=Math.max(.08,(model.wall||.05)/(model.diameter||1));
+  ctx.save();
+  ctx.translate(c[0],c[1]);
+  ctx.transform(ax[0],ax[1],bx[0],bx[1],0,0);
+  ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);
+  ctx.fillStyle=isCollision?'#b91c1c':color;ctx.fill();
+  const inner=Math.max(0,1-wall*2);
+  if(inner>.12){
+    ctx.beginPath();ctx.arc(0,0,inner,0,Math.PI*2);
+    ctx.fillStyle='#111827';ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=Math.min(.08,.2/Math.max(1,Math.sqrt(area)));
+    ctx.stroke();
+  }
   ctx.restore();
 }
 function drawRenderedConduit(model,color,isCollision=false){
@@ -3862,15 +3892,18 @@ function drawRenderedConduit(model,color,isCollision=false){
   // Do not add a second cosmetic radius. The model points already represent
   // the true centerline radius selected for this conduit size, bender, and angle.
   const blendPx=0;
+  // Butt caps: round caps drew screen-space semicircles at every end that read
+  // as rolled tips in head-on elevation. Open ends are drawn by drawTubeEnd
+  // only when the bore faces the camera.
   traceProjected(model.points,blendPx,diameterPx,true);
   ctx.strokeStyle=isCollision?'#450a0a':'rgba(2,6,23,.98)';
   ctx.lineWidth=diameterPx+Math.max(2,diameterPx*.22);
-  ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+  ctx.lineJoin='round';ctx.lineCap='butt';ctx.stroke();
   traceProjected(model.points,blendPx,diameterPx,true);
-  ctx.strokeStyle=color;ctx.lineWidth=diameterPx;ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=diameterPx;ctx.lineCap='butt';ctx.stroke();
   traceProjected(model.points,blendPx,diameterPx,true);
   ctx.strokeStyle=isCollision?'rgba(254,202,202,.72)':'rgba(255,255,255,.42)';
-  ctx.lineWidth=Math.max(1,diameterPx*.19);ctx.stroke();
+  ctx.lineWidth=Math.max(1,diameterPx*.19);ctx.lineCap='butt';ctx.stroke();
   drawTubeEnd(model,model.points[0],color,isCollision);
   drawTubeEnd(model,model.points[model.points.length-1],color,isCollision);
 }
