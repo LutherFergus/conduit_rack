@@ -323,7 +323,7 @@ input:focus,select:focus{outline-color:#3ec4ff}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.65</span>
+      <span class="version-badge">PWA v1.65b</span>
     </div>
   </div>
 </header>
@@ -3444,13 +3444,25 @@ function restoreSectionViewport(anchor){
     if(Math.abs(delta)>.5)window.scrollBy({top:delta,left:0,behavior:'auto'});
   });
 }
-function selectCustomSection(index,focus=true,anchorMode='viewer',anchorElement=null){
+function scrollActiveSectionCardToTop(){
+  const card=$('#customSectionsAccordion details[open]')||$('#conduitLayoutPanel');
+  if(!card)return;
+  const pad=Math.max(10, (parseFloat(getComputedStyle(document.body).paddingTop)||0));
+  const top=card.getBoundingClientRect().top;
+  const delta=top-pad;
+  if(Math.abs(delta)>1)window.scrollBy({top:delta,left:0,behavior:'smooth'});
+}
+function selectCustomSection(index,focus=true,anchorMode='viewer',anchorElement=null,options={}){
   if(!isCustomRun||index<0||index>=customSections.length)return;
   const anchorTarget=anchorElement||(anchorMode==='section'
     ?$('#customSectionsAccordion details[open] summary')
     :$('#sectionSelector'));
-  const anchor=anchorTarget?{mode:anchorMode,top:anchorTarget.getBoundingClientRect().top}:null;
-  if(index===activeCustomSection){if(focus)focusSectionInViewer(index);return}
+  const anchor=options.skipViewportRestore?null:(anchorTarget?{mode:anchorMode,top:anchorTarget.getBoundingClientRect().top}:null);
+  if(index===activeCustomSection){
+    if(focus)focusSectionInViewer(index);
+    if(options.scrollToCard)requestAnimationFrame(()=>scrollActiveSectionCardToTop());
+    return;
+  }
   syncActiveCustomCalculatedState();
   activeCustomSection=index;
   const section=customSections[index];trimApplied=section.trimApplied===true;
@@ -3460,7 +3472,8 @@ function selectCustomSection(index,focus=true,anchorMode='viewer',anchorElement=
   rebuildCustomViewerModels();renderCustomNavigation();updateTrimButton();
   requestAnimationFrame(()=>{
     if(focus)focusSectionInViewer(index);
-    restoreSectionViewport(anchor);
+    if(anchor)restoreSectionViewport(anchor);
+    if(options.scrollToCard)requestAnimationFrame(()=>scrollActiveSectionCardToTop());
   });
 }
 function straightSectionProject(){
@@ -3473,13 +3486,19 @@ function straightSectionProject(){
 function addCustomSection(){
   rememberUndo('Add section');
   closeMeasureKeypad(true);
+  const keepViewerOpen=isMobileViewerLayout()&&document.body.classList.contains('mobile-viewer-open');
   if(!isCustomRun){
     customSections=[{project:baseProjectObject(),trimApplied,modelData:clonePlain(modelData),models:clonePlain(rackModels)}];
     isCustomRun=true;activeCustomSection=0;
   }else syncActiveCustomCalculatedState();
   customSections.push({project:straightSectionProject(),trimApplied:false,modelData:[],models:[]});
-  selectCustomSection(customSections.length-1,true);
-  window.scrollTo({top:0,behavior:'smooth'});
+  selectCustomSection(customSections.length-1,true,'section',null,{skipViewportRestore:true,scrollToCard:true});
+  // Keep the docked viewer expanded across the section rebuild.
+  if(keepViewerOpen){
+    requestAnimationFrame(()=>{
+      if(isMobileViewerLayout()) setMobileViewerOpen(true);
+    });
+  }
 }
 function exitCustomRun(){
   if(!isCustomRun)return;
@@ -5583,7 +5602,7 @@ if(projectStatusClose)projectStatusClose.addEventListener('click',event=>{event.
 if(projectStatusModal)projectStatusModal.addEventListener('click',event=>{if(event.target===projectStatusModal)closeProjectStatusModal()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&projectStatusModal?.classList.contains('open'))closeProjectStatusModal()});
 
-$('#buildBtn').onclick=()=>build(true);$('#addSectionBtn').onclick=addCustomSection;$('#trimModeBtn')?.addEventListener('click',toggleTrimMode);$('#trimRackBtn').onclick=()=>{if(trimModeActive||activeLayoutMode==='single'||(isCustomRun&&activeCustomSection!==customSections.length-1))return;rememberUndo('Trim section');trimApplied=true;recalc(0)};$('#undoBtn').onclick=undoLastEdit;$('#loadLastBtn').onclick=loadLast;$('#autoSpaceBtn').onclick=toggleAutoSpace;$('#randomRunTestBtn').onclick=realisticRandomRunTest;$('#offsetOalBtn').onclick=toggleRackOal;$('#saddleOalBtn').onclick=toggleRackOal;$('#clearBtn').onclick=()=>{if(isCustomRun)exitCustomRun();autoSpaceActive=true;showRackOal=false;trimApplied=true;trimModeActive=true;horizontalStrutSpacing=120;verticalStrutSpacing=240;strutOverrides=[];$('#horizontalStrutSpacing').value='120';$('#verticalStrutSpacing').value='240';updateAutoSpaceButton();updateOalVisibility();updateTrimModeButton();build(false);applyAllAutoSpacing();openSetupWizard()};$('#createPdfBtn').onclick=startPdfCaptureWorkflow;$('#rackDataToggle').onclick=()=>{const body=$('#rackDataBody'),panel=$('#rackDataPanel'),open=body.hasAttribute('hidden');if(open){body.removeAttribute('hidden');panel.classList.add('expanded')}else{body.setAttribute('hidden','');panel.classList.remove('expanded')}$('#rackDataToggle').setAttribute('aria-expanded',open?'true':'false')};$('#saveBtn').onclick=save;$('#loadBtn').onclick=()=>fileInput.click();fileInput.onchange=e=>{if(e.target.files[0])openFile(e.target.files[0]);e.target.value=''};$('#saveLocalBtn').onclick=saveLocalProject;$('#loadLocalBtn').onclick=loadLocalProject;$('#deleteLocalBtn').onclick=deleteLocalProject;$('#exportBackupBtn').onclick=()=>{const n=(localProjectName.value.trim()||'conduit-rack-project').replace(/[^a-z0-9_-]+/gi,'-');downloadProject(projectObject(),n+'.json')};localProjectList.onchange=()=>{const item=readLocalIndex().find(x=>x.id===localProjectList.value);if(item)localProjectName.value=item.name};
+$('#buildBtn').onclick=()=>build(true);$('#addSectionBtn').onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();addCustomSection()};$('#trimModeBtn')?.addEventListener('click',toggleTrimMode);$('#trimRackBtn').onclick=()=>{if(trimModeActive||activeLayoutMode==='single'||(isCustomRun&&activeCustomSection!==customSections.length-1))return;rememberUndo('Trim section');trimApplied=true;recalc(0)};$('#undoBtn').onclick=undoLastEdit;$('#loadLastBtn').onclick=loadLast;$('#autoSpaceBtn').onclick=toggleAutoSpace;$('#randomRunTestBtn').onclick=realisticRandomRunTest;$('#offsetOalBtn').onclick=toggleRackOal;$('#saddleOalBtn').onclick=toggleRackOal;$('#clearBtn').onclick=()=>{if(isCustomRun)exitCustomRun();autoSpaceActive=true;showRackOal=false;trimApplied=true;trimModeActive=true;horizontalStrutSpacing=120;verticalStrutSpacing=240;strutOverrides=[];$('#horizontalStrutSpacing').value='120';$('#verticalStrutSpacing').value='240';updateAutoSpaceButton();updateOalVisibility();updateTrimModeButton();build(false);applyAllAutoSpacing();openSetupWizard()};$('#createPdfBtn').onclick=startPdfCaptureWorkflow;$('#rackDataToggle').onclick=()=>{const body=$('#rackDataBody'),panel=$('#rackDataPanel'),open=body.hasAttribute('hidden');if(open){body.removeAttribute('hidden');panel.classList.add('expanded')}else{body.setAttribute('hidden','');panel.classList.remove('expanded')}$('#rackDataToggle').setAttribute('aria-expanded',open?'true':'false')};$('#saveBtn').onclick=save;$('#loadBtn').onclick=()=>fileInput.click();fileInput.onchange=e=>{if(e.target.files[0])openFile(e.target.files[0]);e.target.value=''};$('#saveLocalBtn').onclick=saveLocalProject;$('#loadLocalBtn').onclick=loadLocalProject;$('#deleteLocalBtn').onclick=deleteLocalProject;$('#exportBackupBtn').onclick=()=>{const n=(localProjectName.value.trim()||'conduit-rack-project').replace(/[^a-z0-9_-]+/gi,'-');downloadProject(projectObject(),n+'.json')};localProjectList.onchange=()=>{const item=readLocalIndex().find(x=>x.id===localProjectList.value);if(item)localProjectName.value=item.name};
 $('#redoBtn').onclick=redoLastEdit;
 $('#strutScheduleDetails > summary').addEventListener('click',e=>{
   e.preventDefault();

@@ -1,3 +1,7 @@
+PWA v1.65b low-light night-shop theme
+
+v1.65b: Add Section scrolls to the new section’s conduit card and keeps the mobile viewer expanded if it was already open.
+
 PWA v1.65 low-light night-shop theme
 
 v1.65: Replaced warm brown/copper “hot chocolate” UI with a cooler charcoal + steel-cyan palette for dim jobsite reading. Kept docked viewer and control layout.
