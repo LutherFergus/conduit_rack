@@ -3011,15 +3011,16 @@ function realisticRandomRunTest(){
       p.saddleVerticalDirection=Math.random()<.5?'up':'down';
       p.saddleHorizontalDirection=Math.random()<.5?'left':'right';
       const angle=threePoint?randomChoice([15,22.5,30]):randomChoice(anglePool);
+      const rolled=p.saddleType==='rolled';
       p.rows=p.rows.map((r,i)=>({...r,
-        critical:i===0?fmtR(q(20,40)):'',
+        critical:i===0?fmtR(rolled?q(45,70):q(20,40)):'',
         oal:i===0?fmtR(q(108,134)):'',
         rise:i===0?fmtR(q(4,10)):'',
-        offsetDistance:p.saddleType==='rolled'&&i===0?fmtR(q(4,10)):'',
+        offsetDistance:rolled&&i===0?fmtR(q(4,10)):'',
         bendAngle:i===0?String(angle):'',
         middleDistance:threePoint?'':(i===0?fmtR(q(9,24)):''),
         secondRise:p.saddleOffsetRelation==='different'&&i===0?fmtR(q(4,10)):'',
-        secondOffsetDistance:p.saddleType==='rolled'&&p.saddleOffsetRelation==='different'&&i===0?fmtR(q(4,10)):''
+        secondOffsetDistance:rolled&&p.saddleOffsetRelation==='different'&&i===0?fmtR(q(4,10)):''
       }));
       return p;
     }
