@@ -3256,6 +3256,9 @@ function applyProject(p){
   saddleOffsetRelation=p.saddleOffsetRelation==='different'?'different':'same';
   saddleVerticalDirection=p.saddleVerticalDirection==='down'?'down':'up';
   saddleHorizontalDirection=p.saddleHorizontalDirection==='left'?'left':'right';
+  if(p.rackType==='saddle'&&p.saddleType==='rolled'){
+    saddleOffsetRelation='same';saddleVerticalDirection='up';saddleHorizontalDirection='right';
+  }
   segmentedReferenceMode=p.segmentedReferenceMode==='start'?'start':'back';
   segmentedTurnDirection=p.segmentedTurnDirection==='right'?'right':'left';
   basic90Direction=['up','right','left','down'].includes(p.basic90Direction)?p.basic90Direction:(p.turnDirection==='right'?'right':'left');
