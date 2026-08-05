@@ -2330,7 +2330,7 @@ function recalcSaddle(){
     if(saddleOffsetRelation==='different'&&rolled&&secondOffsetDistance==null)need.push('Enter second offset distance in any row');
     if(mark1!=null&&tangentSetback!=null&&mark1<=tangentSetback)need.push('Bend 1 is too close to the conduit end for the selected bender radius');
     if(threePoint){
-      if(critical!=null&&travel1!=null&&critical<=travel1)need.push('Center of saddle must be after Bend 1 (greater than first travel)');
+      if(mark2!=null&&travel1!=null&&mark2<=travel1)need.push('Center of saddle (plus shrink) must leave room for Bend 1');
       if(travel1!=null&&tangentSetback!=null&&centerSetback!=null&&travel1<=tangentSetback+centerSetback)need.push('First leg is too small for the selected radius and angle');
       if(travel2!=null&&tangentSetback!=null&&centerSetback!=null&&travel2<=tangentSetback+centerSetback)need.push('Second leg is too small for the selected radius and angle');
       if(showRackOal&&mark3!=null&&oal!=null&&mark3>=oal)need.push('Bend 3 must be before OAL');
