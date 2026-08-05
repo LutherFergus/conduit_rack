@@ -325,7 +325,7 @@ input:focus,select:focus{outline-color:#3ec4ff}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.74</span>
+      <span class="version-badge">PWA v1.75</span>
     </div>
   </div>
 </header>
@@ -776,7 +776,9 @@ function updateRackModeUI(){
     formulaGrid.innerHTML=isSegmented
       ?'<div class="formula-item"><strong>Developed Arc</strong><div class="formula-equation">Radius × π ÷ 2</div></div><div class="formula-item"><strong>Shot Angle</strong><div class="formula-equation">90° ÷ 9 = 10°</div></div><div class="formula-item"><strong>Mark Spacing</strong><div class="formula-equation">Developed Arc ÷ 9</div></div>'
       :isSaddle
-      ?'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>'
+      ?(isThreePointSaddle()
+        ?'<div class="formula-item"><strong>Angle Set</strong><div class="formula-equation">θ · 2θ · θ (e.g. 15-30-15)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">Offset ÷ sin(θ)</div></div><div class="formula-item"><strong>Shrink per Leg</strong><div class="formula-equation">Offset × tan(θ ÷ 2)</div></div>'
+        :'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>')
       :isOffset
       ?'<div class="formula-item"><strong>True Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">True Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">True Offset × tan(Bend Angle ÷ 2)</div></div>'
       :'<div class="formula-item"><div class="formula-equation">Angle = sin⁻¹(Rise ÷ Hypotenuse)</div></div><div class="formula-item"><div class="formula-equation">Shrink Constant = tan(Angle ÷ 2)</div></div><div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>';
@@ -1034,6 +1036,29 @@ function dataBackOf90(d){if(!d)return null;if(d.bon!=null&&d.bon!=='')return d.b
 function dataFinishedOal(d){if(!d)return null;return d.oal}
 
 function sizes(sel=''){return['','1/2"','3/4"','1"','1-1/4"','1-1/2"','2"','2-1/2"','3"','3-1/2"','4"'].map(v=>`<option value='${v}' ${v===sel?'selected':''}>${v||'Select'}</option>`).join('')}
+// Standard 3-point saddle angle sets: outer · center (2×outer) · outer.
+const threePointAnglePresets=[['5','5-10-5'],['10','10-20-10'],['15','15-30-15'],['22.5','22.5-45-22.5'],['30','30-60-30']];
+function normalizeThreePointAngle(sel=''){
+  const n=parseM(sel);
+  if(n==null)return '';
+  const match=threePointAnglePresets.find(([v])=>Math.abs(Number(v)-n)<1e-9);
+  return match?match[0]:'';
+}
+function threePointAngleOptions(sel=''){
+  const use=normalizeThreePointAngle(sel);
+  return `<option value="">Select</option>`+threePointAnglePresets.map(([v,label])=>`<option value="${v}" ${v===use?'selected':''}>${label}</option>`).join('');
+}
+function threePointAngleLabel(angle){
+  if(angle==null||!isFinite(angle))return'—';
+  const match=threePointAnglePresets.find(([v])=>Math.abs(Number(v)-angle)<1e-9);
+  return match?match[1]:`${Number(angle)}-${Number(angle)*2}-${Number(angle)}`;
+}
+function bendAngleControlMarkup(r){
+  const autoClass=r.autoBendAngle?'auto-filled':'';
+  const autoAttr=r.autoBendAngle?'1':'0';
+  if(isThreePointSaddle())return `<select class="bend-angle ${autoClass}" data-auto="${autoAttr}">${threePointAngleOptions(r.bendAngle||'')}</select>`;
+  return `<input class="bend-angle ${autoClass}" data-auto="${autoAttr}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 30">`;
+}
 // EMT outside diameters in inches. These values must match the rendered EMT solids.
 const emtOD={'1/2"':.706,'3/4"':.922,'1"':1.163,'1-1/4"':1.510,'1-1/2"':1.740,'2"':2.197,'2-1/2"':2.875,'3"':3.500,'3-1/2"':4.000,'4"':4.500};
 // Bender profiles control the modeled centerline radius and the minimum usable
@@ -1952,12 +1977,15 @@ function buildOffsetTable(old,n){
 }
 function buildSaddleTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
-  const criticalLabel=isThreePointSaddle()?'To Center of Saddle':'To Bend 1';
-  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center</th><th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>First Offset</th><th class="saddle-roll-col">First Offset Distance</th><th>Bend Angle</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th>First Offset</th><th>Between Points 1 &amp; 2</th><th>First Shrink</th><th>Second Offset</th><th class="saddle-travel2-label">Between Points 3 &amp; 4</th><th>Second Shrink</th><th>Bend 1</th><th>Bend 2</th><th>Bend 3</th><th class="saddle-four-only">Bend 4</th><th>Missing / Needed</th>`;
+  const threePoint=isThreePointSaddle();
+  const criticalLabel=threePoint?'To Center of Saddle':'To Bend 1';
+  const angleHead=threePoint?'Bend Angles<br><small>outer-center-outer</small>':'Bend Angle';
+  const angleLabel=threePoint?'Bend Angles':'Bend Angle';
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center</th><th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>First Offset</th><th class="saddle-roll-col">First Offset Distance</th><th>${angleHead}</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th>First Offset</th><th>Between Points 1 &amp; 2</th><th>First Shrink</th><th>Second Offset</th><th class="saddle-travel2-label">Between Points 3 &amp; 4</th><th>Second Shrink</th><th>Bend 1</th><th>Bend 2</th><th>Bend 3</th><th class="saddle-four-only">Bend 4</th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
-    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td><td class="input-cell" data-label="Center to Center"><input class="cc" type="text" ${i===0?'disabled':''} placeholder="${i===0?'—':'e.g. 2-1/2'}" value="${r.cc||''}"></td><td class="input-cell" data-label="${criticalLabel}"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="First Offset"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 6"></td><td class="input-cell saddle-roll-col" data-label="First Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="Bend Angle"><input class="bend-angle ${r.autoBendAngle?'auto-filled':''}" data-auto="${r.autoBendAngle?'1':'0'}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 30"></td><td class="input-cell saddle-four-only" data-label="Bend 2 to Bend 3"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 12"></td><td class="input-cell saddle-second-col" data-label="Second Rise"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 8"></td><td class="input-cell saddle-second-roll-col" data-label="Second Offset Distance"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 10"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1" data-label="First Offset">—</td><td class="output result-cell travel-1" data-label="Between Points 1 & 2">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell true-offset-2" data-label="Second Offset">—</td><td class="output result-cell travel-2" data-label="Between Points 2 & 3">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell mark-1" data-label="Bend 1 Mark">—</td><td class="output result-cell mark-2" data-label="Bend 2 Mark">—</td><td class="output result-cell mark-3" data-label="Bend 3 Mark">—</td><td class="output result-cell mark-4 saddle-four-only" data-label="Bend 4 Mark">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td><td class="input-cell" data-label="Center to Center"><input class="cc" type="text" ${i===0?'disabled':''} placeholder="${i===0?'—':'e.g. 2-1/2'}" value="${r.cc||''}"></td><td class="input-cell" data-label="${criticalLabel}"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="First Offset"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 6"></td><td class="input-cell saddle-roll-col" data-label="First Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="${angleLabel}">${bendAngleControlMarkup(r)}</td><td class="input-cell saddle-four-only" data-label="Bend 2 to Bend 3"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 12"></td><td class="input-cell saddle-second-col" data-label="Second Rise"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 8"></td><td class="input-cell saddle-second-roll-col" data-label="Second Offset Distance"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 10"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1" data-label="First Offset">—</td><td class="output result-cell travel-1" data-label="Between Points 1 & 2">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell true-offset-2" data-label="Second Offset">—</td><td class="output result-cell travel-2" data-label="Between Points 2 & 3">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell mark-1" data-label="Bend 1 Mark">—</td><td class="output result-cell mark-2" data-label="Bend 2 Mark">—</td><td class="output result-cell mark-3" data-label="Bend 3 Mark">—</td><td class="output result-cell mark-4 saddle-four-only" data-label="Bend 4 Mark">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
   }
   $$('.saddle-roll-col').forEach(el=>el.classList.toggle('hidden',!isRolledSaddle()));
@@ -2178,7 +2206,11 @@ function setOffsetFieldFromAnchor(trs,field,anchor,transform=(value)=>value,attr
   trs.forEach((tr,i)=>{
     const el=tr.querySelector('.'+field);if(!el)return;
     const value=transform(anchor.value,i,anchor.index);
-    el.value=fmtInput(value);
+    // Select controls (3-point angle presets) need the raw option value, not fraction formatting.
+    if(el instanceof HTMLSelectElement){
+      const optionValue=field==='bend-angle'&&isThreePointSaddle()?normalizeThreePointAngle(value):String(value);
+      el.value=optionValue;
+    }else el.value=fmtInput(value);
     const isAnchor=i===anchor.index;
     el.dataset[attr]=isAnchor?'0':'1';
     el.classList.toggle('auto-filled',!isAnchor);
@@ -2240,8 +2272,8 @@ function recalcSaddle(){
     const need=[];
     if(!size)need.push('Select conduit size');if(critical==null)need.push(threePoint?'Enter To Center of Saddle in any row':'Enter To Bend 1 in any row');if(showRackOal&&oal==null)need.push('Enter OAL (finished A to B) in any row');
     if(rise==null)need.push('Enter first offset in any row');if(rolled&&offsetDistance==null)need.push('Enter first offset distance in any row');
-    if(angle==null)need.push('Enter bend angle in any row');
-    else if(!validAngle)need.push(threePoint?'Bend angle must be greater than 0° and less than 45° (center bend is double)':'Bend angle must be greater than 0° and less than 90°');
+    if(angle==null)need.push(threePoint?'Select bend angles (e.g. 15-30-15) in any row':'Enter bend angle in any row');
+    else if(!validAngle)need.push(threePoint?'Select a standard 3-point angle set (outer must be under 45°)':'Bend angle must be greater than 0° and less than 90°');
     if(!threePoint&&middleDistance==null)need.push('Enter Bend 2 to Bend 3 distance in any row');
     if(saddleOffsetRelation==='different'&&secondRise==null)need.push('Enter second rise in any row');
     if(saddleOffsetRelation==='different'&&rolled&&secondOffsetDistance==null)need.push('Enter second offset distance in any row');
@@ -2976,7 +3008,7 @@ function realisticRandomRunTest(){
       p.saddleOffsetRelation=Math.random()<.6?'same':'different';
       p.saddleVerticalDirection=Math.random()<.5?'up':'down';
       p.saddleHorizontalDirection=Math.random()<.5?'left':'right';
-      const angle=threePoint?randomChoice([15,22.5,30]):randomChoice(anglePool);
+      const angle=threePoint?randomChoice([5,10,15,22.5,30]):randomChoice(anglePool);
       p.rows=p.rows.map((r,i)=>({...r,
         critical:i===0?fmtR(q(20,40)):'',
         oal:i===0?fmtR(q(108,134)):'',
@@ -3073,7 +3105,10 @@ function populateSaddleTestRack(randomize=false){
   const first=trs[0];if(first){
     first.querySelector('.critical').value=randomize?fmt16Input(18+Math.round(Math.random()*32)/4):'24';first.querySelector('.oal').value=randomize?'120':'120';first.querySelector('.rise').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
     if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
-    first.querySelector('.bend-angle').value=randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30';first.querySelector('.middle-distance').value=randomize?fmt16Input(8+Math.round(Math.random()*28)/4):'12';
+    first.querySelector('.bend-angle').value=isThreePointSaddle()
+      ?(randomize?['5','10','15','22.5','30'][Math.floor(Math.random()*5)]:'15')
+      :(randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30');
+    if(first.querySelector('.middle-distance'))first.querySelector('.middle-distance').value=randomize?fmt16Input(8+Math.round(Math.random()*28)/4):'12';
     if(saddleOffsetRelation==='different'){first.querySelector('.second-rise').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8';if(first.querySelector('.second-offset-distance'))first.querySelector('.second-offset-distance').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8'}
   }
   refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
@@ -3118,7 +3153,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:75,build:'PWA v1.74',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:76,build:'PWA v1.75',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -3175,7 +3210,13 @@ function applyProject(p){
       if(x.autoSegmentedMeasurement){const e=tr.querySelector('.segmented-measurement');e.dataset.auto='1';e.classList.add('auto-filled')}
       if(x.autoDesiredRadius){const e=tr.querySelector('.desired-radius');e.dataset.auto='1';e.classList.add('auto-filled')}
     }else if(activeRackType==='saddle'){
-      ['critical','oal','rise','offset-distance','bend-angle','middle-distance','second-rise','second-offset-distance'].forEach(field=>{const e=tr.querySelector('.'+field);if(!e)return;const key=field.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());e.value=x[key]||''});
+      ['critical','oal','rise','offset-distance','bend-angle','middle-distance','second-rise','second-offset-distance'].forEach(field=>{
+        const e=tr.querySelector('.'+field);if(!e)return;
+        const key=field.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());
+        let val=x[key]||'';
+        if(field==='bend-angle'&&e instanceof HTMLSelectElement)val=normalizeThreePointAngle(val);
+        e.value=val;
+      });
       [['critical','autoCritical','auto'],['oal','autoOal','auto'],['rise','autoRise','autoRise'],['offset-distance','autoOffsetDistance','auto'],['bend-angle','autoBendAngle','auto'],['middle-distance','autoMiddleDistance','auto'],['second-rise','autoSecondRise','auto'],['second-offset-distance','autoSecondOffsetDistance','auto']].forEach(([field,key,attr])=>{const e=tr.querySelector('.'+field);if(e&&x[key]){e.dataset[attr]='1';e.classList.add('auto-filled')}});
     }else if(activeRackType==='offset'){
       tr.querySelector('.critical').value=x.critical||'';
@@ -5845,12 +5886,15 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
     const reportRows=rows.map((row,i)=>{
       const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);
       const marks=d.mark1==null?'—':(threePoint?`${fmt16(d.mark1)} · ${fmt16(d.mark2)} · ${fmt16(d.mark3)}`:`${fmt16(d.mark1)} · ${fmt16(d.mark2)} · ${fmt16(d.mark3)} · ${fmt16(d.mark4)}`);
-      return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.rise),pdfDisplayValue(row.offsetDistance),pdfDisplayValue(row.secondRise),pdfDisplayValue(row.secondOffsetDistance),d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°',threePoint?null:(d.middleDistance==null?pdfDisplayValue(row.middleDistance):fmt16(d.middleDistance)),marks].filter(v=>v!==null)};
+      const angleText=threePoint
+        ?(d.angle==null?pdfDisplayValue(row.bendAngle):threePointAngleLabel(d.angle))
+        :(d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°');
+      return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.rise),pdfDisplayValue(row.offsetDistance),pdfDisplayValue(row.secondRise),pdfDisplayValue(row.secondOffsetDistance),angleText,threePoint?null:(d.middleDistance==null?pdfDisplayValue(row.middleDistance):fmt16(d.middleDistance)),marks].filter(v=>v!==null)};
     });
     const saddleSettings=threePoint
       ?[['Conduits',countText],['Saddle Direction',project.saddleVerticalDirection==='down'?'Down':'Up']]
       :[['Conduits',countText],['Offsets',project.saddleOffsetRelation==='different'?'Both Different':'Both Same'],['Offset Direction',project.saddleVerticalDirection==='down'?'Down First':'Up First'],['Horizontal',project.saddleType==='rolled'?(project.saddleHorizontalDirection==='left'?'Left First':'Right First'):(saddleTypes[project.saddleType]?.label||'4 Point Saddle')]];
-    return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'First Offset','Offset Distance 1','Rise 2','Offset Distance 2','Angle',...(threePoint?[]:['B2–B3']),threePoint?'Bend Marks 1 · 2 · 3':'Bend Marks 1 · 2 · 3 · 4'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),100,110,90,110,80,...(threePoint?[]:[100]),540],settings:[...sectionSettings,...saddleSettings]},reportRows};
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'First Offset','Offset Distance 1','Rise 2','Offset Distance 2',threePoint?'Angles':'Angle',...(threePoint?[]:['B2–B3']),threePoint?'Bend Marks 1 · 2 · 3':'Bend Marks 1 · 2 · 3 · 4'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),100,110,90,110,threePoint?110:80,...(threePoint?[]:[100]),540],settings:[...sectionSettings,...saddleSettings]},reportRows};
   }
   if(type==='offset'){
     const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size),isParallel=project.offsetType==='parallel';return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.critical),isParallel?'—':(d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise)),project.offsetType==='standard'?'—':(d.offsetDistance==null?pdfDisplayValue(row.offsetDistance):fmt16(d.offsetDistance)),d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°',d.trueOffset==null?'—':fmt16(d.trueOffset),d.travel==null?'—':fmt16(d.travel),d.shrink==null?'—':fmt16(d.shrink),isParallel?(d.gapAtOffsets==null?'—':fmt16(Math.max(0,d.gapAtOffsets))):null,d.firstMark==null?'—':`${fmt16(d.firstMark)} / ${fmt16(d.secondMark)}`].filter(v=>v!==null)}});
