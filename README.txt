@@ -1,5 +1,10 @@
 PWA v1.65b low-light night-shop theme
 
+PWA v1.74 3-point saddle center + direction
+
+v1.74: 3 Point Saddle critical measurement is To Center of Saddle (not To Bend 1). 3-point UI shows only Saddle Direction; Offset Heights / Vertical Direction / Offset Direction stay for 4-point saddles.
+
+
 v1.65b: Add Section scrolls to the new section’s conduit card and keeps the mobile viewer expanded if it was already open.
 
 PWA v1.65 low-light night-shop theme
