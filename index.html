@@ -325,7 +325,7 @@ input:focus,select:focus{outline-color:#3ec4ff}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.79</span>
+      <span class="version-badge">PWA v1.80</span>
     </div>
   </div>
 </header>
@@ -765,7 +765,7 @@ function updateRackModeUI(){
     ?(isThreePointSaddle()
       ?'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains three true circular bends (outer angle and a doubled center bend) with parallel supported runs at both struts.'
       :isRolledSaddle()
-        ?'Rolled 4 Point: roll out, run along the parallel conduit, roll back to the same wall plane. Hyp1 from start→object plane; Hyp2 from object→finish plane. Default bend 30° (editable).'
+        ?'Rolled 4 Point: opposite wings. Roll an offset out, run along the parallel conduit, roll back to the same wall plane. Wing opening = cos⁻¹(oh/Hyp2)+cos⁻¹(oh/Hyp1). Default bend 30°.'
         :'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains four true circular bends, a straight saddle top between bends two and three, and parallel supported runs at both struts.')
     :isOffset
     ?'Rendered EMT uses actual outside diameter and the selected bender radius. Orange and purple struts support the parallel starting and ending runs. Standard, Parallel, and Rolled modes use the same two-bend geometry and collision engine.'
@@ -2238,21 +2238,24 @@ function recalcSaddle(){
     const validAngle=angle!=null&&angle>0&&angle<(threePoint?45:90),theta=validAngle?angle*Math.PI/180:null;
     let trueOffset1,trueOffset2,travel1,travel2,shrink1,shrink2,offsetDistance,secondOffsetDistance,perpAngle1,perpAngle2,rollOut,rollBack;
     if(rolled){
-      // Hyp1 = start plane → object plane (marks 1→2). Hyp2 = object plane → finish plane (marks 3→4).
-      // Default bend 30°. Roll out = sin⁻¹(oh/Hyp1). Roll back = cos⁻¹(oh/Hyp2)+cos⁻¹(oh/Hyp1).
+      // Hyp1 = start→object plane (marks 1→2). Hyp2 = object→finish (marks 3→4).
+      // Roll out = sin⁻¹(oh/Hyp1). Wing opening / roll back = cos⁻¹(oh/Hyp2)+cos⁻¹(oh/Hyp1).
+      // Path: opposite wings ±α from vertical (roll out, run along, roll back).
       travel1=hyp1In;travel2=hyp2In;
+      const oh1=rise!=null?Math.abs(rise):null,oh2=secondRise!=null?Math.abs(secondRise):null;
+      const hypOk1=hyp1In!=null&&oh1!=null&&Math.abs(hyp1In)+1e-12>=oh1&&Math.abs(hyp1In)>1e-12;
+      const hypOk2=hyp2In!=null&&oh2!=null&&Math.abs(hyp2In)+1e-12>=oh2&&Math.abs(hyp2In)>1e-12;
+      const a1=hypOk1?Math.asin(oh1/Math.abs(hyp1In)):null;
+      const a2=hypOk2?Math.asin(oh2/Math.abs(hyp2In)):null;
       const compound1=travel1!=null&&theta?Math.abs(travel1)*Math.sin(theta):null;
       const compound2=travel2!=null&&theta?Math.abs(travel2)*Math.sin(theta):null;
-      const oh1=rise!=null?Math.abs(rise):null,oh2=secondRise!=null?Math.abs(secondRise):null;
-      offsetDistance=compound1!=null&&oh1!=null&&compound1+1e-12>=oh1?Math.sqrt(Math.max(0,compound1*compound1-oh1*oh1)):null;
-      secondOffsetDistance=compound2!=null&&oh2!=null&&compound2+1e-12>=oh2?Math.sqrt(Math.max(0,compound2*compound2-oh2*oh2)):null;
+      offsetDistance=compound1!=null&&a1!=null?compound1*Math.sin(a1):null;
+      secondOffsetDistance=compound2!=null&&a2!=null?compound2*Math.sin(a2):null;
       trueOffset1=compound1;trueOffset2=compound2;
       shrink1=trueOffset1!=null&&theta?trueOffset1*Math.tan(theta/2):null;
       shrink2=trueOffset2!=null&&theta?trueOffset2*Math.tan(theta/2):null;
-      const hypOk1=hyp1In!=null&&oh1!=null&&Math.abs(hyp1In)+1e-12>=oh1&&Math.abs(hyp1In)>1e-12;
-      const hypOk2=hyp2In!=null&&oh2!=null&&Math.abs(hyp2In)+1e-12>=oh2&&Math.abs(hyp2In)>1e-12;
-      rollOut=hypOk1?Math.asin(oh1/Math.abs(hyp1In))*180/Math.PI:null;
-      rollBack=hypOk1&&hypOk2?(Math.acos(oh2/Math.abs(hyp2In))+Math.acos(oh1/Math.abs(hyp1In)))*180/Math.PI:null;
+      rollOut=a1!=null?a1*180/Math.PI:null;
+      rollBack=a1!=null&&a2!=null?(Math.PI-a1-a2)*180/Math.PI:null;
       perpAngle1=rollOut;perpAngle2=rollBack;
     }else{
       offsetDistance=0;secondOffsetDistance=0;
@@ -2307,15 +2310,13 @@ function recalcSaddle(){
     if(rolled&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)+1e-12<Math.abs(rise))need.push('Start→object (Hyp1) must be ≥ oh');
     if(angle==null)need.push('Enter bend angle in any row');
     else if(!validAngle)need.push(threePoint?'Bend angle must be greater than 0° and less than 45° (center bend is double)':'Bend angle must be greater than 0° and less than 90°');
-    if(rolled&&theta&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)*Math.sin(theta)+1e-12<Math.abs(rise))need.push('Bend angle too shallow for oh — Hyp1·sin(θ) must be ≥ oh');
     if(!threePoint&&middleDistance==null)need.push(rolled?'Enter run-along beside the conduit (B2–B3) in any row':'Enter Bend 2 to Bend 3 distance in any row');
     if(saddleOffsetRelation==='different'&&secondRise==null)need.push(rolled?'Enter far-side offset height in any row':'Enter second rise in any row');
     if(saddleOffsetRelation==='different'&&rolled&&hyp2In==null)need.push('Enter object→finish plane distance (Hyp2) in any row');
     if(saddleOffsetRelation==='different'&&rolled&&hyp2In!=null&&secondRise!=null&&Math.abs(hyp2In)+1e-12<Math.abs(secondRise))need.push('Object→finish (Hyp2) must be ≥ far-side oh');
-    if(saddleOffsetRelation==='different'&&rolled&&theta&&hyp2In!=null&&secondRise!=null&&Math.abs(hyp2In)*Math.sin(theta)+1e-12<Math.abs(secondRise))need.push('Bend angle too shallow for far-side oh — Hyp2·sin(θ) must be ≥ oh');
     if(mark1!=null&&mark1<=0)need.push('Bend 1 must be after the stub end');
     if(mark1!=null&&tangentSetback!=null&&mark1<=tangentSetback)need.push('Bend 1 is too close to the conduit end for the selected bender radius');
-    if(rolled&&offsetDistance==null&&hyp1In!=null&&rise!=null&&theta&&Math.abs(hyp1In)*Math.sin(theta)+1e-12>=Math.abs(rise))need.push('Could not derive lateral bump-out from Hyp1, oh, and bend angle');
+    if(rolled&&(offsetDistance==null||secondOffsetDistance==null)&&hyp1In!=null&&rise!=null&&theta)need.push('Could not build wing directions from Hyp, oh, and bend angle');
     if(threePoint){
       if(travel1!=null&&tangentSetback!=null&&centerSetback!=null&&travel1<=tangentSetback+centerSetback)need.push('First leg is too small for the selected radius and angle');
       if(travel2!=null&&tangentSetback!=null&&centerSetback!=null&&travel2<=tangentSetback+centerSetback)need.push('Second leg is too small for the selected radius and angle');
@@ -2825,7 +2826,7 @@ function renderSaddleStatus(d){
   const bendHelp=isThreePointSaddle()
     ?'Each solved conduit contains three circular bends: two outer bends and a doubled center bend.'
     :isRolledSaddle()
-      ?'Pass a parallel conduit: roll out, run along its side, roll back to the same wall plane. Hyp1 = start→object plane; Hyp2 = object→finish plane. Bend defaults to 30°.'
+      ?'Pass a parallel conduit: opposite wings roll out and back. Hyp1 = start→object; Hyp2 = object→finish. Wing opening = roll back angle. Bend defaults to 30°.'
       :'Each solved conduit contains four circular bends and a straight section from Bend 2 to Bend 3.';
   const clearanceHelp=isThreePointSaddle()
     ?'Actual conduit ODs maintain the required clearance through all three bends and straight sections.'
@@ -2833,7 +2834,7 @@ function renderSaddleStatus(d){
   const markHelp=isThreePointSaddle()
     ?'<div class="status-card ok"><strong>All three bend marks are included</strong><div class="helper">Bend 2 is the doubled center bend. Bend 3 completes the return offset.</div></div>'
     :isRolledSaddle()
-      ?'<div class="status-card ok"><strong>Roll out, then roll back in</strong><div class="helper">Hyp1 from start→object plane; Hyp2 from object→finish. Roll out = sin⁻¹(oh/Hyp1). Roll back = cos⁻¹(oh/Hyp2)+cos⁻¹(oh/Hyp1). Bend defaults to 30° (editable).</div></div>'
+      ?'<div class="status-card ok"><strong>Wings spread opposite ways</strong><div class="helper">Roll out = sin⁻¹(oh/Hyp1). Wing opening / roll back = cos⁻¹(oh/Hyp2)+cos⁻¹(oh/Hyp1) (~151° when Hyp and oh match). Opposite wings return to the same wall plane.</div></div>'
       :'<div class="status-card ok"><strong>All four bend marks are included</strong><div class="helper">Bend 4 is calculated from the second true offset, selected bend angle, second travel, and the cumulative location established by Bends 1–3.</div></div>';
   const offsetHelp=isThreePointSaddle()
     ?'Bends 1–2 form the first leg. Bends 2–3 form the return leg through the doubled center bend.'
@@ -3197,7 +3198,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:80,build:'PWA v1.79',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:81,build:'PWA v1.80',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4595,35 +4596,42 @@ function buildStraightSaddleCenterlineYZ(d,clr,baseY,verticalSign){
   return{pts,a1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,startStraightEndIndex:Math.max(0,pts.indexOf(a1)),finalStraightStartIndex:pts.length-2};
 }
 function buildRolledSaddleCenterline(d,clr,baseY,verticalSign,horizontalSign){
-  // Rolled 4-point — primarily pass a parallel conduit:
-  //   roll 2-point out (oh + dx), run along its lateral side, roll 2-point back to same wall plane.
+  // Rolled 4-point — pass a parallel conduit with wings spread opposite ways.
+  // First offset rolls out from vertical by α1 = asin(oh/Hyp1).
+  // Return rolls the opposite wing: separation = acos(oh/Hyp2)+acos(oh/Hyp1) (= 180°−2α when matched).
   // Local frame starts at X=0 so callers can place each conduit at its rack X.
   const inDir=[0,0,1],theta=d.angle*Math.PI/180,t=clr*Math.tan(theta/2);
   if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||d.middleDistance<=2*t||d.mark1<=t)return null;
-  const dx1=horizontalSign*Math.abs(d.offsetDistance||0),dy1=verticalSign*Math.abs(d.rise||0);
-  const dx2=-horizontalSign*Math.abs(d.secondOffsetDistance||0),dy2=-verticalSign*Math.abs(d.secondRise||0);
-  if(Math.hypot(dx1,dy1)<1e-9||Math.hypot(dx2,dy2)<1e-9)return null;
-  const dir1=unit([dx1,dy1,0]),dir2=unit([dx2,dy2,0]);
+  const hyp1=Math.abs(d.travel1||0),hyp2=Math.abs(d.travel2||0);
+  const oh1=Math.abs(d.rise||0),oh2=Math.abs(d.secondRise||0);
+  if(!(hyp1>1e-12&&hyp2>1e-12)||oh1>hyp1+1e-12||oh2>hyp2+1e-12)return null;
+  const a1=Math.asin(Math.min(1,oh1/hyp1)),a2=Math.asin(Math.min(1,oh2/hyp2));
+  // Wings from vertical (±α). Opposite horizontal + opposite vertical returns to the same wall & elevation.
+  // Interior opening between the up-wing and down-wing = π − a1 − a2 (= roll-back when hyps/oh match).
+  const dir1=unit([horizontalSign*Math.sin(a1),verticalSign*Math.cos(a1),0]);
+  const dir2=unit([-horizontalSign*Math.sin(a2),-verticalSign*Math.cos(a2),0]);
+  if(Math.hypot(dir1[0],dir1[1])<1e-9||Math.hypot(dir2[0],dir2[1])<1e-9)return null;
   const slope1=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir1,Math.sin(theta))));
   const slope2=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir2,Math.sin(theta))));
   const start=[0,baseY,-30];
   const v1=vadd(start,vmul(inDir,d.mark1)),v2=vadd(v1,vmul(slope1,d.travel1));
   const v3=vadd(v2,vmul(inDir,d.middleDistance)),v4=vadd(v3,vmul(slope2,d.travel2));
-  const a1=vsub(v1,vmul(inDir,t)),c1=vsub(v2,vmul(slope1,t)),d1=vadd(v2,vmul(inDir,t));
-  const a2=vsub(v3,vmul(inDir,t)),c2=vsub(v4,vmul(slope2,t)),d2=vadd(v4,vmul(inDir,t));
+  const aTan1=vsub(v1,vmul(inDir,t)),c1=vsub(v2,vmul(slope1,t)),d1=vadd(v2,vmul(inDir,t));
+  const aTan2=vsub(v3,vmul(inDir,t)),c2=vsub(v4,vmul(slope2,t)),d2=vadd(v4,vmul(inDir,t));
   const steps=Math.max(18,Math.ceil(d.angle));
-  const arc1=sampleOffsetArc(a1,inDir,dir1,clr,theta,steps);
+  const arc1=sampleOffsetArc(aTan1,inDir,dir1,clr,theta,steps);
   const return1=vsub(vmul(inDir,Math.sin(theta)),vmul(dir1,Math.cos(theta))),arc2=sampleOffsetArc(c1,slope1,return1,clr,theta,steps);
-  const arc3=sampleOffsetArc(a2,inDir,dir2,clr,theta,steps);
+  const arc3=sampleOffsetArc(aTan2,inDir,dir2,clr,theta,steps);
   const return2=vsub(vmul(inDir,Math.sin(theta)),vmul(dir2,Math.cos(theta))),arc4=sampleOffsetArc(c2,slope2,return2,clr,theta,steps);
-  const pts=[start];if(Math.hypot(...vsub(a1,start))>1e-6)pts.push(a1);arc1.slice(1).forEach(p=>pts.push(p));
+  const pts=[start];if(Math.hypot(...vsub(aTan1,start))>1e-6)pts.push(aTan1);arc1.slice(1).forEach(p=>pts.push(p));
   if(Math.hypot(...vsub(c1,pts.at(-1)))>1e-6)pts.push(c1);arc2.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d1;
-  if(Math.hypot(...vsub(a2,pts.at(-1)))>1e-6)pts.push(a2);arc3.slice(1).forEach(p=>pts.push(p));
+  if(Math.hypot(...vsub(aTan2,pts.at(-1)))>1e-6)pts.push(aTan2);arc3.slice(1).forEach(p=>pts.push(p));
   if(Math.hypot(...vsub(c2,pts.at(-1)))>1e-6)pts.push(c2);arc4.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d2;
   const developed=polylineLength(pts),remainingStub=d.oal-developed;
   if(remainingStub<=1e-6)return null;
   pts.push([d2[0],d2[1],d2[2]+remainingStub]);
-  return{pts,a1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,startStraightEndIndex:Math.max(0,pts.indexOf(a1)),finalStraightStartIndex:pts.length-2,dx1,dy1,dx2,dy2};
+  const wingSep=(Math.PI-a1-a2)*180/Math.PI;
+  return{pts,a1:aTan1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,startStraightEndIndex:Math.max(0,pts.indexOf(aTan1)),finalStraightStartIndex:pts.length-2,dx1:dir1[0],dy1:dir1[1],dx2:dir2[0],dy2:dir2[1],rollA1:a1*180/Math.PI,rollA2:a2*180/Math.PI,wingSep};
 }
 function buildSaddleRackModels(){
   if(!modelData.length)return[];
@@ -5116,10 +5124,20 @@ function detectSaddleTransitionConsistencyIssues(models){
   const threePoint=isThreePointSaddle(),rolled=isRolledSaddle();
   models.forEach(m=>{
     const d=modelData[m.index];if(!d)return;
-    const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
-    const expectedX=rolled?horizontalSign*((d.offsetDistance||0)-(d.secondOffsetDistance||0)):0;
-    if(Math.abs((m.centerRise||0)-expectedY)>tolerance)issues.push({index:m.index,field:'second-rise',message:`Rendered final elevation change (${fmt16(m.centerRise)}) does not match the two opposing saddle offsets (${fmt16(expectedY)})`});
-    if(Math.abs((m.horizontalOffset||0)-expectedX)>tolerance)issues.push({index:m.index,field:'second-offset-distance',message:`Rendered final horizontal change (${fmt16(m.horizontalOffset)}) does not match the rolled saddle offsets (${fmt16(expectedX)})`});
+    if(rolled){
+      // Wing-spread rolled 4-point: matched legs return to the same wall plane and elevation.
+      if(Math.abs(m.horizontalOffset||0)>tolerance)issues.push({index:m.index,field:'offset-distance',message:`Rolled wings should return to the same wall plane, but finished ${fmt16(m.horizontalOffset)} off`});
+      const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
+      // Modeled vertical uses wing tilt from vertical; matched oh returns to start elevation.
+      if(saddleOffsetRelation==='same'||(d.rise!=null&&d.secondRise!=null&&Math.abs(Math.abs(d.rise)-Math.abs(d.secondRise))<=tolerance)){
+        if(Math.abs(m.centerRise||0)>tolerance)issues.push({index:m.index,field:'rise',message:`Rolled wings should return to the start elevation, but finished ${fmt16(m.centerRise)} off`});
+      }else if(Math.abs((m.centerRise||0)-expectedY)>tolerance){
+        issues.push({index:m.index,field:'second-rise',message:`Rendered final elevation change (${fmt16(m.centerRise)}) does not match the opposing rolled offsets (${fmt16(expectedY)})`});
+      }
+    }else{
+      const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
+      if(Math.abs((m.centerRise||0)-expectedY)>tolerance)issues.push({index:m.index,field:'second-rise',message:`Rendered final elevation change (${fmt16(m.centerRise)}) does not match the two opposing saddle offsets (${fmt16(expectedY)})`});
+    }
     const a=m.points[m.finalStraightStartIndex],b=m.points.at(-1);
     if(a&&b&&(Math.abs(b[0]-a[0])>tolerance||Math.abs(b[1]-a[1])>tolerance))issues.push({index:m.index,field:'critical',message:threePoint?'Final straight is not parallel after Bend 3':'Final straight is not parallel after Bend 4'});
     // 4-point crown between bends 2–3 must stay parallel to the supported run plane.
