@@ -237,7 +237,7 @@ input:focus,select:focus{outline-color:#f59e0b}
     </div>
     <div class="header-badges">
       <span class="exp-badge" title="experiment/ui-playground branch">UI EXP</span>
-      <span class="version-badge">PWA v1.66</span>
+      <span class="version-badge">PWA v1.67</span>
     </div>
   </div>
 </header>
@@ -338,10 +338,11 @@ input:focus,select:focus{outline-color:#f59e0b}
     </div>
   </section>
   <section id="saddleModePanel" class="panel offset-mode-panel hidden" aria-label="Saddle style">
-    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Switch this section between a vertical or rolled four-bend saddle.</div></div>
+    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Four-bend standard/rolled, or 3-point push-through (45° notch on every shot; unequal mark legs).</div></div>
     <div id="saddleModeSelector" class="segmented-control" role="group" aria-label="Saddle style">
       <button type="button" data-saddle-mode="standard">Standard</button>
       <button type="button" data-saddle-mode="rolled">Rolled</button>
+      <button type="button" data-saddle-mode="three-point">3-Point</button>
     </div>
   </section>
   <div id="conduitDirectionControls"></div>
@@ -489,8 +490,18 @@ const offsetTypes={
 };
 const saddleTypes={
   'standard':{label:'Standard',description:'A four-bend saddle made from two opposing vertical offsets.'},
-  'rolled':{label:'Rolled',description:'A four-bend saddle whose opposing offsets move vertically and horizontally.'}
+  'rolled':{label:'Rolled',description:'A four-bend saddle whose opposing offsets move vertically and horizontally.'},
+  'three-point':{label:'3-Point Push-Through',description:'Shallow α-2α-α saddle. All shots use the 45° notch; marks shift so COBs stay true (A→B ≠ B→C).'}
 };
+/** Push-through: 45° rim notch used for every shot. Mark shift from true COB. */
+function notchShiftFromCob(clr,thetaDeg){
+  if(clr==null||thetaDeg==null||!isFinite(clr)||!isFinite(thetaDeg))return null;
+  return clr*Math.PI/360*(45-thetaDeg);
+}
+function threePointCobLeg(rise,outerDeg){
+  if(rise==null||outerDeg==null||outerDeg<=0||outerDeg>=90)return null;
+  return Math.abs(rise)/Math.tan(outerDeg*Math.PI/180);
+}
 const wizardState={layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null};
 let rackReferenceLength='longest';
 const wizardSteps=[
@@ -579,6 +590,7 @@ function updateBendTypeSelect(){
     ['offset-rolled','Rolled Offset'],
     ['saddle-standard','Standard Saddle'],
     ['saddle-rolled','Rolled Saddle'],
+    ['saddle-three-point','3-Point Push-Through Saddle'],
     ['segmented-90','Segmented 90']
   ];
   select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
@@ -638,7 +650,9 @@ function updateRackModeUI(){
   $('#offsetVerticalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='parallel');
   $('#offsetHorizontalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='standard');
   $$('.offset-gap-col').forEach(el=>el.classList.toggle('hidden',!(isOffset&&activeOffsetType==='parallel')));
-  $('#saddleHorizontalDirectionBox')?.classList.toggle('hidden',isSaddle&&activeSaddleType==='standard');
+  const isThreePoint=isSaddle&&activeSaddleType==='three-point';
+  $('#saddleHorizontalDirectionBox')?.classList.toggle('hidden',isSaddle&&(activeSaddleType==='standard'||isThreePoint));
+  $('#saddleRelationSelector')?.closest('.offset-parameter-card')?.classList.toggle('hidden',isThreePoint);
   $('#offsetModeSelector [data-offset-mode="parallel"]')?.classList.toggle('hidden',activeLayoutMode==='single');
   setSegmentedState('#offsetModeSelector','offsetMode',activeOffsetType);
   setSegmentedState('#criticalBendSelector','criticalBend',offsetCriticalBend);
@@ -658,7 +672,9 @@ function updateRackModeUI(){
   if(viewerHelp)viewerHelp.textContent=isSegmented
     ?'The viewer shows the nine individual 10-degree shots. Rack conduits use concentric centerline radii so actual EMT outside diameters preserve the selected CTC spacing throughout the sweep.'
     :isSaddle
-    ?'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains four true circular bends, a straight saddle top between bends two and three, and parallel supported runs at both struts.'
+    ?(isThreePoint
+      ?'3-point push-through: every shot uses the 45° rim notch. Correct marks have unequal A→B / B→C legs so COBs stay true. A translucent ghost shows incorrect equal mark spacing — finish stays parallel but lands on a shifted plane.'
+      :'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains four true circular bends, a straight saddle top between bends two and three, and parallel supported runs at both struts.')
     :isOffset
     ?'Rendered EMT uses actual outside diameter and the selected bender radius. Orange and purple struts support the parallel starting and ending runs. Standard, Parallel, and Rolled modes use the same two-bend geometry and collision engine.'
     :'Rendered EMT uses the selected trade size and actual outside diameter. The Struts card schedules full 3-D 1-5/8-inch supports only on valid horizontal or vertical straight portions, using the selected Top or Bottom contact and calculated rack cut length. Bend radii and angled travel are excluded from support locations. Collisions are highlighted in red.';
@@ -667,7 +683,9 @@ function updateRackModeUI(){
     formulaGrid.innerHTML=isSegmented
       ?'<div class="formula-item"><strong>Developed Arc</strong><div class="formula-equation">Radius × π ÷ 2</div></div><div class="formula-item"><strong>Shot Angle</strong><div class="formula-equation">90° ÷ 9 = 10°</div></div><div class="formula-item"><strong>Mark Spacing</strong><div class="formula-equation">Developed Arc ÷ 9</div></div>'
       :isSaddle
-      ?'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>'
+      ?(isThreePoint
+        ?'<div class="formula-item"><strong>Notch shift δ(θ)</strong><div class="formula-equation">R·π/360·(45−θ)</div></div><div class="formula-item"><strong>Equal COB legs</strong><div class="formula-equation">L = H ÷ tan(α)</div></div><div class="formula-item"><strong>Unequal mark legs</strong><div class="formula-equation">d_AB = L−Δ · d_BC = L+Δ · Δ = R·π/360·α</div></div>'
+        :'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>')
       :isOffset
       ?'<div class="formula-item"><strong>True Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">True Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">True Offset × tan(Bend Angle ÷ 2)</div></div>'
       :'<div class="formula-item"><div class="formula-equation">Angle = sin⁻¹(Rise ÷ Hypotenuse)</div></div><div class="formula-item"><div class="formula-equation">Shrink Constant = tan(Angle ÷ 2)</div></div><div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>';
@@ -1041,15 +1059,24 @@ function rawRows(){
     }));
   }
   if(activeRackType==='saddle'){
+    if(activeSaddleType==='three-point'){
+      return $$('#rows tr').map(tr=>({
+        size:tr.querySelector('.size').value,bender:tr.querySelector('.bender').value,cc:tr.querySelector('.cc').value,
+        critical:tr.querySelector('.critical').value,oal:tr.querySelector('.oal').value,
+        rise:tr.querySelector('.rise')?.value||'',bendAngle:tr.querySelector('.bend-angle')?.value||'',
+        autoCritical:tr.querySelector('.critical')?.dataset.auto==='1',autoOal:tr.querySelector('.oal')?.dataset.auto==='1',
+        autoRise:tr.querySelector('.rise')?.dataset.autoRise==='1',autoBendAngle:tr.querySelector('.bend-angle')?.dataset.auto==='1'
+      }));
+    }
     return $$('#rows tr').map(tr=>({
       size:tr.querySelector('.size').value,bender:tr.querySelector('.bender').value,cc:tr.querySelector('.cc').value,
       critical:tr.querySelector('.critical').value,oal:tr.querySelector('.oal').value,
       rise:tr.querySelector('.rise')?.value||'',offsetDistance:tr.querySelector('.offset-distance')?.value||'',
-      bendAngle:tr.querySelector('.bend-angle').value,middleDistance:tr.querySelector('.middle-distance').value,
+      bendAngle:tr.querySelector('.bend-angle').value,middleDistance:tr.querySelector('.middle-distance')?.value||'',
       secondRise:tr.querySelector('.second-rise')?.value||'',secondOffsetDistance:tr.querySelector('.second-offset-distance')?.value||'',
       autoCritical:tr.querySelector('.critical').dataset.auto==='1',autoOal:tr.querySelector('.oal').dataset.auto==='1',
       autoRise:tr.querySelector('.rise')?.dataset.autoRise==='1',autoOffsetDistance:tr.querySelector('.offset-distance')?.dataset.auto==='1',
-      autoBendAngle:tr.querySelector('.bend-angle').dataset.auto==='1',autoMiddleDistance:tr.querySelector('.middle-distance').dataset.auto==='1',
+      autoBendAngle:tr.querySelector('.bend-angle').dataset.auto==='1',autoMiddleDistance:tr.querySelector('.middle-distance')?.dataset.auto==='1',
       autoSecondRise:tr.querySelector('.second-rise')?.dataset.auto==='1',autoSecondOffsetDistance:tr.querySelector('.second-offset-distance')?.dataset.auto==='1'
     }));
   }
@@ -1322,6 +1349,10 @@ function sectionBendAnglesDeg(d){
     return a>1e-9?[a,a]:[];
   }
   if(activeRackType==='saddle'){
+    if(activeSaddleType==='three-point'||d.saddleKind==='three-point'){
+      const a=Math.abs(d.outerAngle||d.angle||0);
+      return a>1e-9?[a,2*a,a]:[];
+    }
     const a=Math.abs(d.angle||0);
     return a>1e-9?[a,a,a,a]:[];
   }
@@ -1342,7 +1373,13 @@ function sectionGainFor(d){
   if(activeRackType==='basic-90')return bendGainFor(d.size,d.bender,90,'outside');
   if(activeRackType==='kicked-90')return bendGainFor(d.size,d.bender,90,'outside')+bendGainFor(d.size,d.bender,d.angle,'outside');
   if(activeRackType==='offset')return 2*bendGainFor(d.size,d.bender,d.angle,'outside');
-  if(activeRackType==='saddle')return 4*bendGainFor(d.size,d.bender,d.angle,'outside');
+  if(activeRackType==='saddle'){
+    if(activeSaddleType==='three-point'||d.saddleKind==='three-point'){
+      const a=d.outerAngle||d.angle||0;
+      return bendGainFor(d.size,d.bender,a,'outside')+bendGainFor(d.size,d.bender,2*a,'outside')+bendGainFor(d.size,d.bender,a,'outside');
+    }
+    return 4*bendGainFor(d.size,d.bender,d.angle,'outside');
+  }
   if(activeRackType==='segmented')return bendGainFor(d.size,d.bender,90,'outside');
   return 0;
 }
@@ -1845,6 +1882,17 @@ function buildOffsetTable(old,n){
 }
 function buildSaddleTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
+  if(activeSaddleType==='three-point'){
+    if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center</th><th>Obstacle Center<br><small>desired center COB</small></th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>Rise H</th><th>Outer Angle α<br><small>center = 2α</small></th><th>Center Angle</th><th>COB Leg L</th><th>δ Outer</th><th>δ Center</th><th>Mark A</th><th>Mark B</th><th>Mark C</th><th>Mark A→B</th><th>Mark B→C</th><th>Shrink est.</th><th>Missing / Needed</th>';
+    rowsEl.innerHTML='';
+    for(let i=0;i<n;i++){
+      const r=old[i]||{},tr=document.createElement('tr');
+      tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td><td class="input-cell" data-label="Center to Center"><input class="cc" type="text" ${i===0?'disabled':''} placeholder="${i===0?'—':'e.g. 2-1/2'}" value="${r.cc||''}"></td><td class="input-cell" data-label="Obstacle Center"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="e.g. 48" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="Rise H"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 3"></td><td class="input-cell" data-label="Outer Angle α"><input class="bend-angle ${r.autoBendAngle?'auto-filled':''}" data-auto="${r.autoBendAngle?'1':'0'}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 10"></td><td class="output-section-label">Output Data</td><td class="output result-cell center-angle" data-label="Center Angle">—</td><td class="output result-cell cob-leg" data-label="COB Leg L">—</td><td class="output result-cell delta-outer" data-label="δ Outer">—</td><td class="output result-cell delta-center" data-label="δ Center">—</td><td class="output result-cell mark-1" data-label="Mark A">—</td><td class="output result-cell mark-2" data-label="Mark B">—</td><td class="output result-cell mark-3" data-label="Mark C">—</td><td class="output result-cell mark-ab" data-label="Mark A→B">—</td><td class="output result-cell mark-bc" data-label="Mark B→C">—</td><td class="output result-cell shrink-1" data-label="Shrink est.">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+      rowsEl.appendChild(tr);
+    }
+    updateOalVisibility();
+    return;
+  }
   if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center</th><th>To Bend 1</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>First Offset</th><th class="saddle-roll-col">First Offset Distance</th><th>Bend Angle</th><th>Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th>First Offset</th><th>Between Points 1 &amp; 2</th><th>First Shrink</th><th>Second Offset</th><th>Between Points 3 &amp; 4</th><th>Second Shrink</th><th>Bend 1</th><th>Bend 2</th><th>Bend 3</th><th>Bend 4</th><th>Missing / Needed</th>';
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
@@ -2073,7 +2121,92 @@ function setOffsetFieldFromAnchor(trs,field,anchor,transform=(value)=>value,attr
     el.classList.toggle('auto-filled',!isAnchor);
   });
 }
+function recalcThreePointSaddle(){
+  const trs=$$('#rows tr'),data=[];
+  const criticalAnchor=findManualAnchor(trs,'critical'),oalAnchor=findManualAnchor(trs,'oal');
+  const riseAnchor=findManualAnchor(trs,'rise','autoRise');
+  const angleAnchor=findManualAnchor(trs,'bend-angle');
+  if(riseAnchor?.value<0){saddleVerticalDirection='down';setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection)}
+  setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,value=>value);
+  setOffsetFieldFromAnchor(trs,'oal',oalAnchor,value=>value);
+  setOffsetFieldFromAnchor(trs,'bend-angle',angleAnchor,value=>value);
+  if(riseAnchor)setOffsetFieldFromAnchor(trs,'rise',riseAnchor,value=>value,'autoRise');
+
+  trs.forEach((tr,i)=>{
+    const size=tr.querySelector('.size').value,bender=tr.querySelector('.bender').value;
+    const cc=parseM(tr.querySelector('.cc').value);
+    const critical=parseM(tr.querySelector('.critical').value);
+    const oal=parseM(tr.querySelector('.oal').value);
+    const rise=parseM(tr.querySelector('.rise').value);
+    const outerAngle=parseM(tr.querySelector('.bend-angle').value);
+    const validOuter=outerAngle!=null&&outerAngle>0&&outerAngle<45;
+    const centerAngle=validOuter?outerAngle*2:null;
+    const clr=profileCLR(size,bender)||emtGeometry[size]?.clr||null;
+    const leg=validOuter&&rise!=null?threePointCobLeg(rise,outerAngle):null;
+    const dOuter=clr!=null&&validOuter?notchShiftFromCob(clr,outerAngle):null;
+    const dCenter=clr!=null&&centerAngle!=null?notchShiftFromCob(clr,centerAngle):null;
+    const delta=(dOuter!=null&&dCenter!=null)?(dOuter-dCenter):null;
+    const markAB=(leg!=null&&delta!=null)?(leg-delta):null;
+    const markBC=(leg!=null&&delta!=null)?(leg+delta):null;
+    const cobA=(critical!=null&&leg!=null)?(critical-leg):null;
+    const cobB=critical;
+    const cobC=(critical!=null&&leg!=null)?(critical+leg):null;
+    const mark1=(cobA!=null&&dOuter!=null)?(cobA+dOuter):null;
+    const mark2=(cobB!=null&&dCenter!=null)?(cobB+dCenter):null;
+    const mark3=(cobC!=null&&dOuter!=null)?(cobC+dOuter):null;
+    // Incorrect equal mark legs about the center mark — angles still cancel, plane shifts.
+    const equalMark1=(mark2!=null&&leg!=null)?(mark2-leg):null;
+    const equalMark2=mark2;
+    const equalMark3=(mark2!=null&&leg!=null)?(mark2+leg):null;
+    const equalCobA=(equalMark1!=null&&dOuter!=null)?(equalMark1-dOuter):null;
+    const equalCobB=(equalMark2!=null&&dCenter!=null)?(equalMark2-dCenter):null;
+    const equalCobC=(equalMark3!=null&&dOuter!=null)?(equalMark3-dOuter):null;
+    const planeShift=(equalCobA!=null&&equalCobB!=null&&equalCobC!=null&&outerAngle!=null)
+      ?((equalCobB-equalCobA)-(equalCobC-equalCobB))*Math.tan(outerAngle*Math.PI/180)
+      :null;
+    const shrink=(rise!=null&&validOuter)?(2*Math.abs(rise)*Math.tan((outerAngle*Math.PI/180)/2)):null;
+    const theta=validOuter?outerAngle*Math.PI/180:null;
+    const travel=(leg!=null&&theta)?(leg/Math.cos(theta)):null;
+    data.push({
+      size,bender,cc,critical,oal,rise,angle:outerAngle,outerAngle,centerAngle,clr,leg,delta,dOuter,dCenter,
+      markAB,markBC,cobA,cobB,cobC,mark1,mark2,mark3,shrink,travel,travel1:travel,travel2:travel,
+      equalMark1,equalMark2,equalMark3,equalCobA,equalCobB,equalCobC,planeShift,
+      trueOffset1:Math.abs(rise||0),trueOffset2:Math.abs(rise||0),middleDistance:leg,mark4:mark3,
+      saddleKind:'three-point'
+    });
+    const set=(sel,val)=>{const el=tr.querySelector(sel);if(el)el.textContent=val};
+    set('.center-angle',centerAngle==null?'—':fmtDecimal(centerAngle,1).replace('"','°'));
+    set('.cob-leg',fmt16(leg));
+    set('.delta-outer',fmt16(dOuter));
+    set('.delta-center',fmt16(dCenter));
+    set('.mark-1',fmt16(mark1));
+    set('.mark-2',fmt16(mark2));
+    set('.mark-3',fmt16(mark3));
+    set('.mark-ab',fmt16(markAB));
+    set('.mark-bc',fmt16(markBC));
+    set('.shrink-1',fmt16(shrink));
+    const need=[];
+    if(!size)need.push('Select conduit size');
+    if(critical==null)need.push('Enter obstacle center (desired center COB) in any row');
+    if(showRackOal&&oal==null)need.push('Enter OAL (finished A to B) in any row');
+    if(rise==null)need.push('Enter rise H in any row');
+    else if(Math.abs(rise)<1e-9)need.push('Rise H must be greater than 0');
+    if(outerAngle==null)need.push('Enter outer angle α in any row');
+    else if(!validOuter)need.push('Outer angle α must be greater than 0° and less than 45° (center = 2α)');
+    if(clr==null)need.push('Select a bender profile with a known CLR');
+    if(mark1!=null&&mark1<=0)need.push('Mark A must fall on the stick (increase obstacle center)');
+    if(showRackOal&&mark3!=null&&oal!=null&&mark3>=oal)need.push('Mark C must be before OAL');
+    if(i>0&&cc!=null){const clear=outsideClearance(data[i-1].size,size,cc),ccInput=tr.querySelector('.cc');if(clear!=null&&clear<0){need.push('<span style="color:#fca5a5;font-weight:800">ERROR: conduit outside diameters overlap by '+fmt16(Math.abs(clear))+'</span>');ccInput.classList.add('invalid')}else if(clear!=null&&clear+1e-9<preferredClearance){need.push('<span style="color:#fbbf24;font-weight:800">WARNING: only '+fmt16(Math.max(0,clear))+' clear; recommended 9/16"</span>');ccInput.classList.remove('invalid')}else ccInput.classList.remove('invalid')}
+    tr.querySelector('.need').innerHTML=need.length?need.join('<br>'):'<span style="color:#22c55e;font-weight:700">Complete</span>';
+  });
+  if(!showRackOal){
+    const commonOal=Math.max(120,...data.map(d=>(d.mark3||0)+24));
+    data.forEach(d=>{d.oal=commonOal});
+  }
+  modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels.filter(m=>!m.ghost));hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels.filter(m=>!m.ghost));transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels.filter(m=>!m.ghost));applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();
+}
 function recalcSaddle(){
+  if(activeSaddleType==='three-point'){recalcThreePointSaddle();return;}
   const trs=$$('#rows tr'),data=[];
   const criticalAnchor=findManualAnchor(trs,'critical'),oalAnchor=findManualAnchor(trs,'oal');
   const riseAnchor=findManualAnchor(trs,'rise','autoRise');
@@ -2617,11 +2750,20 @@ function renderOffsetStatus(d){
   const fixCTCButton=$('#fixCTCBtn');if(fixCTCButton)fixCTCButton.onclick=fixAllCTCIssues;
 }
 function renderSaddleStatus(d){
-  const full=rackModels.length;let overlapCount=0,tightCount=0;
+  const realModels=rackModels.filter(m=>!m.ghost);
+  const full=realModels.length;let overlapCount=0,tightCount=0;
   d.forEach((x,i)=>{if(!i||x.cc==null)return;const c=outsideClearance(d[i-1].size,x.size,x.cc);if(c!=null&&c<0)overlapCount++;else if(c!=null&&c<preferredClearance)tightCount++});
   const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required ${fmt16(c.requiredClearance||preferredClearance)}. Current CTC ${c.currentCC==null?'—':fmt16(c.currentCC)}; recommended ${c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC)}`).join('<br>');
   const style=saddleTypes[activeSaddleType]?.label||'Standard',relation=saddleOffsetRelation==='same'?'Same opposing offsets':'Different opposing offsets';
+  if(activeSaddleType==='three-point'){
+    const sample=d.find(x=>x.mark1!=null&&x.planeShift!=null)||d[0];
+    const ghost=rackModels.find(m=>m.ghost);
+    const ghostShift=ghost?ghost.planeShift:sample?.planeShift;
+    const proofCard=sample?`<div class="status-card warn"><strong>Proof · incorrect equal mark legs</strong><div class="helper">If marks use equal legs (A→B = B→C = L) instead of L±Δ, angles still cancel so the finish is <em>parallel</em> to the start — but COB legs become unequal, the third bend is pushed, and the finish lands on a different plane. Predicted plane shift ≈ ${fmt16(ghostShift)} (ghost conduit in the viewer). Correct marks restore the start plane (shift ≈ ${fmt16(realModels[0]?.planeShift||0)}).</div></div>`:'';
+    statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully modeled</strong><div class="helper">Each solved conduit is an α-2α-α push-through saddle. Every shot uses the 45° rim notch; marks shift so COBs stay true (A→B ≠ B→C).</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Saddle collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails:'Actual conduit ODs maintain clearance through all three bends and straights.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred 9/16-inch clearance.':'All straight-run spacings provide at least 9/16-inch clearance.'}</div></div><div class="status-card ok"><strong>${style}</strong><div class="helper">δ(θ)=R·π/360·(45−θ). L=H/tan(α). Mark legs d_AB=L−Δ and d_BC=L+Δ with Δ=R·π/360·α. Sample marks ${sample?fmt16(sample.mark1)+' / '+fmt16(sample.mark2)+' / '+fmt16(sample.mark3):'—'}.</div></div>${proofCard}${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
+  }else{
   statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully modeled</strong><div class="helper">Each solved conduit contains four circular bends and a straight section from Bend 2 to Bend 3.</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Saddle collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails:'Actual conduit ODs maintain the required clearance through all four bends and straight sections.'}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred 9/16-inch clearance.':'All straight-run spacings provide at least 9/16-inch clearance.'}</div></div><div class="status-card ok"><strong>${style} Saddle · ${relation}</strong><div class="helper">Bends 1–2 form the first offset. Bends 3–4 form the opposing offset. Shrink from each completed offset is carried into every downstream absolute bend mark.</div></div><div class="status-card ok"><strong>All four bend marks are included</strong><div class="helper">Bend 4 is calculated from the second true offset, selected bend angle, second travel, and the cumulative location established by Bends 1–3.</div></div>${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">Fix CTC increases affected spacing and rebuilds the complete four-bend saddle.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
+  }
   const hasError=Boolean(rackPlaneIssues.length||transitionConsistencyIssues.length||modelCollisions.length||overlapCount);
   const signature=hasError?JSON.stringify({plane:rackPlaneIssues.length,transition:transitionConsistencyIssues.length,collisions:modelCollisions.map(c=>[c.a,c.b,Math.round((c.distance||0)*1000)]),overlapCount}):'';
   if(hasError&&signature!==lastShownProjectErrorSignature){lastShownProjectErrorSignature=signature;openProjectStatusModal()}if(!hasError)lastShownProjectErrorSignature='';
@@ -2927,10 +3069,18 @@ function populateSaddleTestRack(randomize=false){
   const testSizes=['3/4"','3/4"','1"','1"','1-1/4"','1-1/4"','1-1/2"'];
   const trs=$$('#rows tr');trs.forEach((tr,i)=>{tr.querySelector('.size').value=testSizes[i%testSizes.length];const b=tr.querySelector('.bender');b.innerHTML=benderOptions(tr.querySelector('.size').value,defaultBenderForSize(tr.querySelector('.size').value));b.value=defaultBenderForSize(tr.querySelector('.size').value)});
   const first=trs[0];if(first){
-    first.querySelector('.critical').value=randomize?fmt16Input(18+Math.round(Math.random()*32)/4):'24';first.querySelector('.oal').value=randomize?'120':'120';first.querySelector('.rise').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
-    if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
-    first.querySelector('.bend-angle').value=randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30';first.querySelector('.middle-distance').value=randomize?fmt16Input(8+Math.round(Math.random()*28)/4):'12';
-    if(saddleOffsetRelation==='different'){first.querySelector('.second-rise').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8';if(first.querySelector('.second-offset-distance'))first.querySelector('.second-offset-distance').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8'}
+    if(activeSaddleType==='three-point'){
+      first.querySelector('.critical').value=randomize?fmt16Input(40+Math.round(Math.random()*24)/2):'48';
+      first.querySelector('.oal').value='120';
+      first.querySelector('.rise').value=randomize?fmt16Input(2+Math.round(Math.random()*16)/4):'3';
+      first.querySelector('.bend-angle').value=randomize?['10','15','22.5'][Math.floor(Math.random()*3)]:'10';
+    }else{
+      first.querySelector('.critical').value=randomize?fmt16Input(18+Math.round(Math.random()*32)/4):'24';first.querySelector('.oal').value=randomize?'120':'120';first.querySelector('.rise').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
+      if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(4+Math.round(Math.random()*20)/4):'6';
+      first.querySelector('.bend-angle').value=randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30';
+      if(first.querySelector('.middle-distance'))first.querySelector('.middle-distance').value=randomize?fmt16Input(8+Math.round(Math.random()*28)/4):'12';
+      if(saddleOffsetRelation==='different'){first.querySelector('.second-rise').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8';if(first.querySelector('.second-offset-distance'))first.querySelector('.second-offset-distance').value=randomize?fmt16Input(6+Math.round(Math.random()*24)/4):'8'}
+    }
   }
   refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
@@ -2974,7 +3124,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:67,build:'PWA v1.63',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:68,build:'PWA v1.67',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -3072,7 +3222,7 @@ function sectionTypeOptions(project){
     ['offset-standard','Standard Offset'],
     ...(activeLayoutMode==='rack'?[['offset-parallel','Parallel Offset']]:[]),
     ['offset-rolled','Rolled Offset'],['saddle-standard','Standard Saddle'],
-    ['saddle-rolled','Rolled Saddle'],['segmented','Segmented 90']
+    ['saddle-rolled','Rolled Saddle'],['saddle-three-point','3-Point Push-Through Saddle'],['segmented','Segmented 90']
   ];
   return options.map(([value,label])=>`<option value="${value}" ${value===current?'selected':''}>${label}</option>`).join('');
 }
@@ -3089,7 +3239,11 @@ function projectForSectionType(value){
   }
   if(value.startsWith('saddle-')){
     p.rackType='saddle';p.saddleType=value.slice(7);
-    p.rows=common.map((r,i)=>({...r,critical:i===0?'24':'',oal:'',rise:i===0?'6':'',offsetDistance:p.saddleType==='rolled'&&i===0?'6':'',bendAngle:i===0?'30':'',middleDistance:i===0?'12':'',secondRise:'',secondOffsetDistance:''}));
+    if(p.saddleType==='three-point'){
+      p.rows=common.map((r,i)=>({...r,critical:i===0?'48':'',oal:'',rise:i===0?'3':'',bendAngle:i===0?'10':''}));
+    }else{
+      p.rows=common.map((r,i)=>({...r,critical:i===0?'24':'',oal:'',rise:i===0?'6':'',offsetDistance:p.saddleType==='rolled'&&i===0?'6':'',bendAngle:i===0?'30':'',middleDistance:i===0?'12':'',secondRise:'',secondOffsetDistance:''}));
+    }
     return p;
   }
   p.rackType='segmented';p.rows=common.map((r,i)=>({...r,segmentedMeasurement:i===0?'84':'',desiredRadius:i===0?'36':''}));return p;
@@ -3757,17 +3911,23 @@ function drawRenderedConduit(model,color,isCollision=false){
   // Do not add a second cosmetic radius. The model points already represent
   // the true centerline radius selected for this conduit size, bender, and angle.
   const blendPx=0;
+  const ghost=!!model.ghost;
+  ctx.save();
+  if(ghost)ctx.globalAlpha=0.45;
   traceProjected(model.points,blendPx,diameterPx,true);
-  ctx.strokeStyle=isCollision?'#450a0a':'rgba(2,6,23,.98)';
+  ctx.strokeStyle=isCollision?'#450a0a':(ghost?'rgba(120,53,15,.55)':'rgba(2,6,23,.98)');
   ctx.lineWidth=diameterPx+Math.max(2,diameterPx*.22);
   ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
   traceProjected(model.points,blendPx,diameterPx,true);
   ctx.strokeStyle=color;ctx.lineWidth=diameterPx;ctx.stroke();
-  traceProjected(model.points,blendPx,diameterPx,true);
-  ctx.strokeStyle=isCollision?'rgba(254,202,202,.72)':'rgba(255,255,255,.42)';
-  ctx.lineWidth=Math.max(1,diameterPx*.19);ctx.stroke();
+  if(!ghost){
+    traceProjected(model.points,blendPx,diameterPx,true);
+    ctx.strokeStyle=isCollision?'rgba(254,202,202,.72)':'rgba(255,255,255,.42)';
+    ctx.lineWidth=Math.max(1,diameterPx*.19);ctx.stroke();
+  }
   drawTubeEnd(model,model.points[0],color,isCollision);
   drawTubeEnd(model,model.points[model.points.length-1],color,isCollision);
+  ctx.restore();
 }
 
 function polylineLength(points){
@@ -3789,6 +3949,7 @@ function pointAlongPolyline(points,distanceFromStart){
   return points[points.length-1].slice();
 }
 function buildOffsetStrutSolids(models){
+  models=models.filter(m=>!m.ghost);
   if(!models.length)return[];
   const startSide=getRadio('firstStrutSide')||'top',farSide=getRadio('secondStrutSide')||'top';
   const startSign=startSide==='top'?1:-1,farSign=farSide==='top'?1:-1;
@@ -4039,6 +4200,7 @@ function buildScheduledStrutSolid(item,index,count,models){
   return{a:vsub(center,vmul(lengthDir,half)),b:vadd(center,vmul(lengthDir,half)),lengthDir,away,size:1.625,side,role:`scheduled-${index+1}`,color:index%2?'#7c3aed':'#f97316',rackWidth,strutLength,station:item.station,orientation:item.interval.orientation,adjusted:item.adjusted===true,sectionIndex};
 }
 function buildRunStrutSolids(models){
+  models=models.filter(m=>!m.ghost);
   const intervals=validSupportIntervals(models);if(!intervals.length){scheduledStruts=[];renderStrutSchedule();return[]}
   const stations=applyStrutDistanceOverrides(automaticStrutStations(models),intervals);
   scheduledStruts=stations.map((item,index)=>buildScheduledStrutSolid(item,index,stations.length,models));
@@ -4181,7 +4343,102 @@ function sampleOffsetArc(start,tangent,turnBasis,radius,angle,steps=24){
   }
   return pts;
 }
+function buildThreePointSaddlePath(d,start,baseY,geo,verticalSign){
+  const alpha=d.outerAngle*Math.PI/180,centerAng=2*alpha;
+  if(!(alpha>0&&alpha<Math.PI/4)||d.cobA==null||d.cobB==null||d.cobC==null)return null;
+  const inDir=[0,0,1],dirUp=[0,verticalSign,0];
+  const R=geo.clr;
+  const tOuter=R*Math.tan(alpha/2),tCenter=R*Math.tan(alpha);
+  const legAB=d.cobB-d.cobA,legBC=d.cobC-d.cobB;
+  if(legAB<=2*tOuter+1e-9||legBC<=2*tOuter+1e-9)return null;
+  if(d.cobA<=tOuter)return null;
+  const slope1=unit(vadd(vmul(inDir,Math.cos(alpha)),vmul(dirUp,Math.sin(alpha))));
+  const slope2=unit(vadd(vmul(inDir,Math.cos(alpha)),vmul(dirUp,-Math.sin(alpha))));
+  const travel1=legAB/Math.cos(alpha),travel2=legBC/Math.cos(alpha);
+  const vA=vadd(start,vmul(inDir,d.cobA));
+  const vB=vadd(vA,vmul(slope1,travel1));
+  const vC=vadd(vB,vmul(slope2,travel2));
+  const a1=vsub(vA,vmul(inDir,tOuter)),b1=vadd(vA,vmul(slope1,tOuter));
+  const a2=vsub(vB,vmul(slope1,tCenter)),b2=vadd(vB,vmul(slope2,tCenter));
+  const a3=vsub(vC,vmul(slope2,tOuter)),b3=vadd(vC,vmul(inDir,tOuter));
+  const stepsOuter=Math.max(16,Math.ceil(d.outerAngle)),stepsCenter=Math.max(20,Math.ceil(d.centerAngle||2*d.outerAngle));
+  const arc1=sampleOffsetArc(a1,inDir,dirUp,R,alpha,stepsOuter);
+  const centerTurn=unit(vsub(vmul(inDir,Math.sin(alpha)),vmul(dirUp,Math.cos(alpha))));
+  const arc2=sampleOffsetArc(a2,slope1,centerTurn,R,centerAng,stepsCenter);
+  const finalTurn=unit(vadd(vmul(inDir,Math.sin(alpha)),vmul(dirUp,Math.cos(alpha))));
+  const arc3=sampleOffsetArc(a3,slope2,finalTurn,R,alpha,stepsOuter);
+  const pts=[start];
+  if(Math.hypot(...vsub(a1,start))>1e-6)pts.push(a1);
+  arc1.slice(1).forEach(p=>pts.push(p));
+  pts[pts.length-1]=b1;
+  if(Math.hypot(...vsub(a2,pts.at(-1)))>1e-6)pts.push(a2);
+  arc2.slice(1).forEach(p=>pts.push(p));
+  pts[pts.length-1]=b2;
+  if(Math.hypot(...vsub(a3,pts.at(-1)))>1e-6)pts.push(a3);
+  arc3.slice(1).forEach(p=>pts.push(p));
+  pts[pts.length-1]=b3;
+  return {pts,vA,vB,vC,a1,b3,finalY:b3[1]};
+}
+function buildThreePointSaddleModels(){
+  if(!modelData.length)return[];
+  const xs=[0];for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?0:modelData[i].cc));
+  const center=(Math.min(...xs)+Math.max(...xs))/2;
+  const side=getRadio('firstStrutSide')||'top',sideSign=side==='top'?1:-1;
+  const models=[];
+  modelData.forEach((d,i)=>{
+    if(!d.size||d.oal==null||d.cobA==null||d.cobB==null||d.cobC==null||d.outerAngle==null)return;
+    const baseGeo=emtGeometry[d.size]||{od:.75,wall:.05,clr:5.5},geo={...baseGeo,clr:profileCLR(d.size,d.bender)||baseGeo.clr};
+    const radius=geo.od/2,baseY=-sideSign*radius;
+    const verticalSign=d.rise<0?-1:(saddleVerticalDirection==='down'?-1:1);
+    const start=[xs[i]-center,baseY,-30];
+    const correct=buildThreePointSaddlePath(d,start,baseY,geo,verticalSign);
+    if(!correct)return;
+    const developed=polylineLength(correct.pts),remainingStub=d.oal-developed;
+    if(remainingStub<=1e-6)return;
+    const pts=correct.pts.slice();
+    const finalStraightStartIndex=pts.length-1;
+    pts.push([correct.b3[0],correct.b3[1],correct.b3[2]+remainingStub]);
+    models.push({
+      index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,
+      rackType:'saddle',saddleType:'three-point',ghost:false,
+      startPlaneY:baseY,finalPlaneY:correct.finalY,
+      startStraightEnd:correct.a1,startStraightEndIndex:Math.max(0,pts.indexOf(correct.a1)),
+      finalStraightStartIndex,firstBend:correct.vA,secondBend:correct.vB,thirdBend:correct.vC,fourthBend:correct.vC,
+      kickCenter:correct.vA,kickEnd:correct.vB,arcStart:correct.vB,back90:correct.vC,
+      firstContactPlane:0,finalContactPlane:correct.finalY+sideSign*radius,
+      centerRise:correct.finalY-baseY,horizontalOffset:0,trueOffset:Math.abs(correct.finalY-baseY),
+      length:polylineLength(pts),requiredLength:polylineLength(pts),remainingStub,overLength:false,
+      planeShift:correct.finalY-baseY
+    });
+    // Ghost: incorrect equal mark legs → unequal COBs → parallel finish on a shifted plane.
+    if(d.equalCobA!=null&&d.equalCobB!=null&&d.equalCobC!=null){
+      const wrong={...d,cobA:d.equalCobA,cobB:d.equalCobB,cobC:d.equalCobC};
+      const bad=buildThreePointSaddlePath(wrong,start,baseY,geo,verticalSign);
+      if(bad){
+        const badPts=bad.pts.slice();
+        const badDev=polylineLength(badPts);
+        const badStub=Math.max(12,d.oal-badDev);
+        const badFinalIdx=badPts.length-1;
+        badPts.push([bad.b3[0],bad.b3[1],bad.b3[2]+badStub]);
+        models.push({
+          index:i,points:badPts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,
+          rackType:'saddle',saddleType:'three-point',ghost:true,proof:'equal-marks',
+          startPlaneY:baseY,finalPlaneY:bad.finalY,
+          startStraightEnd:bad.a1,startStraightEndIndex:Math.max(0,badPts.indexOf(bad.a1)),
+          finalStraightStartIndex:badFinalIdx,firstBend:bad.vA,secondBend:bad.vB,thirdBend:bad.vC,fourthBend:bad.vC,
+          kickCenter:bad.vA,kickEnd:bad.vB,arcStart:bad.vB,back90:bad.vC,
+          firstContactPlane:0,finalContactPlane:bad.finalY+sideSign*radius,
+          centerRise:bad.finalY-baseY,horizontalOffset:0,trueOffset:Math.abs(bad.finalY-baseY),
+          length:polylineLength(badPts),requiredLength:polylineLength(badPts),remainingStub:badStub,overLength:false,
+          planeShift:bad.finalY-baseY
+        });
+      }
+    }
+  });
+  return models;
+}
 function buildSaddleRackModels(){
+  if(activeSaddleType==='three-point')return buildThreePointSaddleModels();
   if(!modelData.length)return[];
   const xs=[0];for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?0:modelData[i].cc));
   const center=(Math.min(...xs)+Math.max(...xs))/2;
@@ -4573,6 +4830,7 @@ function detectRackPlaneIssues(models){
   const tolerance=1/32;
   let expectedSecond=null;
   models.forEach(m=>{
+    if(m.ghost)return;
     const start=m.points?.[0];
     const end=m.points?.[m.points.length-1];
     if(!start||!end)return;
@@ -4624,7 +4882,14 @@ function detectOffsetTransitionConsistencyIssues(models){
 function detectSaddleTransitionConsistencyIssues(models){
   const issues=[],tolerance=1/16+1e-7,verticalSign=saddleVerticalDirection==='down'?-1:1,horizontalSign=saddleHorizontalDirection==='left'?-1:1;
   models.forEach(m=>{
+    if(m.ghost)return;
     const d=modelData[m.index];if(!d)return;
+    if(activeSaddleType==='three-point'||d.saddleKind==='three-point'){
+      if(Math.abs(m.centerRise||0)>tolerance)issues.push({index:m.index,field:'rise',message:`3-point finish plane shifted ${fmt16(m.centerRise)} from the start plane — check unequal mark legs (L±Δ)`});
+      const a=m.points[m.finalStraightStartIndex],b=m.points.at(-1);
+      if(a&&b&&(Math.abs(b[0]-a[0])>tolerance||Math.abs(b[1]-a[1])>tolerance))issues.push({index:m.index,field:'critical',message:'Final straight is not parallel after Bend C'});
+      return;
+    }
     const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
     const expectedX=activeSaddleType==='rolled'?horizontalSign*((d.offsetDistance||0)-(d.secondOffsetDistance||0)):0;
     if(Math.abs((m.centerRise||0)-expectedY)>tolerance)issues.push({index:m.index,field:'second-rise',message:`Rendered final elevation change (${fmt16(m.centerRise)}) does not match the two opposing saddle offsets (${fmt16(expectedY)})`});
@@ -4736,7 +5001,7 @@ function detectCollisions(models){
   const safety=activeRackType==='kicked-90'?1/8:preferredClearance;
   for(let i=0;i<models.length;i++)for(let j=i+1;j<models.length;j++){
     const mi=models[i],mj=models[j];
-    if(!mi?.points?.length||!mj?.points?.length)continue;
+    if(!mi?.points?.length||!mj?.points?.length||mi.ghost||mj.ghost)continue;
     if((mi.index??i)===(mj.index??j))continue;
     let best={dist:Infinity};
     for(let a=0;a<mi.points.length-1;a++)for(let b=0;b<mj.points.length-1;b++){
@@ -4867,13 +5132,14 @@ function addTessellatedStrutPrimitives(primitives,s){
   });
 }
 function addTessellatedConduitPrimitives(primitives,m,bad){
-  const isBad=bad.has(m.index),color=conduitColor(m.index,isBad);
+  const isBad=!m.ghost&&bad.has(m.index);
+  const color=m.ghost?'rgba(180,83,9,0.42)':conduitColor(m.index,isBad);
   for(let i=1;i<m.points.length;i++){
     const a=m.points[i-1],b=m.points[i],len=Math.hypot(...vsub(b,a));
     const pieces=Math.max(1,Math.ceil(len/1.15));
     for(let j=0;j<pieces;j++){
       const p0=lerp3(a,b,j/pieces),p1=lerp3(a,b,(j+1)/pieces);
-      primitives.push({type:'conduit',depth:primitiveDepth([p0,p1]),model:m,a:p0,b:p1,color,bad:isBad});
+      primitives.push({type:'conduit',depth:primitiveDepth([p0,p1]),model:m,a:p0,b:p1,color,bad:isBad,ghost:!!m.ghost});
     }
   }
 }
@@ -4964,15 +5230,17 @@ function drawContinuousConduits(bad){
   // to the rack at the first kick center-of-bend instead of the average depth
   // of the whole stick. A deterministic row tie-break prevents flicker where
   // adjacent centerlines are nearly coplanar to the camera.
+  // Ghost proof conduits (incorrect equal marks) draw first so correct runs sit on top.
   [...rackModels]
     .sort((a,b)=>{
+      if(!!a.ghost!==!!b.ghost)return a.ghost?-1:1;
       const delta=rackAwareConduitDepth(a)-rackAwareConduitDepth(b);
       return Math.abs(delta)>1e-6?delta:a.index-b.index;
     })
     .forEach(m=>{
       const active=!isCustomRun||m.sectionIndex===activeCustomSection;
-      const color=active?conduitColor(m.index):'#64748b';
-      drawRenderedConduit(m,color,bad.has(m.index));
+      const color=m.ghost?'rgba(180,83,9,0.95)':(active?conduitColor(m.index):'#64748b');
+      drawRenderedConduit(m,color,!m.ghost&&bad.has(m.index));
     });
 }
 function drawCouplingSleeve(model){
@@ -5172,7 +5440,10 @@ function resetPdfPromptText(){if(pdfTitleEl)pdfTitleEl.textContent=defaultPdfTit
 function sectionHasPdfSolvedRow(){
   return modelData.some(d=>{
     if(activeRackType==='segmented')return d&&d.radius>0&&d.startMark!=null&&d.marks?.length===9;
-    if(activeRackType==='saddle')return d&&d.oal!=null&&d.trueOffset1>0&&d.trueOffset2>0&&d.mark4!=null;
+    if(activeRackType==='saddle'){
+      if(activeSaddleType==='three-point')return d&&d.oal!=null&&d.mark1!=null&&d.mark3!=null&&d.outerAngle>0;
+      return d&&d.oal!=null&&d.trueOffset1>0&&d.trueOffset2>0&&d.mark4!=null;
+    }
     if(activeRackType==='offset')return d&&d.oal!=null&&d.trueOffset>0&&d.angle!=null&&d.firstMark!=null;
     if(activeRackType==='basic-90')return d&&d.oal!=null&&d.bendMark!=null;
     if(activeRackType==='straight')return d&&d.size;
