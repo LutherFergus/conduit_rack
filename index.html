@@ -325,7 +325,7 @@ input:focus,select:focus{outline-color:#3ec4ff}
     </div>
     <div class="header-badges">
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.80</span>
+      <span class="version-badge">PWA v1.81</span>
     </div>
   </div>
 </header>
@@ -367,7 +367,7 @@ input:focus,select:focus{outline-color:#3ec4ff}
       </div>
       <div id="saddleParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
-          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default): Bend 2 = Center + shrink, then shift every mark to the 45° shoe notch. Δ = CLR × (45° − bend°)/2. Requires conduit size for CLR and OD.</div></div>
+          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default): Bend 2 = Center + shrink, then shift every mark to the 45° shoe notch. Δ = CLR × (45° − bend°) / 4 (radians). Field-calibrated on Ideal 3/4". Requires conduit size for CLR and OD.</div></div>
           <div id="saddleHeightsCard" class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Different enables a separate height for the second opposing offset.</div></div>
           <div id="saddleVerticalCard" class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
           <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div></div>
@@ -787,10 +787,10 @@ function updateRackModeUI(){
       :isSaddle
       ?(isThreePointSaddle()
         ?(isPushThroughMarks()
-          ?'<div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Height × csc(θ) + OD</div></div><div class="formula-item"><strong>45° Notch Δ</strong><div class="formula-equation">CLR × (45° − θ<sub>bend</sub>) ÷ 2</div></div><div class="formula-item"><strong>Display Mark</strong><div class="formula-equation">True COB + Δ (outers θ, center 2θ)</div></div>'
+          ?'<div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Height × csc(θ) + OD</div></div><div class="formula-item"><strong>45° Notch Δ</strong><div class="formula-equation">CLR × (45° − θ<sub>bend</sub>) ÷ 4</div></div><div class="formula-item"><strong>Display Mark</strong><div class="formula-equation">True COB + Δ (outers θ, center 2θ)</div></div>'
           :'<div class="formula-item"><strong>Angle Set</strong><div class="formula-equation">θ · 2θ · θ (e.g. 15-30-15)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">Offset ÷ sin(θ)</div></div><div class="formula-item"><strong>Shrink per Leg</strong><div class="formula-equation">Offset × tan(θ ÷ 2)</div></div>')
         :(isPushThroughMarks()
-          ?'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>45° Notch Mark</strong><div class="formula-equation">COB + CLR × (45° − θ) ÷ 2</div></div>'
+          ?'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>45° Notch Mark</strong><div class="formula-equation">COB + CLR × (45° − θ) ÷ 4</div></div>'
           :'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>'))
       :isOffset
       ?'<div class="formula-item"><strong>True Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">True Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">True Offset × tan(Bend Angle ÷ 2)</div></div>'
@@ -1090,10 +1090,12 @@ function supportedBenders(size){return Object.entries(benderProfiles).filter(([,
 function benderOptions(size,selected=''){const choices=supportedBenders(size);if(!choices.length)return'<option value="">Select conduit size</option>';const use=choices.some(([k])=>k===selected)?selected:defaultBenderForSize(size);return choices.map(([k,p])=>`<option value="${k}" ${k===use?'selected':''}>${p.label}</option>`).join('')}
 function profileForRow(tr){const key=tr?.querySelector('.bender')?.value||defaultBenderForSize(tr?.querySelector('.size')?.value);return benderProfiles[key]||null}
 function profileCLR(size,key){const p=benderProfiles[key];return p?.clr?.[size]??null}
-// Push-through: shift a true COB mark to the 45° rim notch. Δ = CLR × (45° − θ)/2 in radians.
+// Push-through: shift a true COB mark to the 45° rim notch.
+// Δ = CLR × (45° − θ) / 4 in radians.
+// Field-calibrated on Ideal 3/4" 10-20-10 (mid-arc /2 overshot peak by ~1/2").
 function notchDelta45(clr,bendAngleDeg){
   if(clr==null||bendAngleDeg==null||!Number.isFinite(clr)||!Number.isFinite(bendAngleDeg))return 0;
-  return clr*((45-bendAngleDeg)/2)*Math.PI/180;
+  return clr*((45-bendAngleDeg)/4)*Math.PI/180;
 }
 const isPushThroughMarks=()=>saddleMarkMethod!=='traditional';
 // Field-calibrated minimum distance from the kick center-of-bend to the start
@@ -2844,8 +2846,8 @@ function renderSaddleStatus(d){
   const push=isPushThroughMarks();
   const markHelp=push
     ?(isThreePointSaddle()
-      ?'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Bend 2 COB = Center of Saddle + shrink (Height × tan(θ/2)). COB spacing = Height × csc(θ) + OD. Output marks add Δ = CLR × (45° − θ<sub>bend</sub>) ÷ 2 so each mark lands on the 45° shoe notch (select conduit size for CLR/OD).</div></div>'
-      :'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (45° − θ) ÷ 2 so each mark lands on the 45° shoe notch.</div></div>')
+      ?'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Bend 2 COB = Center of Saddle + shrink (Height × tan(θ/2)). COB spacing = Height × csc(θ) + OD. Output marks add Δ = CLR × (45° − θ<sub>bend</sub>) ÷ 4 so each mark lands on the 45° shoe notch (select conduit size for CLR/OD).</div></div>'
+      :'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (45° − θ) ÷ 4 so each mark lands on the 45° shoe notch.</div></div>')
     :(isThreePointSaddle()
       ?'<div class="status-card ok"><strong>Traditional · COB marks</strong><div class="helper">Bend 2 = Center of Saddle + shrink. Bend 1 / Bend 3 sit one travel away. Marks are true centers of bend.</div></div>'
       :'<div class="status-card ok"><strong>Traditional · COB marks</strong><div class="helper">Bend 4 is calculated from the second true offset, selected bend angle, second travel, and the cumulative location established by Bends 1–3.</div></div>');
@@ -3213,7 +3215,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:81,build:'PWA v1.80',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:82,build:'PWA v1.81',layoutMode:activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
