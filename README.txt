@@ -1,3 +1,15 @@
+PWA v1.65b low-light night-shop theme
+
+v1.65b: Add Section scrolls to the new section’s conduit card and keeps the mobile viewer expanded if it was already open.
+
+PWA v1.65 low-light night-shop theme
+
+v1.65: Replaced warm brown/copper “hot chocolate” UI with a cooler charcoal + steel-cyan palette for dim jobsite reading. Kept docked viewer and control layout.
+
+PWA v1.64e simplified UI + mobile docked viewer
+
+v1.64e: Expanding the mobile viewer auto-fits the rack (Fit button kept). Bend Type sits above Conduit Count; Conduit Count is placed under Bender Profile.
+
 PWA v1.64d simplified UI + mobile docked viewer
 
 v1.64d: Added Bottom and Back preset view buttons beside Front/Right/Left/Top/Iso on the 3D viewer.
