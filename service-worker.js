@@ -1,4 +1,4 @@
-const CACHE_NAME="conduit-rack-v1.87-stick-drop-ctc";
+const CACHE_NAME="conduit-rack-v1.88-mark-highlight";
 const APP_FILES=[
   "./",
   "./index.html",

@@ -120,7 +120,57 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   tr.inputs-collapsed .input-cell{display:none!important}
   .output-section-label{margin-top:7px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:9px;color:#bae6fd;font-weight:850;text-align:left!important}
   .result-cell{background:rgba(15,23,42,.68)}
+  /* Bend marks = what you layout on the stick */
+  .mark-cell{
+    background:rgba(62,196,255,.16)!important;
+    box-shadow:inset 3px 0 0 #3ec4ff;
+    font-weight:850;
+    color:#eaf7ff;
+  }
+  .mark-cell.mark-ready{color:#fff;font-weight:900}
+  .marks-section-label{display:none}
 }
+@media(max-width:760px){
+  #rows .marks-section-label{
+    display:block!important;
+    grid-column:2;
+    grid-row:var(--compact-row);
+    border:0!important;
+    background:transparent!important;
+    padding:10px 3px 2px!important;
+    margin:0!important;
+  }
+  #rows .marks-section-label::before{content:none!important}
+  #rows .marks-section-title{
+    display:block;
+    padding:7px 9px;
+    border-radius:8px;
+    background:rgba(62,196,255,.18);
+    border:1px solid rgba(62,196,255,.5);
+    color:#b6e9ff;
+    font-weight:900;
+    font-size:.78rem;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  #rows .mark-cell{
+    background:#0b2a3d!important;
+    border:1px solid #3ec4ff!important;
+    border-radius:9px;
+    margin:3px 0;
+    padding:8px 6px!important;
+    box-shadow:inset 3px 0 0 #5eead4;
+    color:#eaf7ff!important;
+  }
+  #rows .mark-cell::before{color:#7dd3fc;font-weight:900}
+  #rows .mark-cell.mark-ready{
+    background:#083552!important;
+    border-color:#5eead4!important;
+    color:#fff!important;
+    font-size:1.08rem;
+  }
+}
+
 @media(max-width:760px){
   #rows tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:8px;row-gap:0;align-items:stretch}
   #rows .conduit-card-heading{grid-column:1/-1;grid-row:1}
@@ -132,7 +182,7 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   #rows td::before{font-size:.75rem;line-height:1.15;overflow-wrap:anywhere}
   #rows td input,#rows td select{padding:7px 5px;font-size:14px}
   #rows tr.inputs-collapsed .compact-input-cell{display:none!important}
-  #rows tr.outputs-collapsed .compact-output-cell{display:none!important}
+  #rows tr.outputs-collapsed .compact-output-cell,tr.outputs-collapsed .marks-section-label{display:none!important}
 }
 @media(max-width:420px){
   #rows tr{column-gap:6px;padding:7px 6px}
@@ -347,6 +397,11 @@ body.stick-app td.ctc-col,
 body.stick-app td.stick-cc-stub,
 body.stick-app td[data-label="Center to Center"],
 body.stick-app #rows td:has(> input.cc){display:none!important;visibility:hidden!important;position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;padding:0!important;margin:0!important;border:0!important}
+th.mark-col,td.mark-cell{background:rgba(62,196,255,.12)}
+td.mark-cell{box-shadow:inset 3px 0 0 #3ec4ff;font-weight:850;color:#eaf7ff}
+td.mark-cell.mark-ready{color:#fff;font-weight:900}
+.marks-section-label{display:none}
+
 
 </style>
 </head>
@@ -365,7 +420,7 @@ body.stick-app #rows td:has(> input.cc){display:none!important;visibility:hidden
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.87</span>
+      <span class="version-badge">PWA v1.88</span>
     </div>
   </div>
 </header>
@@ -1475,27 +1530,27 @@ $('#measureKeypadClose').onclick=()=>closeMeasureKeypad();$('#measureKeypadBackd
 function buildSegmentedTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
   const referenceLabel=segmentedReferenceMode==='back'?'Back of 90':'Start of Bend';
-  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>${referenceLabel}</th><th>Desired Radius</th><th>Calculated Radius</th><th>Developed Arc</th><th>Shots</th><th>Angle Per Shot</th><th>Mark Spacing</th><th>First Mark</th><th>Center Mark</th><th>Last Mark</th><th>All Bend Marks</th><th>Missing / Needed</th>`;
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>${referenceLabel}</th><th>Desired Radius</th><th>Calculated Radius</th><th>Developed Arc</th><th>Shots</th><th>Angle Per Shot</th><th>Mark Spacing</th><th class="mark-col">First Mark</th><th class="mark-col">Center Mark</th><th class="mark-col">Last Mark</th><th class="mark-col">All Bend Marks</th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
-    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell segmented-reference-cell" data-label="${referenceLabel}"><input class="segmented-measurement ${r.autoSegmentedMeasurement?'auto-filled':''}" data-auto="${r.autoSegmentedMeasurement?'1':'0'}" type="text" value="${r.segmentedMeasurement||''}" placeholder="${segmentedReferenceMode==='back'?'e.g. 60':'e.g. 24'}"></td><td class="input-cell" data-label="Desired Radius"><input class="desired-radius ${r.autoDesiredRadius?'auto-filled':''}" data-auto="${r.autoDesiredRadius?'1':'0'}" type="text" value="${r.desiredRadius||''}" placeholder="e.g. 24"></td><td class="output-section-label">Output Data</td><td class="output result-cell calculated-radius" data-label="Calculated Radius">—</td><td class="output result-cell developed-arc" data-label="Developed Arc">—</td><td class="output result-cell shot-count" data-label="Shots">9</td><td class="output result-cell shot-angle" data-label="Angle Per Shot">10°</td><td class="output result-cell mark-spacing" data-label="Mark Spacing">—</td><td class="output result-cell first-mark" data-label="First Mark">—</td><td class="output result-cell center-mark" data-label="Center Mark">—</td><td class="output result-cell last-mark" data-label="Last Mark">—</td><td class="output result-cell all-marks" data-label="All Bend Marks">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell segmented-reference-cell" data-label="${referenceLabel}"><input class="segmented-measurement ${r.autoSegmentedMeasurement?'auto-filled':''}" data-auto="${r.autoSegmentedMeasurement?'1':'0'}" type="text" value="${r.segmentedMeasurement||''}" placeholder="${segmentedReferenceMode==='back'?'e.g. 60':'e.g. 24'}"></td><td class="input-cell" data-label="Desired Radius"><input class="desired-radius ${r.autoDesiredRadius?'auto-filled':''}" data-auto="${r.autoDesiredRadius?'1':'0'}" type="text" value="${r.desiredRadius||''}" placeholder="e.g. 24"></td><td class="output-section-label">Output Data</td><td class="output result-cell calculated-radius" data-label="Calculated Radius">—</td><td class="output result-cell developed-arc" data-label="Developed Arc">—</td><td class="output result-cell shot-count" data-label="Shots">9</td><td class="output result-cell shot-angle" data-label="Angle Per Shot">10°</td><td class="output result-cell mark-spacing" data-label="Mark Spacing">—</td><td class="output result-cell mark-cell first-mark" data-label="First Mark">—</td><td class="output result-cell mark-cell center-mark" data-label="Center Mark">—</td><td class="output result-cell mark-cell last-mark" data-label="Last Mark">—</td><td class="output result-cell mark-cell all-marks" data-label="All Bend Marks">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
   }
 }
 function buildBasic90Table(old,n){
   const header=document.querySelector('.table-wrap thead tr');
-  if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Back of 90</th><th>Bend Mark</th><th>90° Gain</th><th>Missing / Needed</th>';
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Back of 90</th><th class="mark-col">Bend Mark</th><th>90° Gain</th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
-    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Back of 90"><input class="bon ${r.autoBon||r.autoOal?'auto-filled':''}" data-auto="${r.autoBon||r.autoOal?'1':'0'}" type="text" value="${r.bon||r.oal||''}" placeholder="e.g. 60"></td><td class="output-section-label">Output Data</td><td class="output result-cell bend-mark" data-label="Bend Mark">—</td><td class="output result-cell basic-gain" data-label="90° Gain">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Back of 90"><input class="bon ${r.autoBon||r.autoOal?'auto-filled':''}" data-auto="${r.autoBon||r.autoOal?'1':'0'}" type="text" value="${r.bon||r.oal||''}" placeholder="e.g. 60"></td><td class="output-section-label">Output Data</td><td class="output result-cell mark-cell bend-mark" data-label="Bend Mark">—</td><td class="output result-cell basic-gain" data-label="90° Gain">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
   }
 }
 function buildStraightTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
-  if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Stick Length</th><th>Missing / Needed</th>';
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Stick Length</th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
@@ -1537,7 +1592,31 @@ function ensureLengthColumns(anyTrimNeeded=null){
   prepareCompactConduitRows();
   applyStickTableChrome();
 }
+
+function ensureMarkHighlights(){
+  $$('#rows tr').forEach(tr=>{
+    const marks=[...tr.querySelectorAll('.mark-cell')].filter(td=>!td.classList.contains('hidden'));
+    let label=tr.querySelector('.marks-section-label');
+    if(!marks.length){
+      label?.remove();
+      return;
+    }
+    if(!label){
+      label=document.createElement('td');
+      label.className='marks-section-label';
+      label.innerHTML='<span class="marks-section-title">Marks to layout</span>';
+    }
+    // Keep the group header immediately above the first bend mark cell.
+    marks[0].before(label);
+    marks.forEach(td=>{
+      const raw=(td.textContent||'').trim();
+      td.classList.toggle('mark-ready', !!raw && raw!=='—' && raw!=='-');
+    });
+  });
+}
 function prepareCompactConduitRows(){
+  // Insert/update mark group chrome before assigning compact grid rows.
+  ensureMarkHighlights();
   $$('#rows tr').forEach(tr=>{
     let cells=[...tr.children];
     const heading=cells[0];if(!heading)return;
@@ -1556,18 +1635,41 @@ function prepareCompactConduitRows(){
       tr.insertBefore(outputHeading,firstOutput||null);
     }
     if(!outputHeading.querySelector('.conduit-output-toggle'))outputHeading.innerHTML='<button type="button" class="conduit-output-toggle" aria-expanded="true">Output Data</button>';
+    const marksHeading=tr.querySelector('.marks-section-label');
     cells=[...tr.children];
     const outputStart=cells.indexOf(outputHeading);
+    const markSet=new Set([...(marksHeading?[marksHeading]:[]), ...tr.querySelectorAll('.mark-cell')]);
     let inputRow=3,outputRow=3;
-    cells.forEach((td,index)=>{
-      td.classList.remove('compact-input-cell','compact-output-cell');
-      td.style.removeProperty('--compact-row');
-      if(td===heading||td===inputHeading||td===outputHeading)return;
-      if(td.classList.contains('stick-cc-stub')||td.classList.contains('ctc-col')&&isStickApp())return;
-      const output=index>outputStart||td.classList.contains('output');
+    const place=(td,output)=>{
       td.classList.add(output?'compact-output-cell':'compact-input-cell');
       td.style.setProperty('--compact-row',String(output?outputRow:inputRow));
       if(!td.classList.contains('hidden')){if(output)outputRow++;else inputRow++}
+    };
+    cells.forEach(td=>{
+      td.classList.remove('compact-input-cell','compact-output-cell');
+      td.style.removeProperty('--compact-row');
+    });
+    // Inputs keep DOM order.
+    cells.forEach((td,index)=>{
+      if(td===heading||td===inputHeading||td===outputHeading)return;
+      if(td.classList.contains('stick-cc-stub')||(td.classList.contains('ctc-col')&&isStickApp()))return;
+      if(markSet.has(td))return;
+      const output=index>outputStart||td.classList.contains('output');
+      if(output)return; // outputs placed in prioritized passes below
+      place(td,false);
+    });
+    // Output column: marks group first (what you layout), then the rest.
+    if(marksHeading)place(marksHeading,true);
+    cells.forEach(td=>{
+      if(!td.classList.contains('mark-cell')||td.classList.contains('hidden'))return;
+      place(td,true);
+    });
+    cells.forEach((td,index)=>{
+      if(td===heading||td===inputHeading||td===outputHeading||markSet.has(td))return;
+      if(td.classList.contains('stick-cc-stub')||(td.classList.contains('ctc-col')&&isStickApp()))return;
+      const output=index>outputStart||td.classList.contains('output');
+      if(!output)return;
+      place(td,true);
     });
   });
 }
@@ -2086,6 +2188,7 @@ function redoLastEdit(){
   restoreHistoryState(item);updateUndoButton();
 }
 function finishCalculatedSection(){
+  ensureMarkHighlights();
   updateLengthMetrics();
   if(isCustomRun&&!suppressCustomSync){
     syncActiveCustomCalculatedState();
@@ -2098,11 +2201,11 @@ function finishCalculatedSection(){
 }
 function buildOffsetTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
-  if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Critical Bend<br><small>measurement</small></th><th class="oal-col">OAL<br><small>finished A to B</small></th><th class="offset-rise-col">Rise</th><th class="offset-distance-col">Offset Distance</th><th>Bend Angle</th><th>True Offset</th><th>Travel Between Bends</th><th>Shrink</th><th class="offset-gap-col">Gap at Offsets</th><th>First Bend Mark</th><th>Second Bend Mark</th><th>Missing / Needed</th>';
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Critical Bend<br><small>measurement</small></th><th class="oal-col">OAL<br><small>finished A to B</small></th><th class="offset-rise-col">Rise</th><th class="offset-distance-col">Offset Distance</th><th>Bend Angle</th><th>True Offset</th><th>Travel Between Bends</th><th>Shrink</th><th class="offset-gap-col">Gap at Offsets</th><th class="mark-col">First Bend Mark</th><th class="mark-col">Second Bend Mark</th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
-    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Critical Bend Measurement"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell offset-rise-col" data-label="Rise"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 8"></td><td class="input-cell offset-distance-col" data-label="Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="Bend Angle"><input class="bend-angle ${r.autoBendAngle?'auto-filled':''}" data-auto="${r.autoBendAngle?'1':'0'}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 30"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset" data-label="True Offset">—</td><td class="output result-cell travel" data-label="Travel Between Bends">—</td><td class="output result-cell shrink" data-label="Shrink">—</td><td class="output result-cell first-mark" data-label="First Bend Mark">—</td><td class="output result-cell second-mark" data-label="Second Bend Mark">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Critical Bend Measurement"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell offset-rise-col" data-label="Rise"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 8"></td><td class="input-cell offset-distance-col" data-label="Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="Bend Angle"><input class="bend-angle ${r.autoBendAngle?'auto-filled':''}" data-auto="${r.autoBendAngle?'1':'0'}" type="text" value="${r.bendAngle||''}" placeholder="e.g. 30"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset" data-label="True Offset">—</td><td class="output result-cell travel" data-label="Travel Between Bends">—</td><td class="output result-cell shrink" data-label="Shrink">—</td><td class="output result-cell mark-cell first-mark" data-label="First Bend Mark">—</td><td class="output result-cell mark-cell second-mark" data-label="Second Bend Mark">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
     const shrinkCell=tr.querySelector('.shrink');
     if(shrinkCell&&!tr.querySelector('.offset-gap')){
@@ -2131,11 +2234,11 @@ function buildSaddleTable(old,n){
   // COB legs stay equal; mark legs become L±Δ after per-angle 45° notch shifts.
   const betweenLabel=threePoint?'Mark Spacing 1→2':(push?'COB Spacing 1→2':'Between Points 1 &amp; 2');
   const betweenLabel2=threePoint?'Mark Spacing 2→3':(push?'COB Spacing 3→4':'Between Points 3 &amp; 4');
-  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>${riseLabel}</th><th class="saddle-roll-col">First Offset Distance</th><th>${angleHead}</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th class="saddle-true1-label">First Offset</th><th>${betweenLabel}</th><th>First Shrink</th><th class="saddle-true2-label">Second Offset</th><th class="saddle-travel2-label">${betweenLabel2}</th><th>Second Shrink</th><th>Bend 1<br><small>${markNote}</small></th><th>Bend 2<br><small>${markNote}</small></th><th>Bend 3<br><small>${markNote}</small></th><th class="saddle-four-only">Bend 4<br><small>${markNote}</small></th><th>Missing / Needed</th>`;
+  if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>${riseLabel}</th><th class="saddle-roll-col">First Offset Distance</th><th>${angleHead}</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th class="saddle-true1-label">First Offset</th><th>${betweenLabel}</th><th>First Shrink</th><th class="saddle-true2-label">Second Offset</th><th class="saddle-travel2-label">${betweenLabel2}</th><th>Second Shrink</th><th class="mark-col">Bend 1<br><small>${markNote}</small></th><th class="mark-col">Bend 2<br><small>${markNote}</small></th><th class="mark-col">Bend 3<br><small>${markNote}</small></th><th class="mark-col saddle-four-only">Bend 4<br><small>${markNote}</small></th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
     const r=old[i]||{},tr=document.createElement('tr');
-    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="${criticalLabel}"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="${riseLabel}"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 6"></td><td class="input-cell saddle-roll-col" data-label="First Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="${angleLabel}">${bendAngleControlMarkup(r)}</td><td class="input-cell saddle-four-only" data-label="Bend 2 to Bend 3"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 12"></td><td class="input-cell saddle-second-col" data-label="Second Rise"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 8"></td><td class="input-cell saddle-second-roll-col" data-label="Second Offset Distance"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 10"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1 saddle-true1-cell" data-label="First Offset">—</td><td class="output result-cell travel-1" data-label="${betweenLabel.replace(/&amp;/g,'&')}">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell true-offset-2 saddle-true2-cell" data-label="Second Offset">—</td><td class="output result-cell travel-2" data-label="${betweenLabel2.replace(/&amp;/g,'&')}">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell mark-1" data-label="Bend 1 (${markNote})">—</td><td class="output result-cell mark-2" data-label="Bend 2 (${markNote})">—</td><td class="output result-cell mark-3" data-label="Bend 3 (${markNote})">—</td><td class="output result-cell mark-4 saddle-four-only" data-label="Bend 4 (${markNote})">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
+    tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="${criticalLabel}"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="Enter any row" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="${riseLabel}"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 6"></td><td class="input-cell saddle-roll-col" data-label="First Offset Distance"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 8"></td><td class="input-cell" data-label="${angleLabel}">${bendAngleControlMarkup(r)}</td><td class="input-cell saddle-four-only" data-label="Bend 2 to Bend 3"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 12"></td><td class="input-cell saddle-second-col" data-label="Second Rise"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 8"></td><td class="input-cell saddle-second-roll-col" data-label="Second Offset Distance"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 10"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1 saddle-true1-cell" data-label="First Offset">—</td><td class="output result-cell travel-1" data-label="${betweenLabel.replace(/&amp;/g,'&')}">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell true-offset-2 saddle-true2-cell" data-label="Second Offset">—</td><td class="output result-cell travel-2" data-label="${betweenLabel2.replace(/&amp;/g,'&')}">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell mark-cell mark-1" data-label="Bend 1 (${markNote})">—</td><td class="output result-cell mark-cell mark-2" data-label="Bend 2 (${markNote})">—</td><td class="output result-cell mark-cell mark-3" data-label="Bend 3 (${markNote})">—</td><td class="output result-cell mark-cell mark-4 saddle-four-only" data-label="Bend 4 (${markNote})">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td>`;
     rowsEl.appendChild(tr);
   }
   $$('.saddle-roll-col').forEach(el=>el.classList.toggle('hidden',!isRolledSaddle()));
@@ -2158,7 +2261,7 @@ function build(preserve=true){
   else if(activeRackType==='offset')buildOffsetTable(old,n);
   else{
     const header=document.querySelector('.table-wrap thead tr');
-    if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>';
+    if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>`;
     rowsEl.innerHTML='';for(let i=0;i<n;i++){const r=old[i]||{},tr=document.createElement('tr');tr.innerHTML=`<td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r,'')}<td data-label="Distance from End of Strut"><input class="strut ${r.autoStrut?'auto-filled':''}" data-auto="${r.autoStrut?'1':'0'}" type="text" placeholder="Enter any row" value="${r.strut||''}"></td><td data-label="Back of 90"><input class="bon ${r.autoBon||r.autoOal?'auto-filled':''}" data-auto="${r.autoBon||r.autoOal?'1':'0'}" type="text" value="${r.bon||r.oal||''}" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="Enter any row"></td><td data-label="Hypotenuse"><input class="hyp ${r.autoHyp?'auto-filled':''}" data-auto="${r.autoHyp?'1':'0'}" type="text" value="${r.hyp||''}" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">—</td>`;rowsEl.appendChild(tr)}
   }
   ensureLengthColumns();applyPattern(true);attach();refreshBenderMode();recalc(0);enhanceMeasurementInputs();applyStickTableChrome();
@@ -3350,7 +3453,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:88,build:'PWA v1.87',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:89,build:'PWA v1.88',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
