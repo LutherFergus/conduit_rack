@@ -1,4 +1,4 @@
-const CACHE_NAME="conduit-rack-v1.97";
+const CACHE_NAME="conduit-rack-v1.98";
 const APP_FILES=[
   "./",
   "./index.html",
@@ -8,7 +8,10 @@ const APP_FILES=[
   "./service-worker.js",
   "./icons/icon-180.png",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./icons/stick-icon-180.png",
+  "./icons/stick-icon-192.png",
+  "./icons/stick-icon-512.png"
 ];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(()=>self.skipWaiting()));
