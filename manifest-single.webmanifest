@@ -1,8 +1,8 @@
 {
-  "name": "Conduit Rack Layout Calculator",
-  "short_name": "Conduit Rack",
-  "description": "Offline conduit rack layout, geometry, clearance, and 3D viewing tool.",
-  "start_url": "./index.html",
+  "name": "Conduit Stick Calculator",
+  "short_name": "Stick Calc",
+  "description": "Single-conduit bend marks and geometry using the same engine as Conduit Rack.",
+  "start_url": "./single.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#070b12",

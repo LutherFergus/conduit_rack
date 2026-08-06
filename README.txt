@@ -1,6 +1,37 @@
-PWA v1.66 conduit math data audit
+PWA v1.65b low-light night-shop theme
 
-v1.66: Audited bender shoe data against published charts. Corrected Klein 1" CLR (7.375), Milwaukee 3/4" & 1" CLR (5.25 / 6.5), Sidewinder EMT CLR/deduct (B2555 chart), table CLR for 3-1/2" & 4" (777/PVC family), and synced emtGeometry CLR fallbacks to default shoes. Added conduit-math-tests.cjs regression harness. Table deducts (18/21/24/27) remain flagged — they do not match Greenlee 881 Cam Track EMT deducts.
+PWA v1.74 3-point saddle center + direction
+
+v1.74: 3 Point Saddle critical measurement is To Center of Saddle (not To Bend 1). 3-point UI shows only Saddle Direction; Offset Heights / Vertical Direction / Offset Direction stay for 4-point saddles.
+
+
+v1.65b: Add Section scrolls to the new section’s conduit card and keeps the mobile viewer expanded if it was already open.
+
+PWA v1.65 low-light night-shop theme
+
+v1.65: Replaced warm brown/copper “hot chocolate” UI with a cooler charcoal + steel-cyan palette for dim jobsite reading. Kept docked viewer and control layout.
+
+PWA v1.64e simplified UI + mobile docked viewer
+
+v1.64e: Expanding the mobile viewer auto-fits the rack (Fit button kept). Bend Type sits above Conduit Count; Conduit Count is placed under Bender Profile.
+
+PWA v1.64d simplified UI + mobile docked viewer
+
+v1.64d: Added Bottom and Back preset view buttons beside Front/Right/Left/Top/Iso on the 3D viewer.
+
+PWA v1.64c simplified UI + mobile docked viewer
+
+v1.64c: Added Copy on the 3D viewer toolbar to put a PNG screenshot on the clipboard (Capture still saves/shares).
+
+PWA v1.64b simplified UI + mobile docked viewer
+
+v1.64b: Restored the second Test button on the 3D viewer toolbar (top-bar Test remains).
+
+PWA v1.64 simplified UI + mobile docked viewer
+
+v1.64: Simplified chrome (less helper text by default, Help toggle, quieter panels, grouped viewer toolbar). On mobile/tablet the 3D viewer is a persistent bottom dock: collapsed peek by default, expands in place, collapses when tapping outside the viewer (or when the keypad/wizard opens).
+
+PWA v1.63 no embedded Grok
 
 v1.63: Removed in-app Grok chat, API key UI, and xAI proxy. App is local-first again. serve.py is a plain static file server only. Parallel offset mark progression restored to the established formula (see below).
 
