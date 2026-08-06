@@ -1,4 +1,4 @@
-const CACHE_NAME="conduit-rack-v1.89-kicked-marks-rolled30";
+const CACHE_NAME="conduit-rack-v1.90-stick-kick-angle";
 const APP_FILES=[
   "./",
   "./index.html",
