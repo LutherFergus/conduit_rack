@@ -420,7 +420,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.90</span>
+      <span class="version-badge">PWA v1.91</span>
     </div>
   </div>
 </header>
@@ -463,7 +463,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       </div>
       <div id="saddleParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
-          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default): every shot on the rim notch — 45° for 3-point / standard 4-point, 30° for rolled 4-point. Traditional keeps equal COB marks (no notch shift).</div></div>
+          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default on rolled): every shot on the 30° rim notch. Traditional keeps equal COB marks (no notch shift). Standard 4-point always uses center-of-bend marks. 45° notch applies to 3-point saddles only.</div></div>
           <div id="saddleHeightsCard" class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Different enables a separate height for the second opposing offset.</div></div>
           <div id="saddleVerticalCard" class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
           <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div></div>
@@ -644,7 +644,7 @@ let activeSaddleType='standard';
 let saddleOffsetRelation='same';
 let saddleVerticalDirection='up';
 let saddleHorizontalDirection='right';
-// Push Through (default): true COB layout + display marks shifted to the 45° notch.
+// Push Through: 3-point always uses 45° rim-notch marks; rolled 4-point may use the 30° notch.
 let saddleMarkMethod='push-through';
 // 3-point saddle only: up | down | left | right (4-point keeps the separate vertical/horizontal controls).
 let saddleDirection='up';
@@ -908,7 +908,9 @@ function updateRackModeUI(){
   $('#saddleHorizontalDirectionBox')?.classList.toggle('hidden',!isSaddle||!isRolledSaddle()||isThreePointSaddle());
   $('#saddleHeightsCard')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle());
   $('#saddleVerticalCard')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle());
-  $('#saddleMarkMethodCard')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle());
+  // Mark method (30° notch vs COB) is only offered for rolled 4-point.
+  // Standard 4-point is always COB; 3-point is always 45° notch.
+  $('#saddleMarkMethodCard')?.classList.toggle('hidden',!isSaddle||!isRolledSaddle());
   if(isThreePointSaddle()&&saddleMarkMethod!=='push-through'){saddleMarkMethod='push-through';}
   if(isSaddle&&isThreePointSaddle())saddleOffsetRelation='same';
   $('#offsetModeSelector [data-offset-mode="parallel"]')?.classList.toggle('hidden',activeLayoutMode==='single');
@@ -923,7 +925,7 @@ function updateRackModeUI(){
   if(markMethodHelp){
     markMethodHelp.textContent=isRolledSaddle()
       ?'Push Through (default): every shot on the 30° rim notch (rolled 4-point). Traditional keeps equal COB marks (no notch shift). Default bend angle is 30°.'
-      :'Push Through (default): every shot on the 45° rim notch. COB legs stay equal; mark legs A→B and B→C are unequal (L±Δ) so the finish returns to the start plane. Traditional keeps equal COB marks (no notch shift).';
+      :'Standard 4-point marks are true centers of bend. The 45° rim notch applies to 3-point saddles only.';
   }
   setSegmentedState('#saddleRelationSelector','saddleRelation',saddleOffsetRelation);
   setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection);
@@ -1306,8 +1308,9 @@ function profileCLR(size,key){const p=benderProfiles[key];return p?.clr?.[size]?
 // On a circular shoe of radius CLR, bend start → COB(θ) = CLR×θ/2 (mid-arc),
 // bend start → rim = CLR×N°/2, so
 //   Δ = CLR × (N° − θ) / 2   (radians)
-// At θ = N°, Δ = 0. Outers use θ; 3-pt center uses 2θ.
-// Default N = 45°. Rolled 4-point uses the 30° notch only.
+// At θ = N°, Δ = 0.
+// N = 45° for 3-point only. Rolled 4-point Push Through uses the 30° notch.
+// Standard 4-point always stays on true center of bend (no notch shift).
 function notchReferenceDeg(){
   return (typeof isRolledSaddle==='function'&&isRolledSaddle())?30:45;
 }
@@ -1320,7 +1323,9 @@ function notchDelta45(clr,bendAngleDeg){return notchDelta(clr,bendAngleDeg,45)}
 const isPushThroughMarks=()=>{
   // 3-point saddles always use 45° notch push-through so mark legs stay unequal (L±Δ).
   if(typeof isThreePointSaddle==='function'&&isThreePointSaddle())return true;
-  return saddleMarkMethod!=='traditional';
+  // Rolled 4-point may opt into 30° notch marks; standard 4-point is always COB.
+  if(typeof isRolledSaddle==='function'&&isRolledSaddle())return saddleMarkMethod!=='traditional';
+  return false;
 };
 // Field-calibrated minimum distance from the kick center-of-bend to the start
 // reference of the 90. A 3/4-inch Ideal hand bender uses 8 inches through 30°.
@@ -2294,8 +2299,7 @@ function buildSaddleTable(old,n){
   const angleLabel=threePoint?'Bend Angles':'Bend Angle';
   const notchDeg=notchReferenceDeg();
   const markNote=push?`${notchDeg}° notch`:'COB';
-  // Push-through: show notch-mark legs (what you measure on the stick).
-  // Rolled 4-point uses the 30° notch; other saddles use the 45° notch.
+  // Push-through notch marks: 3-point (45°) and rolled 4-point (30°). Standard 4-point is COB.
   const betweenLabel=threePoint?'Mark Spacing 1→2':(push?'COB Spacing 1→2':'Between Points 1 &amp; 2');
   const betweenLabel2=threePoint?'Mark Spacing 2→3':(push?'COB Spacing 3→4':'Between Points 3 &amp; 4');
   if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>${riseLabel}</th><th class="saddle-roll-col">First Offset Distance</th><th>${angleHead}</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th class="saddle-true1-label">First Offset</th><th>${betweenLabel}</th><th>First Shrink</th><th class="saddle-true2-label">Second Offset</th><th class="saddle-travel2-label">${betweenLabel2}</th><th>Second Shrink</th><th class="mark-col">Bend 1<br><small>${markNote}</small></th><th class="mark-col">Bend 2<br><small>${markNote}</small></th><th class="mark-col">Bend 3<br><small>${markNote}</small></th><th class="mark-col saddle-four-only">Bend 4<br><small>${markNote}</small></th><th>Missing / Needed</th>`;
@@ -2621,8 +2625,8 @@ function recalcSaddle(){
       mark3=mark2!=null&&middleDistance!=null?mark2+middleDistance:null;
       mark4=mark3!=null&&travel2!=null?mark3+travel2:null;
     }
-    // Display marks: shift each true COB by Δ to the shoe rim notch.
-    // Δ = CLR × (N° − θ_bend) / 2 (radians). N=30 for rolled 4-pt, else 45.
+    // Display marks: shift each true COB by Δ to the shoe rim notch when push-through applies.
+    // Δ = CLR × (N° − θ_bend) / 2 (radians). N=45 for 3-pt, N=30 for rolled; standard 4-pt stays COB.
     const notchDeg=notchReferenceDeg();
     const dOuter=push&&clr!=null&&validAngle?notchDelta(clr,angle,notchDeg):0;
     const dCenter=push&&threePoint&&clr!=null&&validAngle?notchDelta(clr,2*angle,notchDeg):dOuter;
@@ -3216,10 +3220,8 @@ function renderSaddleStatus(d){
   const markHelp=push
     ?(isThreePointSaddle()
       ?'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Bend 2 COB = Center of Saddle + shrink (Height × tan(θ/2)). COB spacing = Height × csc(θ) + OD. Output marks add Δ = CLR × (45° − θ<sub>bend</sub>) ÷ 2 (Ideal rim notch = COB of a 45° bend; select conduit size for CLR/OD).</div></div>'
-      :`<div class="status-card ok"><strong>Push Through · ${notchDeg}° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (${notchDeg}° − θ) ÷ 2 so each mark lands on the ${notchDeg}° rim notch${isRolledSaddle()?' (rolled 4-point uses the 30° notch)':''}.</div></div>`)
-    :(isThreePointSaddle()
-      ?'<div class="status-card ok"><strong>Traditional · COB marks</strong><div class="helper">Bend 2 = Center of Saddle + shrink. Bend 1 / Bend 3 sit one travel away. Marks are true centers of bend.</div></div>'
-      :'<div class="status-card ok"><strong>Traditional · COB marks</strong><div class="helper">Bend 4 is calculated from the second true offset, selected bend angle, second travel, and the cumulative location established by Bends 1–3.</div></div>');
+      :`<div class="status-card ok"><strong>Push Through · ${notchDeg}° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (${notchDeg}° − θ) ÷ 2 so each mark lands on the ${notchDeg}° rim notch (rolled 4-point).</div></div>`)
+    :'<div class="status-card ok"><strong>Center of bend marks</strong><div class="helper">Bend marks are true centers of bend. The 45° rim notch applies to 3-point saddles only.</div></div>';
   const offsetHelp=isThreePointSaddle()
     ?'Bends 1–2 form the first leg. Bends 2–3 form the return leg through the doubled center bend.'
     :'Bends 1–2 form the first offset. Bends 3–4 form the opposing offset. Shrink from each completed offset is carried into every downstream absolute bend mark.';
@@ -3582,7 +3584,7 @@ function loadLast(){
   if(activeRackType==='segmented'){populateSegmentedTestRack(false);return}
   if(activeRackType==='saddle'){populateSaddleTestRack(false);return}
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
-  countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
+  countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
 function baseProjectObject(){return {version:91,build:'PWA v1.90',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
@@ -6368,14 +6370,20 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
       return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.rise),pdfDisplayValue(row.offsetDistance),pdfDisplayValue(row.secondRise),pdfDisplayValue(row.secondOffsetDistance),angleText,d.middleDistance==null?pdfDisplayValue(row.middleDistance):fmt16(d.middleDistance),marks].filter(v=>v!==null)};
     });
     const threePointDir=normalizeSaddleDirection(project.saddleDirection||(project.saddleVerticalDirection==='down'?'down':'up'));
-    const notchLabel=(project.saddleType==='rolled')?'30° notch':'45° notch';
-    const markMethodLabel=project.saddleMarkMethod==='traditional'?'Traditional (COB)':`Push Through (${notchLabel})`;
+    const rolledPdf=project.saddleType==='rolled';
+    const pushPdf=threePoint||(rolledPdf&&project.saddleMarkMethod!=='traditional');
+    const notchLabel=rolledPdf?'30° notch':'45° notch';
+    const markMethodLabel=threePoint
+      ?'Push Through (45° notch)'
+      :(rolledPdf
+        ?(project.saddleMarkMethod==='traditional'?'Traditional (COB)':`Push Through (${notchLabel})`)
+        :'Center of bend (COB)');
     const saddleSettings=threePoint
       ?[['Conduits',countText],['Direction',threePointDir.replace(/^./,c=>c.toUpperCase())],['Mark Method',markMethodLabel]]
       :[['Conduits',countText],['Offsets',project.saddleOffsetRelation==='different'?'Both Different':'Both Same'],['Offset Direction',project.saddleVerticalDirection==='down'?'Down First':'Up First'],['Horizontal',project.saddleType==='rolled'?(project.saddleHorizontalDirection==='left'?'Left First':'Right First'):(saddleTypes[project.saddleType]?.label||'4 Point Saddle')],['Mark Method',markMethodLabel]];
-    const marksHead=project.saddleMarkMethod==='traditional'
-      ?(threePoint?'Bend Marks (COB) 1 · 2 · 3':'Bend Marks (COB) 1 · 2 · 3 · 4')
-      :(threePoint?'Bend Marks (45° notch) 1 · 2 · 3':`Bend Marks (${notchLabel}) 1 · 2 · 3 · 4`);
+    const marksHead=pushPdf
+      ?(threePoint?'Bend Marks (45° notch) 1 · 2 · 3':`Bend Marks (${notchLabel}) 1 · 2 · 3 · 4`)
+      :(threePoint?'Bend Marks (COB) 1 · 2 · 3':'Bend Marks (COB) 1 · 2 · 3 · 4');
     return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),...(threePoint?['Center of Saddle','Saddle Height','Angles']:['First Offset','Offset Distance 1','Rise 2','Offset Distance 2','Angle','B2–B3']),marksHead],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),...(threePoint?[110,100,110]:[100,110,90,110,80,100]),540],settings:[...sectionSettings,...saddleSettings]},reportRows};
   }
   if(type==='offset'){
