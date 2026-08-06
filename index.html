@@ -646,6 +646,16 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
   </div>
 </div>
 
+<div id="choicePicker" class="setup-wizard" role="dialog" aria-modal="true" aria-label="Choose value" aria-hidden="true">
+  <div class="setup-wizard-card">
+    <div id="choicePickerStep" class="setup-wizard-step">Choose</div>
+    <h2 id="choicePickerQuestion" class="setup-wizard-question">Select a value</h2>
+    <div id="choicePickerHelp" class="setup-wizard-help"></div>
+    <div id="choicePickerOptions" class="setup-wizard-options rack-type-options"></div>
+    <button id="choicePickerClose" class="setup-wizard-back" type="button">Cancel</button>
+  </div>
+</div>
+
 <div id="measureKeypadBackdrop" class="measure-keypad-backdrop"></div>
 <div id="measureKeypad" class="measure-keypad" role="dialog" aria-modal="true" aria-label="Measurement keypad">
   <div class="measure-keypad-head"><div id="measureKeypadLabel" class="measure-keypad-label">Measurement</div><button id="measureKeypadClose" class="key-action" type="button">Close</button></div>
@@ -1623,11 +1633,24 @@ let measureKeypadTarget=null;
 let measureKeypadOriginal='';
 let measureKeypadDirty=false;
 let measureKeypadReplaceOnFirstKey=false;
+let choicePickerOnPick=null;
+function measurementFieldVisible(el){
+  if(!el)return false;
+  const td=el.closest('td');
+  if(td&&(td.classList.contains('hidden')||td.hasAttribute('hidden')))return false;
+  try{
+    if(td&&getComputedStyle(td).display==='none')return false;
+    if(getComputedStyle(el).display==='none')return false;
+  }catch(_e){}
+  return true;
+}
 function measurementInputEligible(el){
   if(!(el instanceof HTMLInputElement)||el.disabled)return false;
   if(el.id==='pattern')return true;
   const tr=el.closest('#rows tr');if(!tr)return false;
   const i=$$('#rows tr').indexOf(tr);
+  // Single stick: keep Next on primary fabrication inputs only.
+  if(isStickApp()&&(el.classList.contains('oal')||el.classList.contains('middle-distance')||el.classList.contains('second-rise')||el.classList.contains('second-offset-distance')))return false;
   if(el.classList.contains('cc'))return i>0;
   if(activeRackType==='segmented'){
     return el.classList.contains('segmented-measurement')||el.classList.contains('desired-radius');
@@ -1659,7 +1682,7 @@ function refreshMeasureKeypad(){
   const value=$('#measureKeypadValue');if(value)value.textContent=measureKeypadTarget?(measureKeypadTarget.value||'—'):'—';
 }
 function openMeasureKeypad(el){
-  if(!measurementInputEligible(el))return;
+  if(!measurementInputEligible(el)||!measurementFieldVisible(el))return;
   if(measureKeypadTarget===el)return;
   if(measureKeypadTarget&&!commitMeasureKeypad())return;
   if(measureKeypadTarget)measureKeypadTarget.classList.remove('measure-keypad-active');
@@ -1727,10 +1750,73 @@ function insertMeasureFraction(fraction){
   if(v&&/\d$/.test(v))v+='-';
   setMeasureValue(v+fraction);
 }
-function measurementTargets(){return [...$$('#rows input')].filter(measurementInputEligible)}
+function measurementTargets(){return [...$$('#rows input')].filter(el=>measurementInputEligible(el)&&measurementFieldVisible(el))}
+function closeChoicePicker(){
+  const modal=$('#choicePicker');
+  if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
+  choicePickerOnPick=null;
+}
+function openChoicePicker({step,question,help,options,onPick}){
+  const modal=$('#choicePicker');if(!modal)return;
+  choicePickerOnPick=onPick||null;
+  $('#choicePickerStep').textContent=step||'Choose';
+  $('#choicePickerQuestion').textContent=question||'Select a value';
+  $('#choicePickerHelp').textContent=help||'';
+  const opts=$('#choicePickerOptions');
+  opts.classList.add('rack-type-options');
+  opts.innerHTML=(options||[]).map(o=>`<button type="button" class="rack-type-button available" data-choice-value="${String(o.value).replace(/"/g,'&quot;')}"><span><span class="rack-type-name">${o.label}</span>${o.desc?`<span class="rack-type-desc">${o.desc}</span>`:''}</span><span class="rack-type-status">Select</span></button>`).join('');
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+}
+function promptStickSizePicker(tr,done){
+  const sizeEl=tr?.querySelector('.size');
+  if(!sizeEl||(sizeEl.value||'').trim()){done?.();return}
+  openChoicePicker({
+    step:'Conduit size',
+    question:'Select conduit size',
+    help:'Needed for CLR, OD, and notch marks on this stick.',
+    options:['1/2"','3/4"','1"','1-1/4"','1-1/2"','2"','2-1/2"','3"','3-1/2"','4"'].map(v=>({value:v,label:v})),
+    onPick:v=>{
+      sizeEl.value=v;
+      const b=tr.querySelector('.bender');
+      if(b){b.innerHTML=benderOptions(v,defaultBenderForSize(v));b.value=defaultBenderForSize(v)}
+      sizeEl.dispatchEvent(new Event('change',{bubbles:true}));
+      closeChoicePicker();
+      done?.();
+    }
+  });
+}
+function promptStickThreePointFollowUps(tr){
+  if(!tr)return;
+  const angleEl=tr.querySelector('select.bend-angle, .bend-angle');
+  openChoicePicker({
+    step:'3 Point angles',
+    question:'Select bend angle set',
+    help:'Outer · center · outer. Center bend is double the outer angle.',
+    options:threePointAnglePresets.map(([v,label])=>({value:v,label,desc:`Outer ${v}°`})),
+    onPick:v=>{
+      if(angleEl){
+        angleEl.value=normalizeThreePointAngle(v)||v;
+        angleEl.dataset.auto='0';
+        angleEl.classList.remove('auto-filled');
+        angleEl.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+      closeChoicePicker();
+      promptStickSizePicker(tr,()=>{try{recalc(0)}catch(_e){}});
+    }
+  });
+}
 function nextMeasureField(){
-  const fields=measurementTargets(),i=fields.indexOf(measureKeypadTarget);
+  const current=measureKeypadTarget;
+  const fields=measurementTargets();
+  const i=fields.indexOf(current);
   if(!commitMeasureKeypad())return;
+  // Stick 3-point: Center → Height → angle popup → size popup if needed.
+  if(isStickApp()&&activeRackType==='saddle'&&isThreePointSaddle()&&current?.classList.contains('rise')){
+    const tr=current.closest('tr');
+    closeMeasureKeypad(true);
+    promptStickThreePointFollowUps(tr);
+    return;
+  }
   const next=i>=0&&i+1<fields.length?fields[i+1]:null;
   if(next){
     if(measureKeypadTarget)measureKeypadTarget.classList.remove('measure-keypad-active');
@@ -1741,9 +1827,16 @@ function nextMeasureField(){
 function enhanceMeasurementInputs(){
   measurementTargets().forEach(el=>{el.inputMode='none';el.setAttribute('readonly','readonly');el.autocomplete='off';el.spellcheck=false});
 }
-document.addEventListener('pointerdown',e=>{const el=e.target.closest?.('input');if(measurementInputEligible(el)){e.preventDefault();openMeasureKeypad(el)}},{passive:false});
+document.addEventListener('pointerdown',e=>{const el=e.target.closest?.('input');if(measurementInputEligible(el)&&measurementFieldVisible(el)){e.preventDefault();openMeasureKeypad(el)}},{passive:false});
 $('#measureKeypad').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.preventDefault();if(b.dataset.fraction)return insertMeasureFraction(b.dataset.fraction);const key=b.dataset.key;if(!key)return;if(key==='done')closeMeasureKeypad();else if(key==='next')nextMeasureField();else appendMeasureKey(key)});
 $('#measureKeypadClose').onclick=()=>closeMeasureKeypad();$('#measureKeypadBackdrop').onclick=()=>closeMeasureKeypad();
+$('#choicePickerOptions')?.addEventListener('click',e=>{
+  const b=e.target.closest('[data-choice-value]');if(!b)return;
+  const pick=choicePickerOnPick;const value=b.getAttribute('data-choice-value');
+  if(pick)pick(value);else closeChoicePicker();
+});
+$('#choicePickerClose')?.addEventListener('click',()=>closeChoicePicker());
+$('#choicePicker')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeChoicePicker()});
 
 function buildSegmentedTable(old,n){
   const header=document.querySelector('.table-wrap thead tr');
@@ -6780,7 +6873,7 @@ function initMobileViewerDock(){
     const t=e.target;
     if(dock && dock.contains(t))return;
     if(t===scrim||t?.id==='mobileViewerScrim'){collapseMobileViewer();return}
-    if(t.closest?.('.setup-wizard,.project-status-modal,.measure-keypad,.measure-keypad-backdrop,.pdf-view-selector,.pdf-busy,#mobileViewerScrim'))return;
+    if(t.closest?.('.setup-wizard,.project-status-modal,.measure-keypad,.measure-keypad-backdrop,.pdf-view-selector,.pdf-busy,#mobileViewerScrim,#choicePicker'))return;
     collapseMobileViewer();
   }, true);
   window.addEventListener('resize', ()=>{
