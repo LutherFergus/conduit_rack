@@ -1,4 +1,4 @@
-const CACHE_NAME="conduit-rack-v1.94-pages-redeploy";
+const CACHE_NAME="conduit-rack-v1.95";
 const APP_FILES=[
   "./",
   "./index.html",
