@@ -1,4 +1,4 @@
-const CACHE_NAME="conduit-rack-v1.86-stick-no-ctc";
+const CACHE_NAME="conduit-rack-v1.87-stick-drop-ctc";
 const APP_FILES=[
   "./",
   "./index.html",
