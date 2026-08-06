@@ -183,7 +183,61 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   #rows td input,#rows td select{padding:7px 5px;font-size:14px}
   #rows tr.inputs-collapsed .compact-input-cell{display:none!important}
   #rows tr.outputs-collapsed .compact-output-cell,tr.outputs-collapsed .marks-section-label{display:none!important}
+  /* Method + formulas sit under Input Data fields only (never covers inputs, never enters Output). */
+  #rows .method-formula-cell{
+    grid-column:1!important;
+    grid-row:var(--compact-row) / var(--compact-row-end, auto)!important;
+    display:flex!important;
+    flex-direction:column;
+    gap:6px;
+    align-self:stretch;
+    justify-self:stretch;
+    min-width:0;
+    max-width:100%;
+    margin:8px 0 2px!important;
+    padding:8px 7px!important;
+    border:1px solid rgba(62,196,255,.28)!important;
+    border-radius:10px;
+    background:rgba(8,24,40,.92)!important;
+    overflow:hidden;
+    z-index:0;
+  }
+  #rows .method-formula-cell::before{display:none!important;content:none!important}
+  #rows .method-formula-cell .method-guide-title{
+    font-size:.72rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#7dd3fc;margin:0
+  }
+  #rows .method-formula-cell .method-guide-blurb{
+    font-size:.72rem;line-height:1.3;color:#b6cfe3;margin:0;overflow-wrap:anywhere
+  }
+  #rows .method-formula-cell .method-guide-formulas{display:grid;gap:5px;grid-template-columns:1fr}
+  #rows .method-formula-cell .formula-item{
+    padding:6px 7px;border-radius:8px;border:1px solid #334155;background:#0a1522
+  }
+  #rows .method-formula-cell .formula-item strong{
+    display:block;margin-bottom:2px;font-size:.68rem;color:#cbd5e1;font-weight:800
+  }
+  #rows .method-formula-cell .formula-equation{
+    font-size:.68rem;line-height:1.25;color:#7dd3fc;overflow-wrap:anywhere
+  }
+  #rows tr.inputs-collapsed .method-formula-cell{display:none!important}
 }
+.method-guide{
+  display:none;
+  margin:12px 0 0;
+  padding:10px 12px;
+  border:1px solid rgba(62,196,255,.28);
+  border-radius:12px;
+  background:rgba(8,24,40,.75);
+  max-width:100%;
+  overflow:hidden;
+}
+@media(min-width:761px){.method-guide{display:block}}
+.method-guide-title{font-size:.78rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#7dd3fc;margin:0 0 5px}
+.method-guide-blurb{font-size:.84rem;line-height:1.35;color:#b6cfe3;margin:0 0 8px}
+.method-guide .method-guide-formulas{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.method-guide .formula-item{padding:8px 10px}
+.method-guide .formula-item strong{font-size:.78rem}
+.method-guide .formula-equation{font-size:.8rem;line-height:1.35}
 @media(max-width:420px){
   #rows tr{column-gap:6px;padding:7px 6px}
   #rows td{grid-template-columns:1fr;gap:3px;padding:4px 2px}
@@ -420,7 +474,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.91</span>
+      <span class="version-badge">PWA v1.93</span>
     </div>
   </div>
 </header>
@@ -533,7 +587,13 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
   <div id="conduitDirectionControls"></div>
 </div>
 <div class="toolbar-title"><h2 id="sectionCardTitle" style="margin:0">Section 1</h2><div class="legend"><span><span class="dot auto"></span>Auto-filled</span><span><span class="dot good"></span>Complete</span><span><span class="dot warn"></span>Needs information</span></div></div>
-<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th class="ctc-col">Center to Center<br><small>from previous</small></th><th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th></tr></thead><tbody id="rows"><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="0"></span><span>1</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" disabled placeholder="—"></td><td data-label="Distance from End of Strut"><input class="strut" type="text" placeholder="Optional start distance"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise" data-auto-rise="0" type="text" placeholder="Reference rise"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="1"></span><span>2</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="2"></span><span>3</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="3"></span><span>4</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="4"></span><span>5</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="5"></span><span>6</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr></tbody></table></div></section>
+<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th class="ctc-col">Center to Center<br><small>from previous</small></th><th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th></tr></thead><tbody id="rows"><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="0"></span><span>1</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" disabled placeholder="—"></td><td data-label="Distance from End of Strut"><input class="strut" type="text" placeholder="Optional start distance"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise" data-auto-rise="0" type="text" placeholder="Reference rise"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="1"></span><span>2</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="2"></span><span>3</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="3"></span><span>4</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="4"></span><span>5</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr><tr><td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="5"></span><span>6</span></span></td><td data-label="Conduit Size"><select class="size"><option value="">Select</option><option value='1/2"'>1/2&quot;</option><option value='3/4"'>3/4&quot;</option><option value='1"'>1&quot;</option><option value='1-1/4"'>1-1/4&quot;</option><option value='1-1/2"'>1-1/2&quot;</option><option value='2"'>2&quot;</option><option value='2-1/2"'>2-1/2&quot;</option><option value='3"'>3&quot;</option><option value='3-1/2"'>3-1/2&quot;</option><option value='4"'>4&quot;</option></select></td><td class="bender-col" data-label="Bender Profile"><select class="bender"><option value="">Select conduit size</option></select></td><td class="ctc-col" data-label="Center to Center"><input class="cc" type="text" placeholder="e.g. 2-1/2"></td><td data-label="Distance from End of Strut"><input class="strut auto-filled" type="text" readonly placeholder="Calculated"></td><td data-label="Back of 90"><input class="bon" data-auto="0" type="text" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise auto-filled" data-auto-rise="1" type="text" readonly placeholder="Calculated from row 1"></td><td data-label="Hypotenuse"><input class="hyp" data-auto="0" type="text" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">JavaScript not started</td></tr></tbody></table></div>
+<div id="methodGuide" class="method-guide" aria-live="polite">
+  <div class="method-guide-title">Method</div>
+  <div class="method-guide-blurb">Select a bend type to see the mark method and formulas.</div>
+  <div class="method-guide-formulas formula-grid"></div>
+</div>
+</section>
 
 <div id="projectStatusModal" class="project-status-modal" role="dialog" aria-modal="true" aria-labelledby="projectStatusTitle" aria-hidden="true"><div class="project-status-dialog"><div class="project-status-header"><div id="projectStatusTitle" class="project-status-title">Project Status</div><button id="projectStatusClose" class="project-status-close" type="button">Close</button></div><div class="project-status-body"><div id="status" class="status-grid"></div></div></div></div>
 </div><!-- /.workspace-main -->
@@ -967,8 +1027,50 @@ function updateRackModeUI(){
       ?'<div class="formula-item"><strong>Bend Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div><div class="formula-item"><strong>90° Gain</strong><div class="formula-equation">2·R_out·tan(45°) − R_out·π/2</div></div>'
       :'<div class="formula-item"><div class="formula-equation">Angle = sin⁻¹(Rise ÷ Hypotenuse)</div></div><div class="formula-item"><div class="formula-equation">Shrink Constant = tan(Angle ÷ 2)</div></div><div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>';
   }
+  refreshMethodGuide();
   updateBendTypeSelect();
   updateActiveRackTypeLabel();
+}
+function bendMethodGuide(){
+  const item=(name,eq)=>`<div class="formula-item"><strong>${name}</strong><div class="formula-equation">${eq}</div></div>`;
+  if(activeRackType==='segmented'){
+    return{title:'Segmented 90 · equal shots',blurb:'Nine equal 10° shots form the 90. Marks are centered in equal developed-arc sections.',formulas:item('Developed Arc','Radius × π ÷ 2')+item('Shot Angle','90° ÷ 9 = 10°')+item('Mark Spacing','Developed Arc ÷ 9')};
+  }
+  if(activeRackType==='saddle'){
+    if(isThreePointSaddle()){
+      return{title:'3 Point · 45° notch marks',blurb:'True COBs are calculated first, then each mark shifts to the hand-bender 45° rim notch so Ideal/Klein/etc. land the same. Outers use θ; the center uses 2θ.',formulas:item('COB Spacing','Height × csc(θ) + OD')+item('Notch Δ','CLR × (45° − θ<sub>bend</sub>) ÷ 2')+item('Display Mark','True COB + Δ')};
+    }
+    if(isRolledSaddle()&&isPushThroughMarks()){
+      return{title:'Rolled 4 Point · 30° notch',blurb:'True COB layout, then each mark shifts to the 30° rim notch for push-through on a rolled saddle.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('COB Spacing','Offset ÷ sin(θ)')+item('Notch Mark','COB + CLR × (30° − θ) ÷ 2')};
+    }
+    return{title:'4 Point · center of bend',blurb:'Bend marks are true centers of bend. No rim-notch shift — the 45° notch method is for 3-point only.',formulas:item('Travel','Offset ÷ sin(θ)')+item('Shrink','Offset × tan(θ ÷ 2)')+item('Bend Marks','True COB stations')};
+  }
+  if(activeRackType==='offset'){
+    return{title:'Offset · two equal bends',blurb:'Two opposing bends share the same angle. Travel and shrink come from the true offset.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('Travel','True Offset ÷ sin(θ)')+item('Shrink','True Offset × tan(θ ÷ 2)')};
+  }
+  if(activeRackType==='kicked-90'){
+    if(isStickApp()){
+      return{title:'Kicked 90 · angle in',blurb:'Enter kick angle and rise. Hypotenuse is solved, then kick and 90 marks come from BON.',formulas:item('Hypotenuse','Rise ÷ sin(Angle)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark','BON − Deduct')};
+    }
+    return{title:'Kicked 90 · rack',blurb:'Enter hypotenuse and rise. Angle and shrink follow; kick and 90 marks come from BON.',formulas:item('Angle','sin⁻¹(Rise ÷ Hyp)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark','BON − Deduct')};
+  }
+  if(activeRackType==='basic-90'){
+    return{title:'Basic 90 · deduct mark',blurb:'Bend mark is back of 90 minus the bender deduct. Gain uses outside radius.',formulas:item('Bend Mark','BON − Deduct')+item('90° Gain','2·R_out·tan(45°) − R_out·π/2')};
+  }
+  if(activeRackType==='straight'){
+    return{title:'Straight stick',blurb:'No bends. Stick length is 120".',formulas:item('Stick Length','120"')};
+  }
+  return{title:'Method',blurb:'Select a bend type to see the mark method and formulas.',formulas:''};
+}
+function methodGuideHtml(){
+  const guide=bendMethodGuide();
+  return `<div class="method-guide-title">${guide.title}</div><div class="method-guide-blurb">${guide.blurb}</div><div class="method-guide-formulas formula-grid">${guide.formulas}</div>`;
+}
+function refreshMethodGuide(){
+  const html=methodGuideHtml();
+  const panel=$('#methodGuide');
+  if(panel)panel.innerHTML=html;
+  $$('#rows .method-formula-cell').forEach(cell=>{cell.innerHTML=html});
 }
 function renderLayoutTypeScreen(){
   wizardState.layoutTypeScreen=true;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=false;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
@@ -1721,11 +1823,28 @@ function prepareCompactConduitRows(){
     cells.forEach((td,index)=>{
       if(td===heading||td===inputHeading||td===outputHeading)return;
       if(td.classList.contains('stick-cc-stub')||(td.classList.contains('ctc-col')&&isStickApp()))return;
+      if(td.classList.contains('method-formula-cell'))return;
       if(markSet.has(td))return;
       const output=index>outputStart||td.classList.contains('output');
       if(output)return; // outputs placed in prioritized passes below
       place(td,false);
     });
+    // Method + formulas go under the input fields (same column), after all inputs.
+    let methodCell=tr.querySelector('.method-formula-cell');
+    if(!methodCell){
+      methodCell=document.createElement('td');
+      methodCell.className='method-formula-cell';
+      const lastInput=[...tr.querySelectorAll('.compact-input-cell:not(.method-formula-cell)')].pop();
+      if(lastInput)lastInput.insertAdjacentElement('afterend',methodCell);
+      else inputHeading.insertAdjacentElement('afterend',methodCell);
+    }
+    methodCell.innerHTML=methodGuideHtml();
+    methodCell.classList.remove('compact-output-cell');
+    methodCell.classList.add('compact-input-cell');
+    methodCell.style.setProperty('--compact-row',String(inputRow));
+    methodCell.style.removeProperty('--compact-row-end');
+    const methodStart=inputRow;
+    inputRow++;
     // Output column: marks group first (what you layout), then the rest.
     if(marksHeading)place(marksHeading,true);
     cells.forEach(td=>{
@@ -1735,10 +1854,13 @@ function prepareCompactConduitRows(){
     cells.forEach((td,index)=>{
       if(td===heading||td===inputHeading||td===outputHeading||markSet.has(td))return;
       if(td.classList.contains('stick-cc-stub')||(td.classList.contains('ctc-col')&&isStickApp()))return;
+      if(td.classList.contains('method-formula-cell'))return;
       const output=index>outputStart||td.classList.contains('output');
       if(!output)return;
       place(td,true);
     });
+    // If Output column is taller, stretch the method block into leftover Input space only.
+    if(outputRow>methodStart+1)methodCell.style.setProperty('--compact-row-end',String(outputRow));
   });
 }
 function bendGainFor(size,bender,angleDeg,mode='outside'){
@@ -3586,7 +3708,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:91,build:'PWA v1.90',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:94,build:'PWA v1.93',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
