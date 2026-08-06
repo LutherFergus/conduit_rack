@@ -1,8 +1,9 @@
 name: Deploy static site to Pages
 
-"on":
+on:
   push:
     branches:
+      - experiment/ui-playground
       - main
   workflow_dispatch:
 
