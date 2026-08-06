@@ -336,6 +336,13 @@ html[data-app="single"] .stick-only,
 body.stick-app .stick-only{display:revert!important}
 html[data-app="single"] a.stick-only,
 body.stick-app a.stick-only{display:inline-flex!important}
+/* Single stick never uses rack spacing. */
+html[data-app="single"] th.ctc-col,
+html[data-app="single"] td.ctc-col,
+html[data-app="single"] td[data-label="Center to Center"],
+body.stick-app th.ctc-col,
+body.stick-app td.ctc-col,
+body.stick-app td[data-label="Center to Center"]{display:none!important}
 
 </style>
 </head>
@@ -354,7 +361,8 @@ body.stick-app a.stick-only{display:inline-flex!important}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.85</span>    </div>
+      <span class="version-badge">PWA v1.86</span>
+    </div>
   </div>
 </header>
 <div class="sub intro-sub collapsed rack-only" id="introSub">Enter what you know. Values update downward from the edited row. General measurements to nearest 1/8&quot;; Auto Space uses 9/16&quot; surface-to-surface clearance (OD-aware CTC). Viewer uses true EMT ODs and circular bend radii.</div>
@@ -610,6 +618,16 @@ function applyStickAppShell(){
   wizardState.layoutMode='single';
   wizardState.conduitCount='1';
   $('#openRackAppLink')?.addEventListener('click',()=>{try{sessionStorage.removeItem('conduitAppMode')}catch(_e){}});
+}
+function applyStickTableChrome(){
+  if(!isStickApp())return;
+  $$('#rows .cc').forEach(el=>{
+    const td=el.closest('td');
+    if(td){td.classList.add('ctc-col');td.dataset.label='Center to Center'}
+  });
+  document.querySelectorAll('.table-wrap thead th').forEach(th=>{
+    if(/Center to Center/i.test(th.textContent||''))th.classList.add('ctc-col');
+  });
 }
 let suppressCustomSync=false;
 let trimApplied=true;
@@ -2110,7 +2128,7 @@ function build(preserve=true){
     if(header)header.innerHTML='<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th><th>Center to Center<br><small>from previous</small></th><th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>';
     rowsEl.innerHTML='';for(let i=0;i<n;i++){const r=old[i]||{},tr=document.createElement('tr');tr.innerHTML=`<td class="output" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td><td data-label="Center to Center"><input class="cc" type="text" ${i===0?'disabled':''} placeholder="${i===0?'—':'e.g. 2-1/2'}" value="${r.cc||''}"></td><td data-label="Distance from End of Strut"><input class="strut ${r.autoStrut?'auto-filled':''}" data-auto="${r.autoStrut?'1':'0'}" type="text" placeholder="Enter any row" value="${r.strut||''}"></td><td data-label="Back of 90"><input class="bon ${r.autoBon||r.autoOal?'auto-filled':''}" data-auto="${r.autoBon||r.autoOal?'1':'0'}" type="text" value="${r.bon||r.oal||''}" placeholder="e.g. 62"></td><td data-label="Rise"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="Enter any row"></td><td data-label="Hypotenuse"><input class="hyp ${r.autoHyp?'auto-filled':''}" data-auto="${r.autoHyp?'1':'0'}" type="text" value="${r.hyp||''}" placeholder="e.g. 28-3/8"></td><td class="output angle" data-label="Angle">—</td><td class="output constant" data-label="Shrink Constant">—</td><td class="output shrink" data-label="Shrink">—</td><td class="output need" data-label="Missing / Needed">—</td>`;rowsEl.appendChild(tr)}
   }
-  ensureLengthColumns();applyPattern(true);attach();refreshBenderMode();recalc(0);enhanceMeasurementInputs();
+  ensureLengthColumns();applyPattern(true);attach();refreshBenderMode();recalc(0);enhanceMeasurementInputs();applyStickTableChrome();
 }
 function applyPattern(force=false){return}
 function clearAutoFrom(start){if(activeRackType!=='kicked-90')return;$$('#rows tr').forEach((tr,i)=>{if(i<start)return;['bon','hyp'].forEach(c=>{const el=tr.querySelector('.'+c);if(el&&el.dataset.auto==='1'){el.value='';el.dataset.auto='0';el.classList.remove('auto-filled')}})})}
@@ -3299,7 +3317,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i)tr.querySelector('.cc').value=a[i][1];tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];tr.querySelector('.hyp').value=a[i][4]});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:86,build:'PWA v1.85',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:87,build:'PWA v1.86',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
