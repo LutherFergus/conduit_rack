@@ -6,7 +6,9 @@ Local-first conduit rack layout, geometry, clearance, and 3D viewing tool.
 
 After Pages is enabled, open:
 
-**https://lutherfergus.github.io/conduit_rack/**
+**Rack app:** https://lutherfergus.github.io/conduit_rack/
+
+**Single stick (same engine, simpler UI):** https://lutherfergus.github.io/conduit_rack/single.html
 
 (Use your own username/repo if different.)
 
@@ -19,7 +21,18 @@ cd path\to\conduit_rack
 python serve.py
 ```
 
-Then open http://127.0.0.1:8000/
+Then open:
+- Rack: http://127.0.0.1:8000/
+- Single stick: http://127.0.0.1:8000/single.html
+
+## Two shells, one calculator
+
+| Entry | Purpose |
+|--------|---------|
+| `index.html` | Full rack calculator (multi-conduit, CTC, trim, runs) |
+| `single.html` | Simplest single-stick UI (`?app=single`) |
+
+Bend math, bender profiles, and 3D geometry live in one place so algorithm updates apply to both.
 
 ## Branches
 
