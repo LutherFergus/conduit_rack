@@ -12,15 +12,17 @@ permissions:
   pages: write
   id-token: write
 
+# Do not share a concurrency group with the automatic pages-build-deployment
+# workflow, and do not cancel in-progress legacy builds.
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: pages-actions-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # Only meaningful when repo Pages source is "GitHub Actions".
+    # Legacy branch deploys still use pages-build-deployment separately.
+    if: github.ref == 'refs/heads/experiment/ui-playground' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,12 +30,15 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        continue-on-error: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
+        continue-on-error: true
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
