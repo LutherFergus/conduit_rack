@@ -171,6 +171,7 @@ table.saddle-layout td input,table.saddle-layout td select{width:100%;min-width:
   }
 }
 
+.method-formula-cell{display:none}
 @media(max-width:760px){
   #rows tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:8px;row-gap:0;align-items:stretch}
   #rows .conduit-card-heading{grid-column:1/-1;grid-row:1}
@@ -1031,8 +1032,24 @@ function updateRackModeUI(){
   updateBendTypeSelect();
   updateActiveRackTypeLabel();
 }
-function bendMethodGuide(){
+function bendUsesDeduct(){return activeRackType==='basic-90'||activeRackType==='kicked-90'}
+function deductGuideItem(size,bender){
+  // Size-relative deduct for bends that mark with BON − Deduct.
+  if(!bendUsesDeduct()||!size)return'';
   const item=(name,eq)=>`<div class="formula-item"><strong>${name}</strong><div class="formula-equation">${eq}</div></div>`;
+  const key=bender||defaultBenderForSize(size);
+  const deduct=profileDeduct(size,key);
+  const profile=benderProfiles[key];
+  if(deduct==null)return item(`Deduct · ${size}`,'No deduct for this size / bender');
+  const label=profile?.label||key;
+  return item(`Deduct · ${size}`,`${fmt16(deduct)} · ${label}`);
+}
+function bendMethodGuide(size,bender){
+  const item=(name,eq)=>`<div class="formula-item"><strong>${name}</strong><div class="formula-equation">${eq}</div></div>`;
+  const key=bender||defaultBenderForSize(size);
+  const deduct=bendUsesDeduct()&&size?profileDeduct(size,key):null;
+  const deductEq=deduct!=null?fmt16(deduct):'Deduct';
+  const deductRow=deductGuideItem(size,bender);
   if(activeRackType==='segmented'){
     return{title:'Segmented 90 · equal shots',blurb:'Nine equal 10° shots form the 90. Marks are centered in equal developed-arc sections.',formulas:item('Developed Arc','Radius × π ÷ 2')+item('Shot Angle','90° ÷ 9 = 10°')+item('Mark Spacing','Developed Arc ÷ 9')};
   }
@@ -1050,27 +1067,57 @@ function bendMethodGuide(){
   }
   if(activeRackType==='kicked-90'){
     if(isStickApp()){
-      return{title:'Kicked 90 · angle in',blurb:'Enter kick angle and rise. Hypotenuse is solved, then kick and 90 marks come from BON.',formulas:item('Hypotenuse','Rise ÷ sin(Angle)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark','BON − Deduct')};
+      return{title:'Kicked 90 · angle in',blurb:'Enter kick angle and rise. Hypotenuse is solved, then kick and 90 marks come from BON.',formulas:item('Hypotenuse','Rise ÷ sin(Angle)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark',`BON − ${deductEq}`)+deductRow};
     }
-    return{title:'Kicked 90 · rack',blurb:'Enter hypotenuse and rise. Angle and shrink follow; kick and 90 marks come from BON.',formulas:item('Angle','sin⁻¹(Rise ÷ Hyp)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark','BON − Deduct')};
+    return{title:'Kicked 90 · rack',blurb:'Enter hypotenuse and rise. Angle and shrink follow; kick and 90 marks come from BON.',formulas:item('Angle','sin⁻¹(Rise ÷ Hyp)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark',`BON − ${deductEq}`)+deductRow};
   }
   if(activeRackType==='basic-90'){
-    return{title:'Basic 90 · deduct mark',blurb:'Bend mark is back of 90 minus the bender deduct. Gain uses outside radius.',formulas:item('Bend Mark','BON − Deduct')+item('90° Gain','2·R_out·tan(45°) − R_out·π/2')};
+    return{title:'Basic 90 · deduct mark',blurb:'Bend mark is back of 90 minus the bender deduct. Gain uses outside radius.',formulas:item('Bend Mark',`BON − ${deductEq}`)+item('90° Gain','2·R_out·tan(45°) − R_out·π/2')+deductRow};
   }
   if(activeRackType==='straight'){
     return{title:'Straight stick',blurb:'No bends. Stick length is 120".',formulas:item('Stick Length','120"')};
   }
   return{title:'Method',blurb:'Select a bend type to see the mark method and formulas.',formulas:''};
 }
-function methodGuideHtml(){
-  const guide=bendMethodGuide();
+function methodGuideHtml(size,bender){
+  const guide=bendMethodGuide(size,bender);
   return `<div class="method-guide-title">${guide.title}</div><div class="method-guide-blurb">${guide.blurb}</div><div class="method-guide-formulas formula-grid">${guide.formulas}</div>`;
 }
+function rowMethodGuideHtml(tr){
+  const size=tr?.querySelector('.size')?.value||'';
+  const bender=tr?.querySelector('.bender')?.value||defaultBenderForSize(size);
+  return methodGuideHtml(size,bender);
+}
 function refreshMethodGuide(){
-  const html=methodGuideHtml();
   const panel=$('#methodGuide');
-  if(panel)panel.innerHTML=html;
-  $$('#rows .method-formula-cell').forEach(cell=>{cell.innerHTML=html});
+  const rows=$$('#rows tr');
+  if(panel){
+    // Desktop shared panel: one deduct when all match; otherwise note per-conduit values.
+    if(bendUsesDeduct()&&rows.length){
+      const keys=rows.map(tr=>{
+        const size=tr.querySelector('.size')?.value||'';
+        const bender=tr.querySelector('.bender')?.value||defaultBenderForSize(size);
+        return `${size}|${bender}|${profileDeduct(size,bender)}`;
+      });
+      const same=new Set(keys).size<=1;
+      if(same)panel.innerHTML=rowMethodGuideHtml(rows[0]);
+      else{
+        const base=bendMethodGuide('','');
+        const item=(name,eq)=>`<div class="formula-item"><strong>${name}</strong><div class="formula-equation">${eq}</div></div>`;
+        const list=rows.map((tr,i)=>{
+          const size=tr.querySelector('.size')?.value||'—';
+          const bender=tr.querySelector('.bender')?.value||defaultBenderForSize(size);
+          const deduct=profileDeduct(size,bender);
+          return `#${i+1} ${size}: ${deduct==null?'—':fmt16(deduct)}`;
+        }).join('<br>');
+        panel.innerHTML=`<div class="method-guide-title">${base.title}</div><div class="method-guide-blurb">${base.blurb}</div><div class="method-guide-formulas formula-grid">${base.formulas}${item('Deduct by conduit',list)}</div>`;
+      }
+    }else panel.innerHTML=methodGuideHtml('','');
+  }
+  rows.forEach(tr=>{
+    const cell=tr.querySelector('.method-formula-cell');
+    if(cell)cell.innerHTML=rowMethodGuideHtml(tr);
+  });
 }
 function renderLayoutTypeScreen(){
   wizardState.layoutTypeScreen=true;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=false;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
@@ -1405,6 +1452,7 @@ function supportedBenders(size){return Object.entries(benderProfiles).filter(([,
 function benderOptions(size,selected=''){const choices=supportedBenders(size);if(!choices.length)return'<option value="">Select conduit size</option>';const use=choices.some(([k])=>k===selected)?selected:defaultBenderForSize(size);return choices.map(([k,p])=>`<option value="${k}" ${k===use?'selected':''}>${p.label}</option>`).join('')}
 function profileForRow(tr){const key=tr?.querySelector('.bender')?.value||defaultBenderForSize(tr?.querySelector('.size')?.value);return benderProfiles[key]||null}
 function profileCLR(size,key){const p=benderProfiles[key];return p?.clr?.[size]??null}
+function profileDeduct(size,key){const p=benderProfiles[key]||benderProfiles[defaultBenderForSize(size)];return p?.deduct?.[size]??null}
 // Push-through: shift a true COB mark to the shoe rim notch.
 // Ideal/Master Bender: the rim notch is the center point of a N° bend.
 // On a circular shoe of radius CLR, bend start → COB(θ) = CLR×θ/2 (mid-arc),
@@ -1838,7 +1886,7 @@ function prepareCompactConduitRows(){
       if(lastInput)lastInput.insertAdjacentElement('afterend',methodCell);
       else inputHeading.insertAdjacentElement('afterend',methodCell);
     }
-    methodCell.innerHTML=methodGuideHtml();
+    methodCell.innerHTML=rowMethodGuideHtml(tr);
     methodCell.classList.remove('compact-output-cell');
     methodCell.classList.add('compact-input-cell');
     methodCell.style.setProperty('--compact-row',String(inputRow));
@@ -2380,6 +2428,7 @@ function redoLastEdit(){
 function finishCalculatedSection(){
   ensureMarkHighlights();
   updateLengthMetrics();
+  refreshMethodGuide();
   if(isCustomRun&&!suppressCustomSync){
     syncActiveCustomCalculatedState();
     // Combined multi-section collisions feed the same row/status validation path.
