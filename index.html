@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.08</span>
+      <span class="version-badge">PWA v2.09</span>
     </div>
   </div>
 </header>
@@ -824,7 +824,7 @@ const saddleTypes={
 const isRolledSaddle=()=>activeSaddleType==='rolled';
 const isThreePointSaddle=()=>activeSaddleType==='three-point';
 const isFourPointSaddle=()=>activeSaddleType==='standard'||activeSaddleType==='rolled';
-const wizardState={layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null,angle:null};
+const wizardState={layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,stickThreePointScreen:false,stickThreePointStep:0,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null,angle:null,stickThreePointCenter:null,stickThreePointHeight:null};
 let rackReferenceLength='longest';
 const wizardSteps=[
   {question:'How many conduits are in this rack?',help:'Enter the total number of conduits. The app will create this many rows.',input:'count',field:'conduitCount',placeholder:'Example: 6'},
@@ -1179,10 +1179,11 @@ function renderOffsetTypeScreen(){
   $('#wizardResult').classList.add('wizard-hidden');$('#wizardBack').classList.remove('wizard-hidden');
 }
 function renderSaddleTypeScreen(){
-  wizardState.layoutTypeScreen=false;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=true;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
-  $('#wizardStepLabel').textContent='Saddle Rack';
-  $('#wizardQuestion').textContent='What type of saddle rack?';
-  $('#wizardHelp').textContent='Parallel is not needed for saddle geometry. Choose a 4 Point Saddle, 3 Point Saddle, or Rolled 4 Point.';
+  wizardState.layoutTypeScreen=false;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=true;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.stickThreePointScreen=false;wizardState.sizePhase=false;
+  const stick=isStickApp()||wizardState.layoutMode==='single';
+  $('#wizardStepLabel').textContent=stick?'Saddle':'Saddle Rack';
+  $('#wizardQuestion').textContent=stick?'What type of saddle?':'What type of saddle rack?';
+  $('#wizardHelp').textContent='Choose a 4 Point Saddle, 3 Point Saddle, or Rolled 4 Point.';
   const opts=$('#wizardOptions');opts.classList.add('rack-type-options');
   opts.innerHTML=Object.entries(saddleTypes).map(([key,type])=>`<button type="button" class="rack-type-button available" data-saddle-type="${key}"><span><span class="rack-type-name">${type.label}</span><span class="rack-type-desc">${type.description}</span></span><span class="rack-type-status">Select</span></button>`).join('');
   $('#wizardResult').classList.add('wizard-hidden');$('#wizardBack').classList.remove('wizard-hidden');
@@ -1205,8 +1206,125 @@ function chooseSaddleType(type){
   if(!saddleTypes[type])return;
   wizardState.saddleType=type;
   activeRackType='saddle';activeSaddleType=type;
-  if(wizardState.layoutMode==='single')countEl.value=1;
+  if(wizardState.layoutMode==='single'||isStickApp())countEl.value=1;
+  // Stick / single: 3 Point opens guided prompts instead of a blank table.
+  if(type==='three-point'&&(isStickApp()||wizardState.layoutMode==='single')){
+    startStickThreePointWizard();
+    return;
+  }
   updateRackModeUI();build(false);
+  $('#setupWizard').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function startStickThreePointWizard(){
+  Object.assign(wizardState,{
+    stickThreePointScreen:true,stickThreePointStep:0,
+    layoutTypeScreen:false,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,
+    basic90DirectionScreen:false,modeScreen:false,sizePhase:false,
+    conduitSize:null,stickThreePointCenter:null,stickThreePointHeight:null,angle:null
+  });
+  activeRackType='saddle';activeSaddleType='three-point';
+  if(countEl)countEl.value=1;
+  renderStickThreePointWizard();
+}
+function renderStickThreePointWizard(){
+  wizardState.stickThreePointScreen=true;
+  const step=wizardState.stickThreePointStep|0;
+  const opts=$('#wizardOptions');
+  opts.classList.toggle('rack-type-options', step===0||step===3);
+  $('#wizardStepLabel').textContent=`3 Point Saddle · Step ${step+1} of 4`;
+  $('#wizardResult').classList.add('wizard-hidden');
+  $('#wizardBack').classList.remove('wizard-hidden');
+  if(step===0){
+    $('#wizardQuestion').textContent='What conduit size?';
+    $('#wizardHelp').textContent='Select the EMT trade size for this stick. Size sets CLR, OD, and notch marks.';
+    opts.innerHTML=['1/2"','3/4"','1"','1-1/4"','1-1/2"','2"','2-1/2"','3"','3-1/2"','4"'].map(v=>`<button type="button" class="rack-type-button available" data-stick-3pt-size="${v.replace(/"/g,'&quot;')}"><span><span class="rack-type-name">${v}</span></span><span class="rack-type-status">Select</span></button>`).join('');
+    return;
+  }
+  if(step===1){
+    $('#wizardQuestion').textContent='What is the measurement to the center of the object?';
+    $('#wizardHelp').textContent='Enter the layout distance to the center of the obstruction (Center of Saddle).';
+    opts.classList.remove('rack-type-options');
+    const value=wizardState.stickThreePointCenter||'';
+    opts.innerHTML=`<div style="grid-column:1/-1;display:grid;gap:12px"><input id="wizardStick3ptCenter" type="text" inputmode="decimal" placeholder="Example: 24" value="${value}" style="width:100%;min-height:64px;border-radius:14px;border:2px solid #334155;background:#0f172a;color:#fff;padding:12px 16px;font-size:1.25rem;font-weight:800"><button type="button" data-wizard-submit="stick-3pt-center" style="min-height:60px">Continue</button></div>`;
+    return;
+  }
+  if(step===2){
+    $('#wizardQuestion').textContent='What is the height of the object?';
+    $('#wizardHelp').textContent='Enter the obstruction height the saddle must clear (Saddle Height).';
+    opts.classList.remove('rack-type-options');
+    const value=wizardState.stickThreePointHeight||'';
+    opts.innerHTML=`<div style="grid-column:1/-1;display:grid;gap:12px"><input id="wizardStick3ptHeight" type="text" inputmode="decimal" placeholder="Example: 6" value="${value}" style="width:100%;min-height:64px;border-radius:14px;border:2px solid #334155;background:#0f172a;color:#fff;padding:12px 16px;font-size:1.25rem;font-weight:800"><button type="button" data-wizard-submit="stick-3pt-height" style="min-height:60px">Continue</button></div>`;
+    return;
+  }
+  $('#wizardQuestion').textContent='Select bend angles';
+  $('#wizardHelp').textContent='Outer · center · outer. The center bend is double the outer angle.';
+  opts.innerHTML=threePointAnglePresets.map(([v,label])=>`<button type="button" class="rack-type-button available" data-stick-3pt-angle="${v}"><span><span class="rack-type-name">${label}</span><span class="rack-type-desc">Outer ${v}°</span></span><span class="rack-type-status">Select</span></button>`).join('');
+}
+function chooseStickThreePointSize(size){
+  if(!size)return;
+  wizardState.conduitSize=size;
+  wizardState.stickThreePointStep=1;
+  renderStickThreePointWizard();
+}
+function chooseStickThreePointAngle(angle){
+  const normalized=normalizeThreePointAngle(angle)||angle;
+  if(!normalized)return;
+  wizardState.angle=normalized;
+  completeStickThreePointWizard();
+}
+function submitStickThreePointMeasurement(kind){
+  if(kind==='stick-3pt-center'){
+    const input=$('#wizardStick3ptCenter'),parsed=parseM(input?.value);
+    if(parsed==null||parsed<=0){input?.classList.add('invalid');return}
+    wizardState.stickThreePointCenter=input.value.trim();
+    wizardState.stickThreePointStep=2;
+    renderStickThreePointWizard();
+    return;
+  }
+  if(kind==='stick-3pt-height'){
+    const input=$('#wizardStick3ptHeight'),parsed=parseM(input?.value);
+    if(parsed==null||parsed<=0){input?.classList.add('invalid');return}
+    wizardState.stickThreePointHeight=input.value.trim();
+    wizardState.stickThreePointStep=3;
+    renderStickThreePointWizard();
+  }
+}
+function completeStickThreePointWizard(){
+  const size=wizardState.conduitSize;
+  const center=wizardState.stickThreePointCenter;
+  const height=wizardState.stickThreePointHeight;
+  const angle=normalizeThreePointAngle(wizardState.angle)||wizardState.angle;
+  if(!size||!center||!height||!angle)return;
+  activeRackType='saddle';activeSaddleType='three-point';
+  saddleMarkMethod='push-through';
+  if(!['up','down','left','right'].includes(saddleDirection))saddleDirection='up';
+  if(countEl)countEl.value=1;
+  activeLayoutMode='single';
+  wizardState.stickThreePointScreen=false;
+  updateRackModeUI();
+  build(false);
+  const tr=$$('#rows tr')[0];
+  if(tr){
+    const sizeEl=tr.querySelector('.size');
+    if(sizeEl){
+      sizeEl.value=size;
+      const b=tr.querySelector('.bender');
+      if(b){b.innerHTML=benderOptions(size,defaultBenderForSize(size));b.value=defaultBenderForSize(size)}
+    }
+    const critical=tr.querySelector('.critical');
+    if(critical){critical.value=center;critical.dataset.auto='0';critical.classList.remove('auto-filled')}
+    const rise=tr.querySelector('.rise');
+    if(rise){rise.value=height;rise.dataset.autoRise='0';rise.classList.remove('auto-filled')}
+    const angleEl=tr.querySelector('select.bend-angle, .bend-angle');
+    if(angleEl){
+      angleEl.value=angle;
+      angleEl.dataset.auto='0';
+      angleEl.classList.remove('auto-filled');
+    }
+  }
+  refreshBenderMode();
+  recalc(0);
   $('#setupWizard').classList.remove('open');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1293,7 +1411,7 @@ function renderSetupWizard(){
   $('#wizardBack').classList.remove('wizard-hidden');
 }
 function resetWizardState(){
-  Object.assign(wizardState,{layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null,angle:null});
+  Object.assign(wizardState,{layoutTypeScreen:true,rackTypeScreen:false,offsetTypeScreen:false,saddleTypeScreen:false,basic90DirectionScreen:false,offsetNoticeScreen:false,modeScreen:false,stickThreePointScreen:false,stickThreePointStep:0,layoutMode:null,step:0,offsetType:null,saddleType:null,basic90Direction:null,conduitCount:'',kickDirection:null,turnDirection:null,kickPosition:null,referenceLength:null,oal:null,rise:null,sameSize:null,sizePhase:false,conduitSize:null,hyp:null,angle:null,stickThreePointCenter:null,stickThreePointHeight:null});
 }
 function openSetupWizard(){
   closeMeasureKeypad();resetWizardState();
@@ -1345,6 +1463,7 @@ function chooseWizardValue(value){
   if(wizardState.step<6){wizardState.step++;renderSetupWizard()}else completeSetupWizard();
 }
 function submitWizardInput(kind){
+  if(kind==='stick-3pt-center'||kind==='stick-3pt-height'){submitStickThreePointMeasurement(kind);return}
   if(kind==='count'){
     const input=$('#wizardCountInput'),n=parseInt(input?.value,10);
     if(!Number.isInteger(n)||n<1||n>100){input?.classList.add('invalid');return}
@@ -3997,7 +4116,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:107,build:'PWA v2.08',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:108,build:'PWA v2.09',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
