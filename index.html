@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.03</span>
+      <span class="version-badge">PWA v2.06</span>
     </div>
   </div>
 </header>
@@ -1649,13 +1649,19 @@ function measurementFieldVisible(el){
   }catch(_e){}
   return true;
 }
+// Stick Next skips secondary fields, but those fields must still open the measure keypad on tap.
+function stickKeypadNextSkip(el){
+  if(!isStickApp()||!el)return false;
+  if(el.classList.contains('oal'))return true;
+  // Rolled Point 4 / Hyp2 / far oh are primary fabrication inputs — keep them on Next.
+  if(activeRackType==='saddle'&&isRolledSaddle())return false;
+  return el.classList.contains('middle-distance')||el.classList.contains('second-rise')||el.classList.contains('second-offset-distance');
+}
 function measurementInputEligible(el){
   if(!(el instanceof HTMLInputElement)||el.disabled)return false;
   if(el.id==='pattern')return true;
   const tr=el.closest('#rows tr');if(!tr)return false;
   const i=$$('#rows tr').indexOf(tr);
-  // Single stick: keep Next on primary fabrication inputs only.
-  if(isStickApp()&&(el.classList.contains('oal')||el.classList.contains('middle-distance')||el.classList.contains('second-rise')||el.classList.contains('second-offset-distance')))return false;
   if(el.classList.contains('cc'))return i>0;
   if(activeRackType==='segmented'){
     return el.classList.contains('segmented-measurement')||el.classList.contains('desired-radius');
@@ -1756,6 +1762,7 @@ function insertMeasureFraction(fraction){
   setMeasureValue(v+fraction);
 }
 function measurementTargets(){return [...$$('#rows input')].filter(el=>measurementInputEligible(el)&&measurementFieldVisible(el))}
+function measurementNextTargets(){return measurementTargets().filter(el=>!stickKeypadNextSkip(el))}
 function closeChoicePicker(){
   const modal=$('#choicePicker');
   if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
@@ -1812,8 +1819,8 @@ function promptStickThreePointFollowUps(tr){
 }
 function nextMeasureField(){
   const current=measureKeypadTarget;
-  const fields=measurementTargets();
-  const i=fields.indexOf(current);
+  const all=measurementTargets();
+  const fields=measurementNextTargets();
   if(!commitMeasureKeypad())return;
   // Stick 3-point: Center → Height → angle popup → size popup if needed.
   if(isStickApp()&&activeRackType==='saddle'&&isThreePointSaddle()&&current?.classList.contains('rise')){
@@ -1822,7 +1829,13 @@ function nextMeasureField(){
     promptStickThreePointFollowUps(tr);
     return;
   }
-  const next=i>=0&&i+1<fields.length?fields[i+1]:null;
+  let next=null;
+  if(current){
+    const start=all.indexOf(current);
+    for(let j=start+1;j<all.length;j++){
+      if(fields.includes(all[j])){next=all[j];break}
+    }
+  }
   if(next){
     if(measureKeypadTarget)measureKeypadTarget.classList.remove('measure-keypad-active');
     measureKeypadTarget=null;
@@ -2563,12 +2576,14 @@ function buildSaddleTable(old,n){
   const threePoint=isThreePointSaddle();
   const rolled=isRolledSaddle();
   if(rolled){
-    // Field order: Point 1 → Hyp1 → Point 2 → object height → angle (30°) → Point 3 → Hyp2 → Point 4
-    if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>Point 1</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>Hyp1<br><small>2-pt hypotenuse</small></th><th>Point 2</th><th>Object Height<br><small>oh · clear</small></th><th>Angle<br><small>default 30°</small></th><th>Point 3</th><th class="saddle-hyp2-same">Hyp2<br><small>= Hyp1</small></th><th class="saddle-second-roll-col">Hyp2<br><small>2-pt back</small></th><th>Point 4</th><th class="saddle-second-col">Far Object Height</th><th>2-Pt Rise</th><th>Roll Out / Back</th><th>First Shrink</th><th>Second Shrink</th><th>Missing / Needed</th>`;
+    // Match other profiles: ALL inputs first (left / Input Data), then ALL outputs (right / Output Data).
+    // Inputs: Point 1 → OAL → Hyp1 → object height → angle → Hyp2 (if different) → Point 4 → far oh
+    // Outputs: Point 1–4 layout marks → Hyp2 (=Hyp1) → rise / roll / shrinks → need
+    if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>Point 1</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>Hyp1<br><small>2-pt hypotenuse</small></th><th>Object Height<br><small>oh · clear</small></th><th>Angle<br><small>default 30°</small></th><th class="saddle-second-roll-col">Hyp2<br><small>2-pt back</small></th><th>Point 4</th><th class="saddle-second-col">Far Object Height</th><th class="mark-col">Point 1<br><small>COB</small></th><th class="mark-col">Point 2<br><small>COB</small></th><th class="mark-col">Point 3<br><small>COB</small></th><th class="mark-col">Point 4<br><small>COB</small></th><th class="saddle-hyp2-same">Hyp2<br><small>= Hyp1</small></th><th>2-Pt Rise</th><th>Roll Out / Back</th><th>First Shrink</th><th>Second Shrink</th><th>Missing / Needed</th>`;
     rowsEl.innerHTML='';
     for(let i=0;i<n;i++){
       const r=old[i]||{},tr=document.createElement('tr');
-      tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Point 1"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="e.g. 20" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="Hyp1 (2-point hypotenuse)"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 12"></td><td class="output result-cell mark-2" data-label="Point 2">—</td><td class="input-cell" data-label="Object Height (oh)"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 2"></td><td class="input-cell" data-label="Angle (default 30°)">${bendAngleControlMarkup(r)}</td><td class="output result-cell mark-3" data-label="Point 3">—</td><td class="output result-cell true-offset-2 saddle-hyp2-same" data-label="Hyp2 (= Hyp1)">—</td><td class="input-cell saddle-second-roll-col" data-label="Hyp2 (2-point back)"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Point 4"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 60"></td><td class="input-cell saddle-second-col" data-label="Far Object Height"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 2"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1" data-label="2-Point Rise (Hyp×sin θ)">—</td><td class="output result-cell perp-angle" data-label="Roll Out / Back">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td><td class="hidden"><span class="travel-1"></span><span class="travel-2"></span><span class="mark-1"></span><span class="mark-4"></span></td>`;
+      tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Point 1"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="e.g. 20" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="Hyp1 (2-point hypotenuse)"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Object Height (oh)"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 2"></td><td class="input-cell" data-label="Angle (default 30°)">${bendAngleControlMarkup(r)}</td><td class="input-cell saddle-second-roll-col" data-label="Hyp2 (2-point back)"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Point 4"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 60"></td><td class="input-cell saddle-second-col" data-label="Far Object Height"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 2"></td><td class="output-section-label">Output Data</td><td class="output result-cell mark-cell mark-1" data-label="Point 1 (COB)">—</td><td class="output result-cell mark-cell mark-2" data-label="Point 2 (COB)">—</td><td class="output result-cell mark-cell mark-3" data-label="Point 3 (COB)">—</td><td class="output result-cell mark-cell mark-4" data-label="Point 4 (COB)">—</td><td class="output result-cell true-offset-2 saddle-hyp2-same" data-label="Hyp2 (= Hyp1)">—</td><td class="output result-cell true-offset-1" data-label="2-Point Rise (Hyp×sin θ)">—</td><td class="output result-cell perp-angle" data-label="Roll Out / Back">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td><td class="hidden"><span class="travel-1"></span><span class="travel-2"></span></td>`;
       rowsEl.appendChild(tr);
     }
   }else{
@@ -3970,7 +3985,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:104,build:'PWA v2.03',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:105,build:'PWA v2.06',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -7163,7 +7178,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v1.84-unequal-3pt';
+  const APP_BUILD='v2.06-rolled-ui-parity';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
