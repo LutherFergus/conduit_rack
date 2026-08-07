@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v1.97</span>
+      <span class="version-badge">PWA v1.99</span>
     </div>
   </div>
 </header>
@@ -513,16 +513,16 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
           <div class="offset-parameter-card rack-only"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Which side is conduit 1. Parallel/rolled mark stagger also follows offset direction so bends open the rack instead of closing into neighbors.</div></div>
           <div id="offsetVerticalDirectionBox" class="offset-parameter-card"><label>Vertical Direction</label><div id="offsetVerticalSelector" class="segmented-control" role="group" aria-label="Vertical offset direction"><button type="button" data-offset-vertical="up">Up</button><button type="button" data-offset-vertical="down">Down</button></div></div>
           <div id="offsetHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="offsetHorizontalSelector" class="segmented-control" role="group" aria-label="Horizontal offset direction"><button type="button" data-offset-horizontal="left">Left</button><button type="button" data-offset-horizontal="right">Right</button></div></div>
-          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear distance A to B after the offset (shortened by shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
+          <div class="offset-parameter-card oal-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear distance A to B after the offset (shortened by shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
       <div id="saddleParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
-          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default on rolled): every shot on the 30° rim notch. Traditional keeps equal COB marks (no notch shift). Standard 4-point always uses center-of-bend marks. 45° notch applies to 3-point saddles only.</div></div>
+          <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default on rolled): every shot on the 30° rim notch. Traditional keeps equal COB marks (no notch shift). Standard 4-mark always uses center-of-bend marks. 45° notch applies to 3-mark saddles only.</div></div>
           <div id="saddleHeightsCard" class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Different enables a separate height for the second opposing offset.</div></div>
           <div id="saddleVerticalCard" class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
           <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div></div>
-          <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear A→B after the saddle (shortened by total shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
+          <div class="offset-parameter-card oal-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear A→B after the saddle (shortened by total shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
       <div id="segmentedParameters" class="hidden" style="grid-column:1/-1">
@@ -578,11 +578,11 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
     </div>
   </section>
   <section id="saddleModePanel" class="panel offset-mode-panel hidden" aria-label="Saddle style">
-    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Switch this section between a 4 Point, 3 Point, or Rolled 4 Point saddle.</div></div>
+    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">Switch this section between a 4 Mark, 3 Mark, or Rolled 4 Mark saddle.</div></div>
     <div id="saddleModeSelector" class="segmented-control" role="group" aria-label="Saddle style">
-      <button type="button" data-saddle-mode="standard">4 Point Saddle</button>
-      <button type="button" data-saddle-mode="three-point">3 Point Saddle</button>
-      <button type="button" data-saddle-mode="rolled">Rolled 4 Point</button>
+      <button type="button" data-saddle-mode="standard">4 Mark Saddle</button>
+      <button type="button" data-saddle-mode="three-point">3 Mark Saddle</button>
+      <button type="button" data-saddle-mode="rolled">Rolled 4 Mark</button>
     </div>
   </section>
   <div id="conduitDirectionControls"></div>
@@ -747,6 +747,8 @@ function applyStickAppShell(){
   activeLayoutMode='single';
   wizardState.layoutMode='single';
   wizardState.conduitCount='1';
+  showRackOal=false;
+  updateOalVisibility();
   $('#openRackAppLink')?.addEventListener('click',()=>{try{sessionStorage.removeItem('conduitAppMode')}catch(_e){}});
 }
 function ctcHeaderHtml(withFromPrevious=true){
@@ -804,7 +806,7 @@ const rackTypes={
   'basic-90':{label:'Basic 90',description:'A single 90-degree bend with no kick.',available:true},
   'kicked-90':{label:'Kicked 90',description:'A rack with a kick and a 90-degree bend.',available:true},
   'offset':{label:'Offset Rack',description:'Standard, parallel, and rolled offsets across a conduit rack.',available:true},
-  'saddle':{label:'Saddle Rack',description:'4 Point, 3 Point, and Rolled 4 Point saddles across an obstruction.',available:true},
+  'saddle':{label:'Saddle Rack',description:'4 Mark, 3 Mark, and Rolled 4 Mark saddles across an obstruction.',available:true},
   'segmented':{label:'Segmented Bend',description:'A large-radius 90 formed from nine equal shots.',available:true},
   'straight':{label:'Straight Stick',description:'A straight 120-inch conduit section.',available:true,internal:true},
   'custom':{label:'Custom Run',description:'Build a run from a sequence of straights and bends.',available:true,internal:true}
@@ -815,9 +817,9 @@ const offsetTypes={
   'rolled':{label:'Rolled',description:'An offset that moves the rack both vertically and horizontally.'}
 };
 const saddleTypes={
-  'standard':{label:'4 Point Saddle',description:'A four-bend saddle made from two opposing vertical offsets.'},
-  'three-point':{label:'3 Point Saddle',description:'A three-bend saddle with a doubled center bend over an obstruction.'},
-  'rolled':{label:'Rolled 4 Point',description:'A four-bend saddle whose opposing offsets move vertically and horizontally.'}
+  'standard':{label:'4 Mark Saddle',description:'A four-bend saddle made from two opposing vertical offsets.'},
+  'three-point':{label:'3 Mark Saddle',description:'A three-bend saddle with a doubled center bend over an obstruction.'},
+  'rolled':{label:'Rolled 4 Mark',description:'A four-bend saddle whose opposing offsets move vertically and horizontally.'}
 };
 const isRolledSaddle=()=>activeSaddleType==='rolled';
 const isThreePointSaddle=()=>activeSaddleType==='three-point';
@@ -848,7 +850,7 @@ function updateActiveRackTypeLabel(){
     : activeRackType==='offset'
     ? `Offset Rack · ${offsetTypes[activeOffsetType]?.label||'Standard'}`
     : activeRackType==='saddle'
-      ? `Saddle Rack · ${saddleTypes[activeSaddleType]?.label||'4 Point Saddle'}`
+      ? `Saddle Rack · ${saddleTypes[activeSaddleType]?.label||'4 Mark Saddle'}`
     : activeRackType==='segmented'
       ? 'Segmented 90'
     : rackTypes[activeRackType]?.label||'Kicked 90';
@@ -886,6 +888,8 @@ function updateLayoutModeUI(){
   if(help)help.textContent=single?'Single Conduit mode is locked to exactly one conduit. All bend tools remain available.':'';
   setSegmentedState('#layoutModeSelector','layoutMode',activeLayoutMode);
   updateSectionCardHeader();
+  // Strut schedule is a rack support plan — hide for single conduit / stick.
+  $('#strutSchedulePanel')?.classList.toggle('hidden', single||isStickApp());
 }
 function switchLayoutMode(mode){
   if(isStickApp()){activeLayoutMode='single';if(countEl)countEl.value=1;updateLayoutModeUI();return}
@@ -914,9 +918,9 @@ function updateBendTypeSelect(){
     ['offset-standard','Standard Offset'],
     ...(activeLayoutMode==='rack'?[['offset-parallel','Parallel Offset']]:[]),
     ['offset-rolled','Rolled Offset'],
-    ['saddle-standard','4 Point Saddle'],
-    ['saddle-three-point','3 Point Saddle'],
-    ['saddle-rolled','Rolled 4 Point'],
+    ['saddle-standard','4 Mark Saddle'],
+    ['saddle-three-point','3 Mark Saddle'],
+    ['saddle-rolled','Rolled 4 Mark'],
     ['segmented-90','Segmented 90']
   ];
   select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
@@ -995,8 +999,8 @@ function updateRackModeUI(){
   const markMethodHelp=$('#saddleMarkMethodCard .helper');
   if(markMethodHelp){
     markMethodHelp.textContent=isRolledSaddle()
-      ?'Push Through (default): every shot on the 30° rim notch (rolled 4-point). Traditional keeps equal COB marks (no notch shift). Default bend angle is 30°.'
-      :'Standard 4-point marks are true centers of bend. The 45° rim notch applies to 3-point saddles only.';
+      ?'Push Through (default): every shot on the 30° rim notch (rolled 4-mark). Traditional keeps equal COB marks (no notch shift). Default bend angle is 30°.'
+      :'Standard 4-mark saddles use true centers of bend. The 45° rim notch applies to 3-mark saddles only.';
   }
   setSegmentedState('#saddleRelationSelector','saddleRelation',saddleOffsetRelation);
   setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection);
@@ -1015,7 +1019,9 @@ function updateRackModeUI(){
       :'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains four true circular bends, a straight saddle top between bends two and three, and parallel supported runs at both struts.')
     :isOffset
     ?'Rendered EMT uses actual outside diameter and the selected bender radius. Orange and purple struts support the parallel starting and ending runs. Standard, Parallel, and Rolled modes use the same two-bend geometry and collision engine.'
-    :'Rendered EMT uses the selected trade size and actual outside diameter. The Struts card schedules full 3-D 1-5/8-inch supports only on valid horizontal or vertical straight portions, using the selected Top or Bottom contact and calculated rack cut length. Bend radii and angled travel are excluded from support locations. Collisions are highlighted in red.';
+    :(activeLayoutMode==='single'||isStickApp()
+      ?'Rendered EMT uses the selected trade size and actual outside diameter. Collisions are highlighted in red.'
+      :'Rendered EMT uses the selected trade size and actual outside diameter. The Struts card schedules full 3-D 1-5/8-inch supports only on valid horizontal or vertical straight portions, using the selected Top or Bottom contact and calculated rack cut length. Bend radii and angled travel are excluded from support locations. Collisions are highlighted in red.');
   const formulaGrid=document.querySelector('.formula-grid');
   if(formulaGrid){
     formulaGrid.innerHTML=isSegmented
@@ -1027,7 +1033,7 @@ function updateRackModeUI(){
           :'<div class="formula-item"><strong>Angle Set</strong><div class="formula-equation">θ · 2θ · θ (e.g. 15-30-15)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">Offset ÷ sin(θ)</div></div><div class="formula-item"><strong>Shrink per Leg</strong><div class="formula-equation">Offset × tan(θ ÷ 2)</div></div>')
         :(isPushThroughMarks()
           ?`<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>${notchReferenceDeg()}° Notch Mark</strong><div class="formula-equation">COB + CLR × (${notchReferenceDeg()}° − θ) ÷ 2</div></div>`
-          :'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Points</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>'))
+          :'<div class="formula-item"><strong>Each Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Distance Between Bend Marks</strong><div class="formula-equation">Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Cumulative Shrink</strong><div class="formula-equation">Σ Offset × tan(Bend Angle ÷ 2)</div></div>'))
       :isOffset
       ?'<div class="formula-item"><strong>True Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">True Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">True Offset × tan(Bend Angle ÷ 2)</div></div>'
       :activeRackType==='kicked-90'
@@ -1065,12 +1071,12 @@ function bendMethodGuide(size,bender){
   }
   if(activeRackType==='saddle'){
     if(isThreePointSaddle()){
-      return{title:'3 Point · 45° notch marks',blurb:'True COBs are calculated first, then each mark shifts to the hand-bender 45° rim notch so Ideal/Klein/etc. land the same. Outers use θ; the center uses 2θ.',formulas:item('COB Spacing','Height × csc(θ) + OD')+item('Notch Δ','CLR × (45° − θ<sub>bend</sub>) ÷ 2')+item('Display Mark','True COB + Δ')};
+      return{title:'3 Mark · 45° notch marks',blurb:'True COBs are calculated first, then each mark shifts to the hand-bender 45° rim notch so Ideal/Klein/etc. land the same. Outers use θ; the center uses 2θ.',formulas:item('COB Spacing','Height × csc(θ) + OD')+item('Notch Δ','CLR × (45° − θ<sub>bend</sub>) ÷ 2')+item('Display Mark','True COB + Δ')};
     }
     if(isRolledSaddle()&&isPushThroughMarks()){
-      return{title:'Rolled 4 Point · 30° notch',blurb:'True COB layout, then each mark shifts to the 30° rim notch for push-through on a rolled saddle.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('COB Spacing','Offset ÷ sin(θ)')+item('Notch Mark','COB + CLR × (30° − θ) ÷ 2')};
+      return{title:'Rolled 4 Mark · 30° notch',blurb:'True COB layout, then each mark shifts to the 30° rim notch for push-through on a rolled saddle.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('COB Spacing','Offset ÷ sin(θ)')+item('Notch Mark','COB + CLR × (30° − θ) ÷ 2')};
     }
-    return{title:'4 Point · center of bend',blurb:'Bend marks are true centers of bend. No rim-notch shift — the 45° notch method is for 3-point only.',formulas:item('Travel','Offset ÷ sin(θ)')+item('Shrink','Offset × tan(θ ÷ 2)')+item('Bend Marks','True COB stations')};
+    return{title:'4 Mark · center of bend',blurb:'Bend marks are true centers of bend. No rim-notch shift — the 45° notch method is for 3-mark only.',formulas:item('Travel','Offset ÷ sin(θ)')+item('Shrink','Offset × tan(θ ÷ 2)')+item('Bend Marks','True COB stations')};
   }
   if(activeRackType==='offset'){
     return{title:'Offset · two equal bends',blurb:'Two opposing bends share the same angle. Travel and shrink come from the true offset.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('Travel','True Offset ÷ sin(θ)')+item('Shrink','True Offset × tan(θ ÷ 2)')};
@@ -1170,7 +1176,7 @@ function renderSaddleTypeScreen(){
   wizardState.layoutTypeScreen=false;wizardState.rackTypeScreen=false;wizardState.offsetTypeScreen=false;wizardState.saddleTypeScreen=true;wizardState.basic90DirectionScreen=false;wizardState.offsetNoticeScreen=false;wizardState.modeScreen=false;wizardState.sizePhase=false;
   $('#wizardStepLabel').textContent='Saddle Rack';
   $('#wizardQuestion').textContent='What type of saddle rack?';
-  $('#wizardHelp').textContent='Parallel is not needed for saddle geometry. Choose a 4 Point Saddle, 3 Point Saddle, or Rolled 4 Point.';
+  $('#wizardHelp').textContent='Parallel is not needed for saddle geometry. Choose a 4 Mark Saddle, 3 Mark Saddle, or Rolled 4 Mark.';
   const opts=$('#wizardOptions');opts.classList.add('rack-type-options');
   opts.innerHTML=Object.entries(saddleTypes).map(([key,type])=>`<button type="button" class="rack-type-button available" data-saddle-type="${key}"><span><span class="rack-type-name">${type.label}</span><span class="rack-type-desc">${type.description}</span></span><span class="rack-type-status">Select</span></button>`).join('');
   $('#wizardResult').classList.add('wizard-hidden');$('#wizardBack').classList.remove('wizard-hidden');
@@ -1522,10 +1528,16 @@ function outsideClearance(sizeA,sizeB,cc){
 let autoSpaceActive=true;
 function updateAutoSpaceButton(){const b=$('#autoSpaceBtn');if(!b)return;b.classList.toggle('toggle-active',autoSpaceActive);b.setAttribute('aria-pressed',autoSpaceActive?'true':'false');b.textContent=`Auto Space: ${autoSpaceActive?'ON':'OFF'}`}
 function updateOalVisibility(){
+  // Stick shell: OAL is a rack finished-length control — keep it off and hidden.
+  if(isStickApp())showRackOal=false;
+  $$('.oal-parameter-card').forEach(el=>el.classList.toggle('hidden', isStickApp()));
   $$('.oal-visibility-btn').forEach(b=>{b.classList.toggle('toggle-active',showRackOal);b.setAttribute('aria-pressed',showRackOal?'true':'false');b.textContent=`OAL: ${showRackOal?'ON':'OFF'}`});
   $$('.oal-col').forEach(el=>el.classList.toggle('hidden',!showRackOal));
 }
-function toggleRackOal(){showRackOal=!showRackOal;updateOalVisibility();build(true)}
+function toggleRackOal(){
+  if(isStickApp())return;
+  showRackOal=!showRackOal;updateOalVisibility();build(true);
+}
 function applyAutoSpacingPair(rowIndex){
   const trs=$$('#rows tr');
   if(rowIndex<=0||rowIndex>=trs.length)return false;
@@ -1789,7 +1801,7 @@ function promptStickThreePointFollowUps(tr){
   if(!tr)return;
   const angleEl=tr.querySelector('select.bend-angle, .bend-angle');
   openChoicePicker({
-    step:'3 Point angles',
+    step:'3 Mark angles',
     question:'Select bend angle set',
     help:'Outer · center · outer. Center bend is double the outer angle.',
     options:threePointAnglePresets.map(([v,label])=>({value:v,label,desc:`Outer ${v}°`})),
@@ -2564,8 +2576,8 @@ function buildSaddleTable(old,n){
   const notchDeg=notchReferenceDeg();
   const markNote=push?`${notchDeg}° notch`:'COB';
   // Push-through notch marks: 3-point (45°) and rolled 4-point (30°). Standard 4-point is COB.
-  const betweenLabel=threePoint?'Mark Spacing 1→2':(push?'COB Spacing 1→2':'Between Points 1 &amp; 2');
-  const betweenLabel2=threePoint?'Mark Spacing 2→3':(push?'COB Spacing 3→4':'Between Points 3 &amp; 4');
+  const betweenLabel=threePoint?'Mark Spacing 1→2':(push?'COB Spacing 1→2':'Between Marks 1 &amp; 2');
+  const betweenLabel2=threePoint?'Mark Spacing 2→3':(push?'COB Spacing 3→4':'Between Marks 3 &amp; 4');
   if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>${criticalLabel}</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>${riseLabel}</th><th class="saddle-roll-col">First Offset Distance</th><th>${angleHead}</th><th class="saddle-four-only">Bend 2 to Bend 3</th><th class="saddle-second-col">Second Rise</th><th class="saddle-second-roll-col">Second Offset Distance</th><th class="saddle-true1-label">First Offset</th><th>${betweenLabel}</th><th>First Shrink</th><th class="saddle-true2-label">Second Offset</th><th class="saddle-travel2-label">${betweenLabel2}</th><th>Second Shrink</th><th class="mark-col">Bend 1<br><small>${markNote}</small></th><th class="mark-col">Bend 2<br><small>${markNote}</small></th><th class="mark-col">Bend 3<br><small>${markNote}</small></th><th class="mark-col saddle-four-only">Bend 4<br><small>${markNote}</small></th><th>Missing / Needed</th>`;
   rowsEl.innerHTML='';
   for(let i=0;i<n;i++){
@@ -2920,7 +2932,7 @@ function recalcSaddle(){
     if(!size)need.push('Select conduit size');if(critical==null)need.push(threePoint?'Enter Center of Saddle in any row':'Enter To Bend 1 in any row');if(showRackOal&&oal==null)need.push('Enter OAL (finished A to B) in any row');
     if(rise==null)need.push(threePoint?'Enter Saddle Height in any row':'Enter first offset in any row');if(rolled&&offsetDistance==null)need.push('Enter first offset distance in any row');
     if(angle==null)need.push(threePoint?'Select bend angles (e.g. 15-30-15) in any row':'Enter bend angle in any row');
-    else if(!validAngle)need.push(threePoint?'Select a standard 3-point angle set (outer must be under 45°)':'Bend angle must be greater than 0° and less than 90°');
+    else if(!validAngle)need.push(threePoint?'Select a standard 3-mark angle set (outer must be under 45°)':'Bend angle must be greater than 0° and less than 90°');
     if(!threePoint&&middleDistance==null)need.push('Enter Bend 2 to Bend 3 distance in any row');
     if(saddleOffsetRelation==='different'&&secondRise==null)need.push('Enter second rise in any row');
     if(saddleOffsetRelation==='different'&&rolled&&secondOffsetDistance==null)need.push('Enter second offset distance in any row');
@@ -3472,7 +3484,7 @@ function renderSaddleStatus(d){
   const full=rackModels.length;let overlapCount=0,tightCount=0;
   d.forEach((x,i)=>{if(!i||x.cc==null)return;const c=outsideClearance(d[i-1].size,x.size,x.cc);if(c!=null&&c<0)overlapCount++;else if(c!=null&&c<preferredClearance)tightCount++});
   const collisionDetails=modelCollisions.map(c=>`Conduits ${c.a+1} and ${c.b+1}: swept OD clearance ${Number.isFinite(c.clearance)?fmt16(Math.max(0,c.clearance)):'unknown'}; required ${fmt16(c.requiredClearance||preferredClearance)}. Current CTC ${c.currentCC==null?'—':fmt16(c.currentCC)}; recommended ${c.recommendedCC==null?'increase CTC':fmt16(c.recommendedCC)}`).join('<br>');
-  const style=saddleTypes[activeSaddleType]?.label||'4 Point Saddle',relation=saddleOffsetRelation==='same'?'Same opposing offsets':'Different opposing offsets';
+  const style=saddleTypes[activeSaddleType]?.label||'4 Mark Saddle',relation=saddleOffsetRelation==='same'?'Same opposing offsets':'Different opposing offsets';
   const bendHelp=isThreePointSaddle()
     ?'Each solved conduit contains three circular bends: two outer bends and a doubled center bend.'
     :'Each solved conduit contains four circular bends and a straight section from Bend 2 to Bend 3.';
@@ -3484,8 +3496,8 @@ function renderSaddleStatus(d){
   const markHelp=push
     ?(isThreePointSaddle()
       ?'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Bend 2 COB = Center of Saddle + shrink (Height × tan(θ/2)). COB spacing = Height × csc(θ) + OD. Output marks add Δ = CLR × (45° − θ<sub>bend</sub>) ÷ 2 (Ideal rim notch = COB of a 45° bend; select conduit size for CLR/OD).</div></div>'
-      :`<div class="status-card ok"><strong>Push Through · ${notchDeg}° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (${notchDeg}° − θ) ÷ 2 so each mark lands on the ${notchDeg}° rim notch (rolled 4-point).</div></div>`)
-    :'<div class="status-card ok"><strong>Center of bend marks</strong><div class="helper">Bend marks are true centers of bend. The 45° rim notch applies to 3-point saddles only.</div></div>';
+      :`<div class="status-card ok"><strong>Push Through · ${notchDeg}° notch marks</strong><div class="helper">Layout uses true centers of bend. Output Bend marks add Δ = CLR × (${notchDeg}° − θ) ÷ 2 so each mark lands on the ${notchDeg}° rim notch (rolled 4-mark).</div></div>`)
+    :'<div class="status-card ok"><strong>Center of bend marks</strong><div class="helper">Bend marks are true centers of bend. The 45° rim notch applies to 3-mark saddles only.</div></div>';
   const offsetHelp=isThreePointSaddle()
     ?'Bends 1–2 form the first leg. Bends 2–3 form the return leg through the doubled center bend.'
     :'Bends 1–2 form the first offset. Bends 3–4 form the opposing offset. Shrink from each completed offset is carried into every downstream absolute bend mark.';
@@ -3850,7 +3862,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:98,build:'PWA v1.97',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:100,build:'PWA v1.99',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -3958,7 +3970,7 @@ function sectionLabel(section,index){
   if(type==='straight')return `Section ${index+1} · Straight 120"`;
   if(type==='basic-90')return `Section ${index+1} · Basic 90`;
   if(type==='offset')return `Section ${index+1} · ${offsetTypes[section.project.offsetType]?.label||'Standard'} Offset`;
-  if(type==='saddle')return `Section ${index+1} · ${saddleTypes[section.project.saddleType]?.label||'4 Point Saddle'}`;
+  if(type==='saddle')return `Section ${index+1} · ${saddleTypes[section.project.saddleType]?.label||'4 Mark Saddle'}`;
   if(type==='segmented')return `Section ${index+1} · Segmented 90`;
   return `Section ${index+1} · Kicked 90`;
 }
@@ -3972,8 +3984,8 @@ function sectionTypeOptions(project){
     ['straight','Straight 120"'],['basic-90','Basic 90'],['kicked-90','Kicked 90'],
     ['offset-standard','Standard Offset'],
     ...(activeLayoutMode==='rack'?[['offset-parallel','Parallel Offset']]:[]),
-    ['offset-rolled','Rolled Offset'],['saddle-standard','4 Point Saddle'],
-    ['saddle-three-point','3 Point Saddle'],['saddle-rolled','Rolled 4 Point'],['segmented','Segmented 90']
+    ['offset-rolled','Rolled Offset'],['saddle-standard','4 Mark Saddle'],
+    ['saddle-three-point','3 Mark Saddle'],['saddle-rolled','Rolled 4 Mark'],['segmented','Segmented 90']
   ];
   return options.map(([value,label])=>`<option value="${value}" ${value===current?'selected':''}>${label}</option>`).join('');
 }
@@ -6611,7 +6623,7 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
     type==='straight'?'Straight 120"':
     type==='basic-90'?'Basic 90':
     type==='offset'?`${offsetTypes[project.offsetType]?.label||'Standard'} Offset`:
-    type==='saddle'?(saddleTypes[project.saddleType]?.label||'4 Point Saddle'):
+    type==='saddle'?(saddleTypes[project.saddleType]?.label||'4 Mark Saddle'):
     type==='segmented'?'Segmented 90':'Kicked 90']
   ];
   const countText=String(project.count||rows.length||dataRows.length||0);
@@ -6644,7 +6656,7 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
         :'Center of bend (COB)');
     const saddleSettings=threePoint
       ?[['Conduits',countText],['Direction',threePointDir.replace(/^./,c=>c.toUpperCase())],['Mark Method',markMethodLabel]]
-      :[['Conduits',countText],['Offsets',project.saddleOffsetRelation==='different'?'Both Different':'Both Same'],['Offset Direction',project.saddleVerticalDirection==='down'?'Down First':'Up First'],['Horizontal',project.saddleType==='rolled'?(project.saddleHorizontalDirection==='left'?'Left First':'Right First'):(saddleTypes[project.saddleType]?.label||'4 Point Saddle')],['Mark Method',markMethodLabel]];
+      :[['Conduits',countText],['Offsets',project.saddleOffsetRelation==='different'?'Both Different':'Both Same'],['Offset Direction',project.saddleVerticalDirection==='down'?'Down First':'Up First'],['Horizontal',project.saddleType==='rolled'?(project.saddleHorizontalDirection==='left'?'Left First':'Right First'):(saddleTypes[project.saddleType]?.label||'4 Mark Saddle')],['Mark Method',markMethodLabel]];
     const marksHead=pushPdf
       ?(threePoint?'Bend Marks (45° notch) 1 · 2 · 3':`Bend Marks (${notchLabel}) 1 · 2 · 3 · 4`)
       :(threePoint?'Bend Marks (COB) 1 · 2 · 3':'Bend Marks (COB) 1 · 2 · 3 · 4');
