@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.15</span>
+      <span class="version-badge">PWA v2.16</span>
     </div>
   </div>
 </header>
@@ -4596,7 +4596,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:114,build:'PWA v2.15',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:115,build:'PWA v2.16',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -7527,38 +7527,31 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
   }
   if(type==='offset'){
     const isParallel=project.offsetType==='parallel';
-    const isStandard=project.offsetType==='standard';
-    const reportRows=rows.map((row,i)=>{
-      const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);
-      const angleText=d.angle==null?pdfDisplayValue(row.bendAngle):(Number.isFinite(+d.angle)?Number(d.angle).toFixed(2)+'°':pdfDisplayValue(row.bendAngle));
-      const gapRaw=d.gapAtOffsets;
-      const gapText=gapRaw==null?'—':fmt16(Math.abs(gapRaw-preferredClearance)<1/32?preferredClearance:Math.max(0,gapRaw));
-      return{number:i+1,color:conduitColor(i),values:[
-        String(i+1),'',
-        size,
-        pdfDisplayValue(i?row.cc:''),
-        project.showRackOal?pdfDisplayValue(row.oal):null,
-        pdfDisplayValue(row.critical),
-        isParallel?null:(d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise)),
-        isStandard?null:(d.offsetDistance==null?pdfDisplayValue(row.offsetDistance):fmt16(d.offsetDistance)),
-        angleText,
-        isParallel?null:(d.trueOffset==null?'—':fmt16(d.trueOffset)),
-        isParallel?null:(d.travel==null?'—':fmt16(d.travel)),
-        d.shrink==null?'—':fmt16(d.shrink),
-        isParallel?gapText:null,
-        d.firstMark==null?'—':fmt16(d.firstMark),
-        d.secondMark==null?'—':fmt16(d.secondMark)
-      ].filter(v=>v!==null)};
-    });
-    const headers=['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'Critical',...(isParallel?[]:['Rise']),...(isStandard?[]:['Offset Dist.']),'Angle',...(isParallel?[]:['True Off.','Travel']),'Shrink',...(isParallel?['Gap at Offsets']:[]),'Mark 1','Mark 2'];
-    const widths=[55,55,90,100,...(project.showRackOal?[95]:[]),110,...(isParallel?[]:[90]),...(isStandard?[]:[95]),80,...(isParallel?[]:[105,105]),95,...(isParallel?[115]:[]),120,120];
-    const directionText=isStandard
-      ?(project.offsetVerticalDirection||'up')
-      :isParallel
-        ?(project.offsetHorizontalDirection||'right')
-        :`${project.offsetHorizontalDirection||'right'} / ${project.offsetVerticalDirection||'up'}`;
-    const settings=[...sectionSettings,['Conduits',countText],['Critical',project.offsetCriticalBend==='second'?'Second Bend':'First Bend'],['Start Side',project.offsetRackStart||'left'],['Direction',directionText],...(isParallel?[['Surface Gap','9/16" standard']]:[])];
-    return{report:{projectName,dateText,headers,widths,settings},reportRows};
+    if(isParallel){
+      const reportRows=rows.map((row,i)=>{
+        const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);
+        const angleText=d.angle==null?pdfDisplayValue(row.bendAngle):(Number.isFinite(+d.angle)?Number(d.angle).toFixed(2)+'°':pdfDisplayValue(row.bendAngle));
+        const gapRaw=d.gapAtOffsets;
+        const gapText=gapRaw==null?'—':fmt16(Math.abs(gapRaw-preferredClearance)<1/32?preferredClearance:Math.max(0,gapRaw));
+        return{number:i+1,color:conduitColor(i),values:[
+          String(i+1),'',
+          size,
+          pdfDisplayValue(i?row.cc:''),
+          project.showRackOal?pdfDisplayValue(row.oal):null,
+          pdfDisplayValue(row.critical),
+          d.offsetDistance==null?pdfDisplayValue(row.offsetDistance):fmt16(d.offsetDistance),
+          angleText,
+          d.shrink==null?'—':fmt16(d.shrink),
+          gapText,
+          d.firstMark==null?'—':fmt16(d.firstMark),
+          d.secondMark==null?'—':fmt16(d.secondMark)
+        ].filter(v=>v!==null)};
+      });
+      return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'Critical','Offset Dist.','Angle','Shrink','Gap at Offsets','Mark 1','Mark 2'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),110,95,80,95,115,120,120],settings:[...sectionSettings,['Conduits',countText],['Critical',project.offsetCriticalBend==='second'?'Second Bend':'First Bend'],['Start Side',project.offsetRackStart||'left'],['Direction',project.offsetHorizontalDirection||'right'],['Surface Gap','9/16" standard']]},reportRows};
+    }
+    // Standard / Rolled: keep prior PDF layout unchanged.
+    const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),project.showRackOal?pdfDisplayValue(row.oal):null,pdfDisplayValue(row.critical),d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise),project.offsetType==='standard'?'—':(d.offsetDistance==null?pdfDisplayValue(row.offsetDistance):fmt16(d.offsetDistance)),d.angle==null?pdfDisplayValue(row.bendAngle):d.angle.toFixed(2)+'°',d.trueOffset==null?'—':fmt16(d.trueOffset),d.travel==null?'—':fmt16(d.travel),d.shrink==null?'—':fmt16(d.shrink),d.firstMark==null?'—':`${fmt16(d.firstMark)} / ${fmt16(d.secondMark)}`].filter(v=>v!==null)}});
+    return{report:{projectName,dateText,headers:['#','Color','Size','CTC',...(project.showRackOal?['OAL']:[]),'Critical','Rise',...(project.offsetType==='standard'?[]:['Offset Dist.']),'Angle','True Off.','Travel','Shrink','Mark 1 / 2'],widths:[55,55,90,100,...(project.showRackOal?[95]:[]),110,90,...(project.offsetType==='standard'?[]:[95]),80,105,105,95,230],settings:[...sectionSettings,['Conduits',countText],['Critical',project.offsetCriticalBend==='second'?'Second Bend':'First Bend'],['Start Side',project.offsetRackStart||'left'],['Direction',project.offsetType==='standard'?(project.offsetVerticalDirection||'up'):`${project.offsetHorizontalDirection||'right'}${project.offsetType==='rolled'?' / '+(project.offsetVerticalDirection||'up'):''}`]]},reportRows};
   }
   if(type==='basic-90'){
     const reportRows=rows.map((row,i)=>{const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size),gain=bendGainFor(size,d.bender||row.bender,90);return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,pdfDisplayValue(i?row.cc:''),(dataBackOf90(d)==null?pdfDisplayValue(row.bon||row.oal):fmt16(dataBackOf90(d))),d.bendMark==null?'—':fmt16(d.bendMark),gain==null?'—':fmt16(gain)]}});
