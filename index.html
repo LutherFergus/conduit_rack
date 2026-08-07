@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.18</span>
+      <span class="version-badge">PWA v2.19</span>
     </div>
   </div>
 </header>
@@ -2023,6 +2023,9 @@ function fmtInput(v){return fmt(v).replace('\"','')}
 function fmtDecimal(v,places=3){if(v==null||!isFinite(v))return'—';return Number(v.toFixed(places)).toString()+'\"'}
 function fmt16(v){if(v==null||!isFinite(v))return'—';const den=16,sg=v<0?'-':'',a=Math.abs(v);let w=Math.floor(a+1e-10),n=Math.round((a-w)*den);if(n===den){w++;n=0}if(!n)return sg+w+'\"';const d=gcd(n,den);return sg+(w?`${w}-${n/d}/${den/d}`:`${n/d}/${den/d}`)+'\"'}
 function fmt16Input(v){return fmt16(v).replace('\"','')}
+// Degrees always display to the tenths place (never hundredths).
+function fmtAngle(v){const n=typeof v==='number'?v:parseDeg(v);if(n==null||!isFinite(n))return'—';return Number(n).toFixed(1)+'°'}
+function fmtAngleInput(v){const n=typeof v==='number'?v:parseDeg(v);if(n==null||!isFinite(n))return'';return Number(n).toFixed(1)}
 function roundUp16(v){return Math.ceil((v-1e-10)*16)/16}
 function rowBonEl(tr){return tr?.querySelector?.('.bon')||null}
 function rowOalEl(tr){return tr?.querySelector?.('.oal')||null}
@@ -2045,7 +2048,9 @@ function threePointAngleOptions(sel=''){
 function threePointAngleLabel(angle){
   if(angle==null||!isFinite(angle))return'—';
   const match=threePointAnglePresets.find(([v])=>Math.abs(Number(v)-angle)<1e-9);
-  return match?match[1]:`${Number(angle)}-${Number(angle)*2}-${Number(angle)}`;
+  if(match)return match[1];
+  const outer=Number(angle).toFixed(1),center=(Number(angle)*2).toFixed(1);
+  return `${outer}-${center}-${outer}`;
 }
 function bendAngleControlMarkup(r){
   const autoClass=r.autoBendAngle?'auto-filled':'';
@@ -3608,8 +3613,8 @@ function recalcSaddle(){
     if(perpEl){
       if(rolled){
         const riseTxt=trueOffset1==null?'—':fmtDecimal(trueOffset1,3).replace('"','');
-        const liftTxt=rollOut==null?'—':`${fmtDecimal(rollOut,2).replace('"','')}°`;
-        const dropTxt=rollBack==null?'—':`${fmtDecimal(rollBack,2).replace('"','')}°`;
+        const liftTxt=rollOut==null?'—':fmtAngle(rollOut);
+        const dropTxt=rollBack==null?'—':fmtAngle(rollBack);
         perpEl.textContent=`Rise ${riseTxt}" · Lift ${liftTxt} · Drop ${dropTxt}`;
       }else perpEl.textContent='—';
     }
@@ -3954,7 +3959,7 @@ function recalc(start=0){
     const hypOut=tr.querySelector('.hyp-out');
     if(hypOut)hypOut.textContent=fmt16(hyp);
     const angleOut=tr.querySelector('.angle');
-    if(angleOut)angleOut.textContent=angle==null?'—':angle.toFixed(2)+'°';
+    if(angleOut)angleOut.textContent=fmtAngle(angle);
     data.push({size,bender,cc,strutDistance,bon,oal:bon,rise,hyp,angle,k,shrink,kickMark,ninetyMark,kickPosition:kickAfter?'after':'before'});
     tr.querySelector('.constant').textContent=k==null?'—':k.toFixed(4);tr.querySelector('.shrink').textContent=fmtDecimal(shrink,3);
     let need=[];
@@ -4594,9 +4599,9 @@ function loadLast(){
   if(activeRackType==='segmented'){populateSegmentedTestRack(false);return}
   if(activeRackType==='saddle'){populateSaddleTestRack(false);return}
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
-  countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
+  countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:117,build:'PWA v2.18',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:118,build:'PWA v2.19',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4680,10 +4685,11 @@ function applyProject(p){
       const kickAngleEl=tr.querySelector('.kick-angle');
       if(kickAngleEl){
         let ang=x.kickAngle||'';
-        if(!ang&&x.angle!=null&&x.angle!=='')ang=String(x.angle);
+        if(!ang&&x.angle!=null&&x.angle!=='')ang=fmtAngleInput(x.angle)||String(x.angle);
+        else if(ang){const n=parseDeg(ang);if(n!=null)ang=fmtAngleInput(n)}
         if(!ang){
           const rv=parseM(x.rise),hv=parseM(x.hyp);
-          if(rv!=null&&hv!=null&&hv>0&&Math.abs(rv)<=Math.abs(hv))ang=(Math.asin(rv/hv)*180/Math.PI).toFixed(2);
+          if(rv!=null&&hv!=null&&hv>0&&Math.abs(rv)<=Math.abs(hv))ang=fmtAngleInput(Math.asin(rv/hv)*180/Math.PI);
         }
         kickAngleEl.value=ang;
         if(x.autoKickAngle){kickAngleEl.dataset.auto='1';kickAngleEl.classList.add('auto-filled')}
@@ -7484,8 +7490,11 @@ function pdfReportIsSingle(project){
   return project?.layoutMode==='single'||project?.appMode==='single'||project?.appMode==='stick';
 }
 function pdfReportAngle(d,row,field='bendAngle'){
-  if(d?.angle!=null&&Number.isFinite(+d.angle))return Number(d.angle).toFixed(2)+'°';
-  return pdfDisplayValue(row?.[field]);
+  if(d?.angle!=null&&Number.isFinite(+d.angle))return fmtAngle(d.angle);
+  const raw=row?.[field];
+  const n=parseDeg(raw);
+  if(n!=null)return fmtAngle(n);
+  return pdfDisplayValue(raw);
 }
 function buildPdfSectionReport(sectionPayload,projectName,dateText){
   const project=sectionPayload.project||{},rows=project.rows||[],dataRows=sectionPayload.modelData||[],type=project.rackType||'kicked-90';
@@ -7647,7 +7656,7 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
   const kickAfterPdf=project.kickPosition==='after';
   const reportRows=rows.map((row,i)=>{
     const d=dataRows[i]||{},size=pdfDisplayValue(d.size||row.size);
-    const angleText=d.angle==null?(row.kickAngle||'—'):(Number.isFinite(+d.angle)?Number(d.angle).toFixed(2)+'°':(row.kickAngle||'—'));
+    const angleText=d.angle!=null&&Number.isFinite(+d.angle)?fmtAngle(d.angle):(parseDeg(row.kickAngle)!=null?fmtAngle(row.kickAngle):(row.kickAngle||'—'));
     const hypText=d.hyp==null?pdfDisplayValue(row.hyp):fmt16(d.hyp);
     const bonText=dataBackOf90(d)==null?pdfDisplayValue(row.bon||row.oal):fmt16(dataBackOf90(d));
     const riseText=d.rise==null?pdfDisplayValue(row.rise):fmt16(d.rise);
