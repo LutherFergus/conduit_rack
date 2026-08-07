@@ -480,7 +480,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.24</span>
+      <span class="version-badge">PWA v2.25</span>
     </div>
   </div>
 </header>
@@ -1153,7 +1153,7 @@ function renderLayoutTypeScreen(){
 }
 function chooseLayoutType(type){
   if(type==='last-session'){loadLastSession();return}
-  if(type==='run-test'){realisticRandomRunTest();$('#setupWizard').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});return}
+  if(type==='run-test'){realisticRandomRunTest();closeSetupWizard();window.scrollTo({top:0,behavior:'smooth'});return}
   if(type!=='single'&&type!=='rack')return;
   wizardState.layoutMode=type;
   activeLayoutMode=type;
@@ -1216,7 +1216,7 @@ function chooseSaddleType(type){
     if(type==='rolled'){startStickBendWizard('saddle-rolled');return}
   }
   updateRackModeUI();build(false);
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function startStickThreePointWizard(){
@@ -1330,7 +1330,7 @@ function completeStickThreePointWizard(){
   }
   refreshBenderMode();
   recalc(0);
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 const fourPointAnglePresets=[['10','10°'],['15','15°'],['22.5','22.5°'],['30','30°'],['45','45°']];
@@ -1498,7 +1498,7 @@ function completeStickFourPointWizard(){
   }
   refreshBenderMode();
   recalc(0);
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 const stickEmtSizes=['1/2"','3/4"','1"','1-1/4"','1-1/2"','2"','2-1/2"','3"','3-1/2"','4"'];
@@ -1795,7 +1795,7 @@ function completeStickBendWizard(){
   }
   refreshBenderMode();
   recalc(0);
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function chooseOffsetType(type){
@@ -1811,7 +1811,7 @@ function chooseOffsetType(type){
   }
   updateRackModeUI();
   build(false);
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function chooseRackType(type){
@@ -1828,7 +1828,7 @@ function chooseRackType(type){
     activeRackType=type;
     if(wizardState.layoutMode==='single')countEl.value=1;
     updateRackModeUI();build(false);
-    $('#setupWizard').classList.remove('open');
+    closeSetupWizard();
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
@@ -1895,6 +1895,10 @@ function resetWizardState(){
 }
 function openSetupWizard(){
   closeMeasureKeypad();resetWizardState();
+  // Pause autosave while the startup/setup wizard is open so an empty table
+  // cannot overwrite the last session stored on this device.
+  sessionAutosaveEnabled=false;
+  clearTimeout(autoSaveTimer);
   if(isStickApp()){
     wizardState.layoutMode='single';
     activeLayoutMode='single';
@@ -1931,7 +1935,7 @@ function applyWizardValues(){
 }
 function completeSetupWizard(){
   applyWizardValues();
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function chooseWizardValue(value){
@@ -2007,13 +2011,13 @@ function populateTestRack(hard=false){
   });
   // Test racks preserve the current Auto Space setting. Only the user-facing toggle may turn it off.
   if(autoSpaceActive)applyAllAutoSpacing();else{updateAutoSpaceButton();refreshBenderMode();recalc(0);}
-  $('#setupWizard').classList.remove('open');
+  closeSetupWizard();
 }
 function chooseSetupMode(mode){
   if(mode==='wizard'){wizardState.step=wizardState.layoutMode==='single'?1:0;if(wizardState.layoutMode==='single')wizardState.conduitCount='1';renderSetupWizard();return}
-  if(mode==='manual'){if(wizardState.layoutMode==='single')countEl.value=1;build(false);$('#setupWizard').classList.remove('open');return}
-  if(mode==='run-test'){realisticRandomRunTest();$('#setupWizard').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});return}
-  if(activeRackType==='basic-90'){populateBasic90TestRack(mode==='hard-test');$('#setupWizard').classList.remove('open');return}
+  if(mode==='manual'){if(wizardState.layoutMode==='single')countEl.value=1;build(false);closeSetupWizard();return}
+  if(mode==='run-test'){realisticRandomRunTest();closeSetupWizard();window.scrollTo({top:0,behavior:'smooth'});return}
+  if(activeRackType==='basic-90'){populateBasic90TestRack(mode==='hard-test');closeSetupWizard();return}
   populateTestRack(mode==='hard-test');
 }
 
@@ -4603,7 +4607,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:123,build:'PWA v2.24',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:124,build:'PWA v2.25',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -5105,12 +5109,14 @@ function restoreCustomRun(p){
 }
 function downloadProject(p,name='conduit-rack-project.json'){const b=new Blob([JSON.stringify(p,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function save(){downloadProject(projectObject())}
-function openFile(f){const r=new FileReader();r.onload=()=>{try{applyProject(JSON.parse(r.result));scheduleAutoSave();setStorageStatus('Project opened. Automatic recovery updated.','ok')}catch(e){alert('Could not open that project file.')}};r.readAsText(f)}
+function openFile(f){const r=new FileReader();r.onload=()=>{try{applyProject(JSON.parse(r.result));enableSessionAutosave();setStorageStatus('Project opened. Automatic recovery updated.','ok')}catch(e){alert('Could not open that project file.')}};r.readAsText(f)}
 
 const LOCAL_PREFIX=isStickApp()?'conduitStick.local.v1.':'conduitRack.local.v1.';
 const LOCAL_INDEX=LOCAL_PREFIX+'index';
 const LOCAL_AUTOSAVE=LOCAL_PREFIX+'autosave';
 let storageAvailable=false,autoSaveTimer=null,isRestoring=false;
+// Prevent the empty startup table / open wizard from wiping the last session.
+let sessionAutosaveEnabled=false;
 const localProjectName=$('#localProjectName'),localProjectList=$('#localProjectList'),storageStatus=$('#storageStatus');
 function setStorageStatus(message,type='ok'){storageStatus.textContent=message;storageStatus.className='storage-status '+type}
 function testStorage(){try{const k=LOCAL_PREFIX+'test';localStorage.setItem(k,'1');localStorage.removeItem(k);storageAvailable=true;setStorageStatus('On-device storage is available. Changes are automatically recovered on this device.','ok')}catch(e){storageAvailable=false;setStorageStatus('Browser storage is unavailable for this file. Use Export JSON Backup to preserve the project.','bad')}return storageAvailable}
@@ -5156,7 +5162,7 @@ function openLocalProjectById(id){
   }catch(e){
     setStorageStatus('That saved project could not be opened.','bad');
     showCaptureStatus('OPEN FAILED',true);
-  }finally{isRestoring=false;scheduleAutoSave()}
+  }finally{isRestoring=false;enableSessionAutosave()}
 }
 function loadLocalProject(){
   if(!storageAvailable&&!testStorage()){showCaptureStatus('STORAGE UNAVAILABLE',true);return}
@@ -5178,9 +5184,26 @@ function loadLocalProject(){
   });
 }
 function deleteLocalProject(){if(!storageAvailable&&!testStorage())return;const id=localProjectList.value;if(!id){setStorageStatus('Choose a saved project to delete.','warn');return}const items=readLocalIndex(),item=items.find(x=>x.id===id);if(!confirm(`Delete “${item?.name||'this project'}” from this device?`))return;localStorage.removeItem(LOCAL_PREFIX+id);writeLocalIndex(items.filter(x=>x.id!==id));localProjectName.value='';refreshLocalProjects();setStorageStatus('Saved project deleted. The current rack remains open.','warn')}
-function scheduleAutoSave(){if(!storageAvailable||isRestoring)return;clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>{flushAutoSave(true)},450)}
+function sessionAutosaveAllowed(){
+  if(!storageAvailable||isRestoring||!sessionAutosaveEnabled)return false;
+  if($('#setupWizard')?.classList.contains('open'))return false;
+  return true;
+}
+function enableSessionAutosave(){
+  sessionAutosaveEnabled=true;
+  flushAutoSave(true);
+}
+function closeSetupWizard(){
+  $('#setupWizard')?.classList.remove('open');
+  enableSessionAutosave();
+}
+function scheduleAutoSave(){
+  if(!sessionAutosaveAllowed())return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>{flushAutoSave(true)},450);
+}
 function flushAutoSave(updateStatus=false){
-  if(!storageAvailable||isRestoring)return false;
+  if(!sessionAutosaveAllowed())return false;
   try{
     clearTimeout(autoSaveTimer);
     localStorage.setItem(LOCAL_AUTOSAVE,JSON.stringify(projectObject()));
@@ -5204,11 +5227,23 @@ function loadLastSession(){
     showCaptureStatus('NO LAST SESSION',true);
     return false;
   }
+  let parsed;
+  try{parsed=JSON.parse(raw)}catch(e){
+    alert('The last session could not be loaded.');
+    showCaptureStatus('LOAD FAILED',true);
+    return false;
+  }
+  if(!parsed||!Array.isArray(parsed.rows)||!parsed.rows.length){
+    alert('No previous session was found on this device yet. Work a rack, then leave the app — it is saved automatically.');
+    showCaptureStatus('NO LAST SESSION',true);
+    return false;
+  }
   try{
     rememberUndo('Load last session');
     isRestoring=true;
-    applyProject(JSON.parse(raw));
+    applyProject(parsed);
     $('#setupWizard')?.classList.remove('open');
+    sessionAutosaveEnabled=true;
     setStorageStatus('Loaded the last session saved on this device.','ok');
     showCaptureStatus('LAST SESSION LOADED');
     window.scrollTo({top:0,behavior:'smooth'});
