@@ -475,7 +475,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.02</span>
+      <span class="version-badge">PWA v2.06</span>
     </div>
   </div>
 </header>
@@ -521,7 +521,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
           <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default on rolled): every shot on the 30° rim notch. Traditional keeps equal COB marks (no notch shift). Standard 4-point always uses center-of-bend marks. 45° notch applies to 3-point saddles only.</div></div>
           <div id="saddleHeightsCard" class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Both Same copies Hyp1/oh to the return wing. Both Different enables separate Hyp2 and far object height.</div></div>
           <div id="saddleVerticalCard" class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
-          <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div><div class="helper">Rolled 4 Point: which way Point 4 → free end swings around the Point 2–3 crown, away from start → Point 1.</div></div>
+          <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div><div class="helper">Rolled 4 Point: which way the Z lift goes on the first wing (Right = +Z out). Both wings keep climbing +Y.</div></div>
           <div class="offset-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear A→B after the saddle (shortened by total shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
@@ -578,7 +578,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
     </div>
   </section>
   <section id="saddleModePanel" class="panel offset-mode-panel hidden" aria-label="Saddle style">
-    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">4 Point and 3 Point clear an obstruction in one plane. Rolled 4 Point builds a standard 4-point, then rolls Point 4 → free end around the Point 2–3 crown axis.</div></div>
+    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">4 Point and 3 Point clear an obstruction in one plane. Rolled 4 Point stays +run/+climb: lift Z on the first wing, drop Z back to zero on the second, never reverse Y.</div></div>
     <div id="saddleModeSelector" class="segmented-control" role="group" aria-label="Saddle style">
       <button type="button" data-saddle-mode="standard">4 Point Saddle</button>
       <button type="button" data-saddle-mode="three-point">3 Point Saddle</button>
@@ -817,7 +817,7 @@ const offsetTypes={
 const saddleTypes={
   'standard':{label:'4 Point Saddle',description:'A four-bend saddle made from two opposing vertical offsets.'},
   'three-point':{label:'3 Point Saddle',description:'A three-bend saddle with a doubled center bend over an obstruction.'},
-  'rolled':{label:'Rolled 4 Point',description:'Standard 4-point, then roll Point 4 → free end around the Point 2–3 crown axis. Roll = cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂). Default 30°.'}
+  'rolled':{label:'Rolled 4 Point',description:'Always +run/+climb: 2-point lifts Z by sin⁻¹(oh/Hyp), crown, 2-point drops Z to 0 while still climbing. Demo 12" @ 30° → φ≈14.5° when oh/Hyp=¼. Default 30°.'}
 };
 const isRolledSaddle=()=>activeSaddleType==='rolled';
 const isThreePointSaddle=()=>activeSaddleType==='three-point';
@@ -977,7 +977,7 @@ function updateRackModeUI(){
   $('#offsetVerticalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='parallel');
   $('#offsetHorizontalDirectionBox')?.classList.toggle('hidden',isOffset&&activeOffsetType==='standard');
   $$('.offset-gap-col').forEach(el=>el.classList.toggle('hidden',!(isOffset&&activeOffsetType==='parallel')));
-  // Rolled: crown-axis roll direction uses Left/Right (away from start→Point 1). Hide vertical.
+  // Rolled: Left/Right picks Z-lift side; both wings keep +Y climb. Hide vertical.
   $('#saddleHorizontalDirectionBox')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle()||!isRolledSaddle());
   $('#saddleHeightsCard')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle());
   $('#saddleVerticalCard')?.classList.toggle('hidden',!isSaddle||isThreePointSaddle()||isRolledSaddle());
@@ -1015,7 +1015,7 @@ function updateRackModeUI(){
     ?(isThreePointSaddle()
       ?'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains three true circular bends (outer angle and a doubled center bend). Direction sets whether the saddle clears Up, Down, Left, or Right.'
       :isRolledSaddle()
-        ?'Rolled 4 Point: standard 4-point (Rise = Hyp × sin θ), then roll Point 4 → free end around the Point 2–3 crown by cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂) (≈151° when oh=2, Hyp=8), away from start → Point 1.'
+        ?'Rolled 4 Point: straight on run, Hyp @ θ toward +Y while lifting Z by φ=sin⁻¹(oh/Hyp) (≈14.5° when oh/Hyp=¼), crown, then Hyp @ θ toward +Y while dropping Z to 0. Run and climb stay positive the whole way.'
         :'Rendered EMT uses actual outside diameter and the selected bender radius. Each conduit contains four true circular bends, a straight saddle top between bends two and three, and parallel supported runs at both struts.')
     :isOffset
     ?'Rendered EMT uses actual outside diameter and the selected bender radius. Orange and purple struts support the parallel starting and ending runs. Standard, Parallel, and Rolled modes use the same two-bend geometry and collision engine.'
@@ -1028,7 +1028,7 @@ function updateRackModeUI(){
       ?'<div class="formula-item"><strong>Developed Arc</strong><div class="formula-equation">Radius × π ÷ 2</div></div><div class="formula-item"><strong>Shot Angle</strong><div class="formula-equation">90° ÷ 9 = 10°</div></div><div class="formula-item"><strong>Mark Spacing</strong><div class="formula-equation">Developed Arc ÷ 9</div></div>'
       :isSaddle
       ?(isRolledSaddle()
-        ?'<div class="formula-item"><strong>2-Point Rise</strong><div class="formula-equation">Rise = Hyp × sin(Angle)</div></div><div class="formula-item"><strong>Roll Around 2–3</strong><div class="formula-equation">cos⁻¹(oh/Hyp₁) + cos⁻¹(oh/Hyp₂)</div></div><div class="formula-item"><strong>Geometry</strong><div class="formula-equation">Standard 4-pt · rotate Point4→end about crown</div></div>'
+        ?'<div class="formula-item"><strong>2-Point Rise</strong><div class="formula-equation">Rise = Hyp × sin(Angle)</div></div><div class="formula-item"><strong>Z Lift / Drop</strong><div class="formula-equation">φ = sin⁻¹(oh ÷ Hyp)</div></div><div class="formula-item"><strong>Path</strong><div class="formula-equation">+run · +climb · Z up then back to 0</div></div>'
         :isThreePointSaddle()
         ?(isPushThroughMarks()
           ?'<div class="formula-item"><strong>COB Spacing</strong><div class="formula-equation">Height × csc(θ) + OD</div></div><div class="formula-item"><strong>45° Notch Δ</strong><div class="formula-equation">CLR × (45° − θ<sub>bend</sub>) ÷ 2</div></div><div class="formula-item"><strong>Display Mark</strong><div class="formula-equation">True COB + Δ (outers θ, center 2θ)</div></div>'
@@ -1074,7 +1074,7 @@ function bendMethodGuide(size,bender){
       return{title:'3 Point · 45° notch marks',blurb:'True COBs are calculated first, then each mark shifts to the hand-bender 45° rim notch so Ideal/Klein/etc. land the same. Outers use θ; the center uses 2θ.',formulas:item('COB Spacing','Height × csc(θ) + OD')+item('Notch Δ','CLR × (45° − θ<sub>bend</sub>) ÷ 2')+item('Display Mark','True COB + Δ')};
     }
     if(isRolledSaddle()){
-      return{title:'Rolled 4 Point · crown-axis roll',blurb:'Build a standard 4-point with Rise = Hyp × sin(θ). Then roll Point 4 → free end around the Point 2–3 centerline by cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂), away from start → Point 1. Demo oh=2 Hyp=8 → ≈151°.',formulas:item('2-Point Rise','Rise = Hyp × sin(θ)')+item('Roll Angle','cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂)')+item('Axis','Point 2 → Point 3 crown')};
+      return{title:'Rolled 4 Point · +run/+climb',blurb:'Straight on run, then Hyp @ θ toward +Y while lifting Z by φ=sin⁻¹(oh/Hyp). Crown, then Hyp @ θ toward +Y while dropping Z to 0. Demo: 12″ legs @ 30°, oh/Hyp=¼ → φ≈14.5°. Run and climb stay positive.',formulas:item('2-Point Rise','Rise = Hyp × sin(θ)')+item('Z Lift','φ = sin⁻¹(oh/Hyp)')+item('Return','Same climb sign · Z back to 0')};
     }
     return{title:'4 Point · center of bend',blurb:'Bend marks are true centers of bend. No rim-notch shift — the 45° notch method is for 3-point only.',formulas:item('Travel','Offset ÷ sin(θ)')+item('Shrink','Offset × tan(θ ÷ 2)')+item('Bend Marks','True COB stations')};
   }
@@ -1649,13 +1649,19 @@ function measurementFieldVisible(el){
   }catch(_e){}
   return true;
 }
+// Stick Next skips secondary fields, but those fields must still open the measure keypad on tap.
+function stickKeypadNextSkip(el){
+  if(!isStickApp()||!el)return false;
+  if(el.classList.contains('oal'))return true;
+  // Rolled Point 4 / Hyp2 / far oh are primary fabrication inputs — keep them on Next.
+  if(activeRackType==='saddle'&&isRolledSaddle())return false;
+  return el.classList.contains('middle-distance')||el.classList.contains('second-rise')||el.classList.contains('second-offset-distance');
+}
 function measurementInputEligible(el){
   if(!(el instanceof HTMLInputElement)||el.disabled)return false;
   if(el.id==='pattern')return true;
   const tr=el.closest('#rows tr');if(!tr)return false;
   const i=$$('#rows tr').indexOf(tr);
-  // Single stick: keep Next on primary fabrication inputs only.
-  if(isStickApp()&&(el.classList.contains('oal')||el.classList.contains('middle-distance')||el.classList.contains('second-rise')||el.classList.contains('second-offset-distance')))return false;
   if(el.classList.contains('cc'))return i>0;
   if(activeRackType==='segmented'){
     return el.classList.contains('segmented-measurement')||el.classList.contains('desired-radius');
@@ -1756,6 +1762,7 @@ function insertMeasureFraction(fraction){
   setMeasureValue(v+fraction);
 }
 function measurementTargets(){return [...$$('#rows input')].filter(el=>measurementInputEligible(el)&&measurementFieldVisible(el))}
+function measurementNextTargets(){return measurementTargets().filter(el=>!stickKeypadNextSkip(el))}
 function closeChoicePicker(){
   const modal=$('#choicePicker');
   if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
@@ -1812,8 +1819,8 @@ function promptStickThreePointFollowUps(tr){
 }
 function nextMeasureField(){
   const current=measureKeypadTarget;
-  const fields=measurementTargets();
-  const i=fields.indexOf(current);
+  const all=measurementTargets();
+  const fields=measurementNextTargets();
   if(!commitMeasureKeypad())return;
   // Stick 3-point: Center → Height → angle popup → size popup if needed.
   if(isStickApp()&&activeRackType==='saddle'&&isThreePointSaddle()&&current?.classList.contains('rise')){
@@ -1822,7 +1829,13 @@ function nextMeasureField(){
     promptStickThreePointFollowUps(tr);
     return;
   }
-  const next=i>=0&&i+1<fields.length?fields[i+1]:null;
+  let next=null;
+  if(current){
+    const start=all.indexOf(current);
+    for(let j=start+1;j<all.length;j++){
+      if(fields.includes(all[j])){next=all[j];break}
+    }
+  }
   if(next){
     if(measureKeypadTarget)measureKeypadTarget.classList.remove('measure-keypad-active');
     measureKeypadTarget=null;
@@ -2563,12 +2576,14 @@ function buildSaddleTable(old,n){
   const threePoint=isThreePointSaddle();
   const rolled=isRolledSaddle();
   if(rolled){
-    // Field order: Point 1 → Hyp1 → Point 2 → object height → angle (30°) → Point 3 → Hyp2 → Point 4
-    if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>Point 1</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>Hyp1<br><small>2-pt hypotenuse</small></th><th>Point 2</th><th>Object Height<br><small>oh · clear</small></th><th>Angle<br><small>default 30°</small></th><th>Point 3</th><th class="saddle-hyp2-same">Hyp2<br><small>= Hyp1</small></th><th class="saddle-second-roll-col">Hyp2<br><small>2-pt back</small></th><th>Point 4</th><th class="saddle-second-col">Far Object Height</th><th>2-Pt Rise</th><th>Roll Out / Back</th><th>First Shrink</th><th>Second Shrink</th><th>Missing / Needed</th>`;
+    // Match other profiles: ALL inputs first (left / Input Data), then ALL outputs (right / Output Data).
+    // Inputs: Point 1 → OAL → Hyp1 → object height → angle → Hyp2 (if different) → Point 4 → far oh
+    // Outputs: Point 1–4 layout marks → Hyp2 (=Hyp1) → rise / roll / shrinks → need
+    if(header)header.innerHTML=`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(false)}<th>Point 1</th><th class="oal-col">OAL<br><small>finished A to B</small></th><th>Hyp1<br><small>2-pt hypotenuse</small></th><th>Object Height<br><small>oh · clear</small></th><th>Angle<br><small>default 30°</small></th><th class="saddle-second-roll-col">Hyp2<br><small>2-pt back</small></th><th>Point 4</th><th class="saddle-second-col">Far Object Height</th><th class="mark-col">Point 1<br><small>COB</small></th><th class="mark-col">Point 2<br><small>COB</small></th><th class="mark-col">Point 3<br><small>COB</small></th><th class="mark-col">Point 4<br><small>COB</small></th><th class="saddle-hyp2-same">Hyp2<br><small>= Hyp1</small></th><th>2-Pt Rise</th><th>Z Lift / Drop</th><th>First Shrink</th><th>Second Shrink</th><th>Missing / Needed</th>`;
     rowsEl.innerHTML='';
     for(let i=0;i<n;i++){
       const r=old[i]||{},tr=document.createElement('tr');
-      tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Point 1"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="e.g. 20" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="Hyp1 (2-point hypotenuse)"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 12"></td><td class="output result-cell mark-2" data-label="Point 2">—</td><td class="input-cell" data-label="Object Height (oh)"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 2"></td><td class="input-cell" data-label="Angle (default 30°)">${bendAngleControlMarkup(r)}</td><td class="output result-cell mark-3" data-label="Point 3">—</td><td class="output result-cell true-offset-2 saddle-hyp2-same" data-label="Hyp2 (= Hyp1)">—</td><td class="input-cell saddle-second-roll-col" data-label="Hyp2 (2-point back)"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Point 4"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 54"></td><td class="input-cell saddle-second-col" data-label="Far Object Height"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 2"></td><td class="output-section-label">Output Data</td><td class="output result-cell true-offset-1" data-label="2-Point Rise (Hyp×sin θ)">—</td><td class="output result-cell perp-angle" data-label="Roll Out / Back">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td><td class="hidden"><span class="travel-1"></span><span class="travel-2"></span><span class="mark-1"></span><span class="mark-4"></span></td>`;
+      tr.innerHTML=`<td class="output conduit-row-heading" data-label="Conduit #"><span class="conduit-id"><span class="conduit-color-dot" data-row-color="${i}"></span><span>${i+1}</span></span></td><td class="conduit-section-toggle"><button type="button" class="conduit-input-toggle" aria-expanded="true">Input Data</button></td><td class="input-cell" data-label="Conduit Size"><select class="size">${sizes(r.size||'')}</select></td><td class="input-cell bender-col" data-label="Bender Profile"><select class="bender">${benderOptions(r.size||'',r.bender||defaultBenderForSize(r.size||''))}</select></td>${ctcCellHtml(i,r)}<td class="input-cell" data-label="Point 1"><input class="critical ${r.autoCritical?'auto-filled':''}" data-auto="${r.autoCritical?'1':'0'}" type="text" placeholder="e.g. 20" value="${r.critical||''}"></td><td class="input-cell oal-col" data-label="OAL (finished A to B)"><input class="oal ${r.autoOal?'auto-filled':''}" data-auto="${r.autoOal?'1':'0'}" type="text" value="${r.oal||''}" placeholder="e.g. 120"></td><td class="input-cell" data-label="Hyp1 (2-point hypotenuse)"><input class="offset-distance ${r.autoOffsetDistance?'auto-filled':''}" data-auto="${r.autoOffsetDistance?'1':'0'}" type="text" value="${r.offsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Object Height (oh)"><input class="rise ${r.autoRise?'auto-filled':''}" data-auto-rise="${r.autoRise?'1':'0'}" type="text" value="${r.rise||''}" placeholder="e.g. 2"></td><td class="input-cell" data-label="Angle (default 30°)">${bendAngleControlMarkup(r)}</td><td class="input-cell saddle-second-roll-col" data-label="Hyp2 (2-point back)"><input class="second-offset-distance ${r.autoSecondOffsetDistance?'auto-filled':''}" data-auto="${r.autoSecondOffsetDistance?'1':'0'}" type="text" value="${r.secondOffsetDistance||''}" placeholder="e.g. 12"></td><td class="input-cell" data-label="Point 4"><input class="middle-distance ${r.autoMiddleDistance?'auto-filled':''}" data-auto="${r.autoMiddleDistance?'1':'0'}" type="text" value="${r.middleDistance||''}" placeholder="e.g. 60"></td><td class="input-cell saddle-second-col" data-label="Far Object Height"><input class="second-rise ${r.autoSecondRise?'auto-filled':''}" data-auto="${r.autoSecondRise?'1':'0'}" type="text" value="${r.secondRise||''}" placeholder="e.g. 2"></td><td class="output-section-label">Output Data</td><td class="output result-cell mark-cell mark-1" data-label="Point 1 (COB)">—</td><td class="output result-cell mark-cell mark-2" data-label="Point 2 (COB)">—</td><td class="output result-cell mark-cell mark-3" data-label="Point 3 (COB)">—</td><td class="output result-cell mark-cell mark-4" data-label="Point 4 (COB)">—</td><td class="output result-cell true-offset-2 saddle-hyp2-same" data-label="Hyp2 (= Hyp1)">—</td><td class="output result-cell true-offset-1" data-label="2-Point Rise (Hyp×sin θ)">—</td><td class="output result-cell perp-angle" data-label="Z Lift / Drop">—</td><td class="output result-cell shrink-1" data-label="First Shrink">—</td><td class="output result-cell shrink-2" data-label="Second Shrink">—</td><td class="output result-cell need" data-label="Missing / Needed">—</td><td class="hidden"><span class="travel-1"></span><span class="travel-2"></span></td>`;
       rowsEl.appendChild(tr);
     }
   }else{
@@ -2889,23 +2904,22 @@ function recalcSaddle(){
     const validAngle=angle!=null&&angle>0&&angle<(threePoint?45:90),theta=validAngle?angle*Math.PI/180:null;
     let trueOffset1,trueOffset2,travel1,travel2,shrink1,shrink2,offsetDistance,secondOffsetDistance,rollOut,rollBack;
     if(rolled){
-      // Standard 4-point marks with Rise = Hyp × sin(θ), then roll Point4→end
-      // around the Point2–Point3 crown axis by rollBack = cos⁻¹(oh/Hyp1)+cos⁻¹(oh/Hyp2)
-      // (demo oh=2, Hyp=8 → ≈151°).
+      // Always-+run/+climb: φ = sin⁻¹(oh/Hyp) lifts Z on wing 1 and drops Z on wing 2
+      // while both wings keep climbing +Y. Demo: Hyp 12 @ 30°, oh/Hyp → φ ≈ 14.5°.
       travel1=hyp1In;travel2=hyp2In;
       const oh1=rise!=null?Math.abs(rise):null,oh2=secondRise!=null?Math.abs(secondRise):null;
       const compound1=travel1!=null&&theta?Math.abs(travel1)*Math.sin(theta):null;
       const compound2=travel2!=null&&theta?Math.abs(travel2)*Math.sin(theta):null;
-      const hypOk1=travel1!=null&&oh1!=null&&Math.abs(travel1)+1e-12>=oh1&&Math.abs(travel1)>1e-12;
-      const hypOk2=travel2!=null&&oh2!=null&&Math.abs(travel2)+1e-12>=oh2&&Math.abs(travel2)>1e-12;
+      const hypOk1=travel1!=null&&oh1!=null&&Math.abs(travel1)>oh1+1e-12;
+      const hypOk2=travel2!=null&&oh2!=null&&Math.abs(travel2)>oh2+1e-12;
       offsetDistance=0;secondOffsetDistance=0;
       trueOffset1=compound1;trueOffset2=compound2;
       shrink1=trueOffset1!=null&&theta?trueOffset1*Math.tan(theta/2):null;
       shrink2=trueOffset2!=null&&theta?trueOffset2*Math.tan(theta/2):null;
-      const a1=hypOk1?Math.acos(Math.min(1,oh1/Math.abs(travel1))):null;
-      const a2=hypOk2?Math.acos(Math.min(1,oh2/Math.abs(travel2))):null;
+      const a1=hypOk1?Math.asin(Math.min(1,oh1/Math.abs(travel1))):null;
+      const a2=hypOk2?Math.asin(Math.min(1,oh2/Math.abs(travel2))):null;
       rollOut=a1!=null?a1*180/Math.PI:null;
-      rollBack=a1!=null&&a2!=null?(a1+a2)*180/Math.PI:null;
+      rollBack=a2!=null?a2*180/Math.PI:null;
     }else{
       offsetDistance=0;secondOffsetDistance=0;rollOut=null;rollBack=null;
       trueOffset1=rise!=null?Math.hypot(rise,0):null;
@@ -2983,8 +2997,9 @@ function recalcSaddle(){
     if(perpEl){
       if(rolled){
         const riseTxt=trueOffset1==null?'—':fmtDecimal(trueOffset1,3).replace('"','');
-        const rollTxt=rollBack==null?'—':`${fmtDecimal(rollBack,2).replace('"','')}°`;
-        perpEl.textContent=`Rise ${riseTxt}" · Crown roll ${rollTxt}`;
+        const liftTxt=rollOut==null?'—':`${fmtDecimal(rollOut,2).replace('"','')}°`;
+        const dropTxt=rollBack==null?'—':`${fmtDecimal(rollBack,2).replace('"','')}°`;
+        perpEl.textContent=`Rise ${riseTxt}" · Lift ${liftTxt} · Drop ${dropTxt}`;
       }else perpEl.textContent='—';
     }
     setTxt('.mark-1',fmt16(displayMark1));setTxt('.mark-2',fmt16(displayMark2));setTxt('.mark-3',fmt16(displayMark3));setTxt('.mark-4',threePoint?'—':fmt16(displayMark4));
@@ -2999,7 +3014,7 @@ function recalcSaddle(){
     if(!threePoint&&(rolled?point4In==null:middleDistanceRaw==null))need.push(rolled?'Enter Point 4 in any row':'Enter Bend 2 to Bend 3 distance in any row');
     if(saddleOffsetRelation==='different'&&secondRise==null)need.push(rolled?'Enter far-side object height in any row':'Enter second rise in any row');
     if(saddleOffsetRelation==='different'&&rolled&&hyp2In==null)need.push('Enter Hyp2 (return 2-point hypotenuse) in any row');
-    if(rolled&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)+1e-12<Math.abs(rise))need.push('Hyp1 must be ≥ object height (oh) for the crown-axis roll angle');
+    if(rolled&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)+1e-12<Math.abs(rise))need.push('Hyp1 must be ≥ object height (oh) for Z lift φ = sin⁻¹(oh/Hyp)');
     if(saddleOffsetRelation==='different'&&rolled&&hyp2In!=null&&secondRise!=null&&Math.abs(hyp2In)+1e-12<Math.abs(secondRise))need.push('Hyp2 must be ≥ far-side object height');
     if(mark1!=null&&tangentSetback!=null&&mark1<=tangentSetback)need.push(rolled?'Point 1 is too close to the conduit end for the selected bender radius':'Bend 1 is too close to the conduit end for the selected bender radius');
     if(rolled&&middleDistance!=null&&middleDistance<=0)need.push('Point 4 must leave a positive run beside the object (Point 3 after Point 2)');
@@ -3009,8 +3024,11 @@ function recalcSaddle(){
       if(travel2!=null&&tangentSetback!=null&&centerSetback!=null&&travel2<=tangentSetback+centerSetback)need.push('Second leg is too small for the selected radius and angle');
       if(showRackOal&&mark3!=null&&oal!=null&&mark3>=oal)need.push('Bend 3 must be before OAL');
     }else{
-      if(travel1!=null&&tangentSetback!=null&&travel1<=2*tangentSetback)need.push('First offset is too small for the selected radius and angle');
-      if(travel2!=null&&tangentSetback!=null&&travel2<=2*tangentSetback)need.push('Second offset is too small for the selected radius and angle');
+      if(travel1!=null&&tangentSetback!=null&&travel1<=2*tangentSetback)need.push(rolled?'Hyp1 is too short for the selected bender radius and angle':'First offset is too small for the selected radius and angle');
+      if(travel2!=null&&tangentSetback!=null&&travel2<=2*tangentSetback)need.push(rolled?'Hyp2 is too short for the selected bender radius and angle':'Second offset is too small for the selected radius and angle');
+      // Crown between bends 2–3 must clear both tangent setbacks (same gate as build*SaddleCenterline).
+      // Without this, rows show Complete while rackModels stay empty — conduit disappears from the viewer.
+      if(middleDistance!=null&&tangentSetback!=null&&middleDistance<=2*tangentSetback)need.push(rolled?'Point 4 leaves too little run beside the object for the selected bender — Bend 3 will look pointy unless Bend 2→3 is longer than 2× tangent setback (viewer pads the crown to keep the bend round)':'Bend 2 to Bend 3 is too short for the selected radius and angle');
       if(showRackOal&&mark4!=null&&oal!=null&&mark4>=oal)need.push(rolled?'Point 4 must be before OAL':'Bend 4 must be before OAL');
     }
     if(i>0&&cc!=null){const clear=outsideClearance(data[i-1].size,size,cc),ccInput=tr.querySelector('.cc');if(clear!=null&&clear<0){need.push('<span style="color:#fca5a5;font-weight:800">ERROR: conduit outside diameters overlap by '+fmt16(Math.abs(clear))+'</span>');ccInput.classList.add('invalid')}else if(clear!=null&&clear+1e-9<preferredClearance){need.push('<span style="color:#fbbf24;font-weight:800">WARNING: only '+fmt16(Math.max(0,clear))+' clear; recommended 9/16"</span>');ccInput.classList.remove('invalid')}else ccInput.classList.remove('invalid')}
@@ -3020,7 +3038,13 @@ function recalcSaddle(){
     const commonOal=Math.max(120,...data.map(d=>(d.lastMark||d.mark4||d.mark3||0)+24));
     data.forEach(d=>{d.oal=commonOal});
   }
-  modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels);transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels);applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();
+  modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels);transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels);applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);
+  // Rolled path leaves the start plane — always re-fit so a prior custom pan/zoom
+  // cannot leave the conduit off-screen ("not showing in the viewer").
+  if(rolled){activeView='free';fitCurrentView()}
+  else if(activeView!=='custom')fitCurrentView();
+  else draw3D();
+  scheduleAutoSave();
 }
 
 function recalcOffset(){
@@ -3555,7 +3579,7 @@ function renderSaddleStatus(d){
   const bendHelp=isThreePointSaddle()
     ?'Each solved conduit contains three circular bends: two outer bends and a doubled center bend.'
     :isRolledSaddle()
-      ?'Standard 4-point first (Rise = Hyp × sin θ). Then Point 4 → free end is rolled around the Point 2–3 crown axis by cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂), away from start → Point 1.'
+      ?'Always +run/+climb: first wing lifts Z by φ=sin⁻¹(oh/Hyp), second wing drops Z to 0 while still climbing. Demo 12″ @ 30° with oh/Hyp=¼ → φ≈14.5°.'
       :'Each solved conduit contains four circular bends and a straight section from Bend 2 to Bend 3.';
   const clearanceHelp=isThreePointSaddle()
     ?'Actual conduit ODs maintain the required clearance through all three bends and straight sections.'
@@ -3564,12 +3588,12 @@ function renderSaddleStatus(d){
   const markHelp=isThreePointSaddle()
     ?'<div class="status-card ok"><strong>Push Through · 45° notch marks</strong><div class="helper">Bend 2 COB = Center of Saddle + shrink (Height × tan(θ/2)). COB spacing = Height × csc(θ) + OD. Output marks add Δ = CLR × (45° − θ<sub>bend</sub>) ÷ 2 (Ideal rim notch = COB of a 45° bend; select conduit size for CLR/OD).</div></div>'
     :isRolledSaddle()
-      ?'<div class="status-card ok"><strong>Crown-axis roll · Point 4 → end</strong><div class="helper">Marks stay a standard 4-point. Geometry builds that saddle, then rotates Point 4 through the free end around the Point 2–3 centerline. Roll angle = cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂) — oh=2, Hyp=8 → ≈151°. Direction is away from start → Point 1.</div></div>'
+      ?'<div class="status-card ok"><strong>+run/+climb · Z lift then drop</strong><div class="helper">Straight → Hyp @ θ toward +Y while lifting Z by φ=sin⁻¹(oh/Hyp) → crown → Hyp @ θ toward +Y while dropping Z to 0 → straight. Run and climb stay positive. Demo: 12″ / 30° / φ≈14.5° when oh/Hyp=¼.</div></div>'
       :'<div class="status-card ok"><strong>Center of bend marks</strong><div class="helper">Bend marks are true centers of bend. The 45° rim notch applies to 3-point saddles only.</div></div>';
   const offsetHelp=isThreePointSaddle()
     ?'Bends 1–2 form the first leg. Bends 2–3 form the return leg through the doubled center bend.'
     :isRolledSaddle()
-      ?'Enter Point 1, Hyp1, object height, and Point 4. Angle defaults to 30°. Hyp2 matches Hyp1 unless Both Different. Rise = Hyp × sin(angle). Roll around 2–3 = cos⁻¹(oh/Hyp₁)+cos⁻¹(oh/Hyp₂).'
+      ?'Enter Point 1, Hyp1, object height, and Point 4. Angle defaults to 30°. Hyp2 matches Hyp1 unless Both Different. Rise = Hyp × sin(angle). Z lift φ = sin⁻¹(oh/Hyp).'
       :'Bends 1–2 form the first offset. Bends 3–4 form the opposing offset. Shrink from each completed offset is carried into every downstream absolute bend mark.';
   const styleTag=isRolledSaddle()?`${style} · ${relation}`:`${style} · ${relation}${push?' · Push Through':' · Traditional'}`;
   statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits fully modeled</strong><div class="helper">${bendHelp}</div></div><div class="status-card ${modelCollisions.length?'bad':'ok'}"><strong>${modelCollisions.length?'Saddle collision detected':'No conduit collisions detected'}</strong><div class="helper">${modelCollisions.length?collisionDetails:clearanceHelp}</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred 9/16-inch clearance.':'All straight-run spacings provide at least 9/16-inch clearance.'}</div></div><div class="status-card ok"><strong>${styleTag}</strong><div class="helper">${offsetHelp}</div></div>${markHelp}${modelCollisions.length||overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="helper">Fix CTC increases affected spacing and rebuilds the saddle.</div><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
@@ -3798,9 +3822,11 @@ function realisticRandomRunTest(){
       p.saddleHorizontalDirection=Math.random()<.5?'left':'right';
       p.saddleDirection=threePoint?randomChoice(['up','down','left','right']):(p.saddleVerticalDirection==='down'?'down':'up');
       const angle=threePoint?randomChoice([5,10,15,22.5,30]):(p.saddleType==='rolled'?30:randomChoice(anglePool));
-      const rolledOh=q(2,4),rolledHyp=q(12,20),rolledPoint4=q(48,72);
+      // Rolled: keep Bend 2→3 crown long enough for large CLR (2×tan(θ/2)×CLR).
+      const rolledOh=q(2,4),rolledHyp=q(12,20),rolledPoint1=q(20,36),rolledCrown=q(14,28);
+      const rolledPoint4=rolledPoint1+rolledHyp+rolledCrown+rolledHyp;
       p.rows=p.rows.map((r,i)=>({...r,
-        critical:i===0?fmtR(q(20,40)):'',
+        critical:i===0?fmtR(p.saddleType==='rolled'?rolledPoint1:q(20,40)):'',
         oal:i===0?fmtR(q(108,134)):'',
         rise:i===0?fmtR(p.saddleType==='rolled'?rolledOh:q(4,10)):'',
         offsetDistance:p.saddleType==='rolled'&&i===0?fmtR(rolledHyp):'',
@@ -3898,14 +3924,24 @@ function populateSaddleTestRack(randomize=false){
   const first=trs[0];if(first){
     const rolled=isRolledSaddle();
     if(rolled){saddleVerticalDirection='up';saddleHorizontalDirection='right';}
-    first.querySelector('.critical').value=randomize?fmt16Input(18+Math.round(Math.random()*32)/4):'24';first.querySelector('.oal').value=randomize?'120':'120';
-    first.querySelector('.rise').value=randomize?fmt16Input(rolled?(2+Math.round(Math.random()*8)/4):(4+Math.round(Math.random()*20)/4)):(rolled?'2':'6');
-    if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(rolled?(12+Math.round(Math.random()*16)/4):(4+Math.round(Math.random()*20)/4)):(rolled?'12':'6');
+    const point1=randomize?(18+Math.round(Math.random()*32)/4):24;
+    const hyp=rolled?(randomize?(12+Math.round(Math.random()*16)/4):12):null;
+    const crown=rolled?(randomize?(14+Math.round(Math.random()*28)/4):12):null;
+    first.querySelector('.critical').value=randomize?fmt16Input(point1):'24';first.querySelector('.oal').value=randomize?'120':'120';
+    first.querySelector('.rise').value=randomize?fmt16Input(rolled?(2+Math.round(Math.random()*8)/4):(4+Math.round(Math.random()*20)/4)):(rolled?'3':'6');
+    if(first.querySelector('.offset-distance'))first.querySelector('.offset-distance').value=randomize?fmt16Input(rolled?hyp:(4+Math.round(Math.random()*20)/4)):(rolled?'12':'6');
     first.querySelector('.bend-angle').value=isThreePointSaddle()
       ?(randomize?['5','10','15','22.5','30'][Math.floor(Math.random()*5)]:'15')
       :(rolled?'30':(randomize?['15','22.5','30','45'][Math.floor(Math.random()*4)]:'30'));
-    if(first.querySelector('.middle-distance'))first.querySelector('.middle-distance').value=randomize?fmt16Input(rolled?(48+Math.round(Math.random()*24)/4):(8+Math.round(Math.random()*28)/4)):(rolled?'54':'12');
-    if(saddleOffsetRelation==='different'){first.querySelector('.second-rise').value=randomize?fmt16Input(rolled?(2+Math.round(Math.random()*8)/4):(6+Math.round(Math.random()*24)/4)):(rolled?'2':'8');if(first.querySelector('.second-offset-distance'))first.querySelector('.second-offset-distance').value=randomize?fmt16Input(rolled?(12+Math.round(Math.random()*16)/4):(6+Math.round(Math.random()*24)/4)):(rolled?'12':'8')}
+    if(first.querySelector('.middle-distance')){
+      if(rolled){
+        const point4=randomize?(point1+hyp+crown+hyp):60;
+        first.querySelector('.middle-distance').value=fmt16Input(point4);
+      }else{
+        first.querySelector('.middle-distance').value=randomize?fmt16Input(8+Math.round(Math.random()*28)/4):'12';
+      }
+    }
+    if(saddleOffsetRelation==='different'){first.querySelector('.second-rise').value=randomize?fmt16Input(rolled?(2+Math.round(Math.random()*8)/4):(6+Math.round(Math.random()*24)/4)):(rolled?'3':'8');if(first.querySelector('.second-offset-distance'))first.querySelector('.second-offset-distance').value=randomize?fmt16Input(rolled?hyp:(6+Math.round(Math.random()*24)/4)):(rolled?'12':'8')}
   }
   refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
@@ -3949,7 +3985,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(2):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:103,build:'PWA v2.02',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:105,build:'PWA v2.06',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4090,7 +4126,7 @@ function projectForSectionType(value){
   if(value.startsWith('saddle-')){
     p.rackType='saddle';p.saddleType=value.slice(7);
     const threePoint=p.saddleType==='three-point';
-    p.rows=common.map((r,i)=>({...r,critical:i===0?'24':'',oal:'',rise:i===0?(p.saddleType==='rolled'?'2':'6'):'',offsetDistance:p.saddleType==='rolled'&&i===0?'12':'',bendAngle:i===0?(threePoint?'22.5':'30'):'',middleDistance:threePoint?'':(i===0?(p.saddleType==='rolled'?'54':'12'):''),secondRise:'',secondOffsetDistance:''}));
+    p.rows=common.map((r,i)=>({...r,critical:i===0?'24':'',oal:'',rise:i===0?(p.saddleType==='rolled'?'3':'6'):'',offsetDistance:p.saddleType==='rolled'&&i===0?'12':'',bendAngle:i===0?(threePoint?'22.5':'30'):'',middleDistance:threePoint?'':(i===0?(p.saddleType==='rolled'?'60':'12'):''),secondRise:'',secondOffsetDistance:''}));
     return p;
   }
   p.rackType='segmented';p.rows=common.map((r,i)=>({...r,segmentedMeasurement:i===0?'84':'',desiredRadius:i===0?'36':''}));return p;
@@ -4621,21 +4657,30 @@ function smartViewScore(testYaw,testPitch){
 }
 function chooseRackAwareIsometricView(){
   if(!rackModels.length){yaw=-.65;pitch=.42;return}
-  // Standard/rolled saddles: prefer a near-elevation side view so the crown
-  // between bends 2–3 reads parallel to the supported run plane (square to
-  // the plane), not like it continues the incline. High pitch makes a level
-  // crown look slanted against the screen frame even when world-flat.
+  // Standard saddles: prefer a near-elevation side view so the crown between
+  // bends 2–3 reads parallel to the supported run plane. Rolled saddles must
+  // avoid pure ±90° side elevation — that buries app-X (user Z lift) in depth
+  // so the roll looks like a flat double-offset and "isn't showing".
   let yawCandidates=[],pitchCandidates;
+  const rolled=activeRackType==='saddle'&&isRolledSaddle();
   if(activeRackType==='saddle'){
-    for(const side of [-1,1]){
-      for(let deg=70;deg<=110;deg+=5)yawCandidates.push(side*deg*Math.PI/180);
+    if(rolled){
+      for(const side of [-1,1]){
+        for(let deg=38;deg<=58;deg+=4)yawCandidates.push(side*deg*Math.PI/180);
+        for(let deg=122;deg<=142;deg+=4)yawCandidates.push(side*deg*Math.PI/180);
+      }
+      pitchCandidates=[.28,.34,.40,.46,.52];
+    }else{
+      for(const side of [-1,1]){
+        for(let deg=70;deg<=110;deg+=5)yawCandidates.push(side*deg*Math.PI/180);
+      }
+      pitchCandidates=[.10,.14,.18,.22,.28,.34];
     }
-    pitchCandidates=[.10,.14,.18,.22,.28,.34];
   }else{
     for(let deg=-170;deg<=180;deg+=10)yawCandidates.push(deg*Math.PI/180);
     pitchCandidates=[.22,.28,.34,.40,.46,.52,.58];
   }
-  let best={score:-Infinity,yaw:activeRackType==='saddle'?-Math.PI/2:-.65,pitch:activeRackType==='saddle'?.18:.42};
+  let best={score:-Infinity,yaw:rolled?-0.85:(activeRackType==='saddle'?-Math.PI/2:-.65),pitch:rolled?.40:(activeRackType==='saddle'?.18:.42)};
   for(const y of yawCandidates)for(const p of pitchCandidates){
     let score=smartViewScore(y,p);
     // Extra reward when the projected crown stays parallel to the start run
@@ -4651,6 +4696,13 @@ function chooseRackAwareIsometricView(){
       score+=Math.max(0,2.5-Math.abs(elevSlope-baseSlope)*20);
       score+=Math.min(2.5,Math.abs(elevSlope-inclSlope)*3);
       score+=Math.max(0,1.2-Math.abs(elevSlope)*4);
+      if(rolled){
+        // Prefer views where the crown's lateral Z-lift reads on screen (not depth-only).
+        const crownMid=[(m.secondBend[0]+m.thirdBend[0])/2,(m.secondBend[1]+m.thirdBend[1])/2,(m.secondBend[2]+m.thirdBend[2])/2];
+        const baseMid=[(m.points[0][0]+(m.startStraightEnd||m.points[1])[0])/2,(m.points[0][1]+(m.startStraightEnd||m.points[1])[1])/2,(m.points[0][2]+(m.startStraightEnd||m.points[1])[2])/2];
+        const cR=rotateForView(crownMid,y,p),bR=rotateForView(baseMid,y,p);
+        score+=Math.min(3.5,Math.hypot(cR[0]-bR[0],cR[1]-bR[1])*0.9);
+      }
     }
     if(score>best.score)best={score,yaw:y,pitch:p};
   }
@@ -5399,69 +5451,60 @@ function buildStraightSaddleCenterlineYZ(d,clr,baseY,verticalSign){
   return{pts,a1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,startStraightEndIndex:Math.max(0,pts.indexOf(a1)),finalStraightStartIndex:pts.length-2};
 }
 function buildRolledSaddleCenterline(d,clr,baseY){
-  // 1) Build a standard vertical 4-point (Rise = Hyp × sin θ).
-  // 2) Roll Point 4 → free end around the Point 2–3 crown axis by
-  //    rollBack° = cos⁻¹(oh/Hyp1)+cos⁻¹(oh/Hyp2) (demo oh=2 Hyp=8 → ≈151°),
-  //    away from the straight starting end → Point 1.
-  // Bend 3→4 rides with the roll so Point 3 (on the axis) stays put and the pipe stays continuous.
+  // Always-+run / always-+climb rolled 4-point (user frame: +X run, +Y climb, Z out):
+  // 1) Straight on run (Point 1)
+  // 2) Hyp @ θ toward +Y while lifting Z by φ = sin⁻¹(oh/Hyp)  (demo 12" @ 30°, φ≈14.5°)
+  // 3) Straight crown to Point 3
+  // 4) Hyp @ θ toward +Y while dropping Z by φ back to 0 at Point 4
+  // 5) Straight on run again
+  // App coords: run=+Z (their X), climb=+Y (their Y), out=+X (their Z).
+  const inDir=[0,0,1],theta=d.angle*Math.PI/180,t=clr*Math.tan(theta/2);
+  if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||!(d.mark1>t))return null;
+  // Crown must clear both tangent setbacks. Shorter than 2×t makes Bend 2→3 run
+  // backward (aTan2 behind d1) and the viewer draws a pointy ~180° spike at Bend 3.
+  const minCrown=2*t+1/16;
+  const middle=Math.max(Math.abs(d.middleDistance||0),minCrown);
   const hyp1=Math.abs(d.travel1||0),hyp2=Math.abs(d.travel2||0);
-  const rise1=d.trueOffset1!=null?Math.abs(d.trueOffset1):hyp1*Math.sin((d.angle||0)*Math.PI/180);
-  const rise2=d.trueOffset2!=null?Math.abs(d.trueOffset2):hyp2*Math.sin((d.angle||0)*Math.PI/180);
-  if(!(rise1>1e-12&&rise2>1e-12))return null;
-  const std={...d,rise:rise1,secondRise:rise2};
-  const built=buildStraightSaddleCenterlineYZ(std,clr,baseY,1);
-  if(!built)return null;
-  const {pts,a1,d1,d2,v1,v2,v3,v4,start,remainingStub,startStraightEndIndex}=built;
   const oh1=Math.abs(d.rise||0),oh2=Math.abs(d.secondRise!=null?d.secondRise:d.rise||0);
-  let rollDeg=d.rollBack;
-  if(!(rollDeg>0)){
-    if(hyp1>1e-12&&hyp2>1e-12&&oh1<=hyp1+1e-12&&oh2<=hyp2+1e-12){
-      rollDeg=(Math.acos(Math.min(1,oh1/hyp1))+Math.acos(Math.min(1,oh2/hyp2)))*180/Math.PI;
-    }else{
-      rollDeg=151;
-    }
-  }
-  // Axis = crown centerline Point 2 → Point 3.
-  const axisOrigin=v2.slice(),axisDir=unit(vsub(v3,v2));
-  const perpToAxis=(p)=>{
-    const w=vsub(p,axisOrigin);
-    return vsub(w,vmul(axisDir,dot(w,axisDir)));
-  };
-  const approachPerp=perpToAxis(start);
-  const angleMag=rollDeg*Math.PI/180;
-  // Choose the sign that swings the exit farther away from start→Point 1.
-  // When both are equally away (coplanar in/out), prefer +X (Right) or −X (Left).
-  const awayScore=(s)=>dot(perpToAxis(rotateAroundAxis(v4,axisOrigin,axisDir,s*angleMag)),approachPerp);
-  const xBump=(s)=>rotateAroundAxis(v4,axisOrigin,axisDir,s*angleMag)[0]-axisOrigin[0];
-  const preferLeft=typeof saddleHorizontalDirection==='string'&&saddleHorizontalDirection==='left';
-  let sign=1;
-  const sPos=awayScore(1),sNeg=awayScore(-1);
-  if(Math.abs(sPos-sNeg)<1e-6){
-    sign=preferLeft?(xBump(-1)<=xBump(1)?-1:1):(xBump(1)>=xBump(-1)?1:-1);
-  }else{
-    sign=sPos<=sNeg?1:-1;
-  }
-  const angleRad=sign*angleMag;
-  const rot=p=>rotateAroundAxis(p,axisOrigin,axisDir,angleRad);
-  // Snapshot bend stations before mutating shared polyline point refs (d2 is aliased into pts).
-  const v4Orig=v4.slice(),d2Orig=d2.slice();
-  // Start at Point 3 (on-axis ≈ fixed). Everything after — Bend 3→4, Point 4, free end — rolls.
-  let iStart=0,best=Infinity;
-  for(let i=0;i<pts.length;i++){
-    const dist=Math.hypot(...vsub(pts[i],v3));
-    if(dist<best){best=dist;iStart=i;}
-  }
-  for(let i=iStart;i<pts.length;i++){
-    const r=rot(pts[i]);
-    pts[i][0]=r[0];pts[i][1]=r[1];pts[i][2]=r[2];
-  }
-  const v4r=rot(v4Orig),d2r=rot(d2Orig);
-  const developed=polylineLength(pts);
+  if(!(hyp1>1e-12&&hyp2>1e-12)||oh1>hyp1+1e-12||oh2>hyp2+1e-12)return null;
+  // Cap φ just under 90° so climb component stays strictly positive.
+  const phi1=Math.asin(Math.min(0.999999,oh1/hyp1)),phi2=Math.asin(Math.min(0.999999,oh2/hyp2));
+  const rise1=hyp1*Math.sin(theta),rise2=hyp2*Math.sin(theta);
+  // Left First flips which way Z lifts; both wings keep +Y (climb).
+  const side=(typeof saddleHorizontalDirection==='string'&&saddleHorizontalDirection==='left')?-1:1;
+  // Wing 1: +climb, +out. Wing 2: +climb, −out (Z back to 0). Never reverse Y.
+  const dir1=unit([side*Math.sin(phi1),Math.cos(phi1),0]);
+  const dir2=unit([-side*Math.sin(phi2),Math.cos(phi2),0]);
+  if(!(dir1[1]>0)||!(dir2[1]>0))return null;
+  const slope1=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir1,Math.sin(theta))));
+  const slope2=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir2,Math.sin(theta))));
+  // Forward-only on run (+Z) and climb (+Y).
+  if(slope1[2]<0||slope2[2]<0||slope1[1]<0||slope2[1]<0)return null;
+  const start=[0,baseY,-30];
+  const v1=vadd(start,vmul(inDir,d.mark1)),v2=vadd(v1,vmul(slope1,d.travel1));
+  const v3=vadd(v2,vmul(inDir,middle)),v4=vadd(v3,vmul(slope2,d.travel2));
+  const aTan1=vsub(v1,vmul(inDir,t)),c1=vsub(v2,vmul(slope1,t)),d1=vadd(v2,vmul(inDir,t));
+  const aTan2=vsub(v3,vmul(inDir,t)),c2=vsub(v4,vmul(slope2,t)),d2=vadd(v4,vmul(inDir,t));
+  // Dense samples so compound (non-planar) bends stay round in the viewer, not faceted/pointy.
+  const steps=Math.max(48,Math.ceil(d.angle*3));
+  const arc1=sampleOffsetArc(aTan1,inDir,dir1,clr,theta,steps);
+  const return1=vsub(vmul(inDir,Math.sin(theta)),vmul(dir1,Math.cos(theta))),arc2=sampleOffsetArc(c1,slope1,return1,clr,theta,steps);
+  const arc3=sampleOffsetArc(aTan2,inDir,dir2,clr,theta,steps);
+  const return2=vsub(vmul(inDir,Math.sin(theta)),vmul(dir2,Math.cos(theta))),arc4=sampleOffsetArc(c2,slope2,return2,clr,theta,steps);
+  const pts=[start];if(Math.hypot(...vsub(aTan1,start))>1e-6)pts.push(aTan1);arc1.slice(1).forEach(p=>pts.push(p));
+  if(Math.hypot(...vsub(c1,pts.at(-1)))>1e-6)pts.push(c1);arc2.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d1;
+  // Crown: always advance forward from d1 to aTan2 (never reverse — that made Bend 3 pointy).
+  if(Math.hypot(...vsub(aTan2,pts.at(-1)))>1e-6)pts.push(aTan2);arc3.slice(1).forEach(p=>pts.push(p));
+  if(Math.hypot(...vsub(c2,pts.at(-1)))>1e-6)pts.push(c2);arc4.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d2;
+  const developed=polylineLength(pts),remainingStub=d.oal-developed;
+  if(remainingStub<=1e-6)return null;
+  pts.push([d2[0],d2[1],d2[2]+remainingStub]);
+  const wallGain=rise1*Math.cos(phi1)+rise2*Math.cos(phi2);
   return{
-    pts,a1,d1,d2:d2r,v1,v2,v3,v4:v4r,start,developed,remainingStub,
-    startStraightEndIndex,finalStraightStartIndex:pts.length-2,
-    rollBackDeg:rollDeg,rollSign:sign,axisOrigin,axisDir,
-    rise1,rise2
+    pts,a1:aTan1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,
+    startStraightEndIndex:Math.max(0,pts.indexOf(aTan1)),finalStraightStartIndex:pts.length-2,
+    rollOutDeg:phi1*180/Math.PI,rollBackDeg:phi2*180/Math.PI,rollSign:side,
+    rise1,rise2,wallGain,phi1,phi2,middleUsed:middle,crownPadded:middle>Math.abs(d.middleDistance||0)+1e-9
   };
 }
 function buildSaddleRackModels(){
@@ -5475,7 +5518,7 @@ function buildSaddleRackModels(){
   // One shared vertical bend shape (reference row CLR), copied onto every conduit
   // at its own X / baseY. That keeps a plane straight down through each centerline
   // and keeps the rack from twisting through the bends (mixed CLR phase skew).
-  // Rolled saddles use the crown-axis roll path below.
+  // Rolled saddles use the +run/+climb Z-lift path below.
   if(activeSaddleType==='standard'||activeSaddleType==='three-point'){
     const threePoint=activeSaddleType==='three-point';
     const threePointDir=normalizeSaddleDirection(saddleDirection);
@@ -5520,7 +5563,7 @@ function buildSaddleRackModels(){
     }).filter(Boolean);
   }
 
-  // —— Rolled 4-point: standard 4-point, then roll Point4→end around Point2–3 ——
+  // —— Rolled 4-point: +run/+climb, Z lift then drop back to wall ——
   {
     let refBaseY=null,refCenter=null;
     for(let i=0;i<modelData.length;i++){
@@ -5540,13 +5583,13 @@ function buildSaddleRackModels(){
       const baseGeo=emtGeometry[d.size]||{od:.75,wall:.05,clr:5.5},geo={...baseGeo,clr:profileCLR(d.size,d.bender)||baseGeo.clr};
       const radius=geo.od/2,baseY=-sideSign*radius,x0=xs[i]-center;
       const theta=d.angle*Math.PI/180,tOwn=geo.clr*Math.tan(theta/2);
-      if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*tOwn||d.travel2<=2*tOwn||d.middleDistance<=2*tOwn||d.mark1<=tOwn)return null;
+      if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*tOwn||d.travel2<=2*tOwn||!(d.middleDistance>0)||d.mark1<=tOwn)return null;
       const elev=y=>y-refBaseY;
       const place=p=>[x0+p[0],baseY+elev(p[1]),p[2]];
       const pts=refCenter.pts.map(place);
       const a1=place(refCenter.a1),d2=place(refCenter.d2);
       const v1=place(refCenter.v1),v2=place(refCenter.v2),v3=place(refCenter.v3),v4=place(refCenter.v4);
-      return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,rackType:'saddle',saddleType:'rolled',startPlaneY:baseY,finalPlaneY:d2[1],startStraightEnd:a1,startStraightEndIndex:refCenter.startStraightEndIndex,finalStraightStartIndex:refCenter.finalStraightStartIndex,firstBend:v1,secondBend:v2,thirdBend:v3,fourthBend:v4,kickCenter:v1,kickEnd:v2,arcStart:v3,back90:v4,firstContactPlane:0,finalContactPlane:d2[1]+sideSign*radius,centerRise:d2[1]-baseY,horizontalOffset:d2[0]-(x0),trueOffset:Math.hypot(d2[0]-x0,d2[1]-baseY),length:polylineLength(pts),requiredLength:polylineLength(pts),remainingStub:refCenter.remainingStub,overLength:false,rollBackDeg:refCenter.rollBackDeg};
+      return{index:i,points:pts,radius,diameter:geo.od,wall:geo.wall,bendRadius:geo.clr,size:d.size,bender:d.bender,rackType:'saddle',saddleType:'rolled',startPlaneY:baseY,finalPlaneY:d2[1],startStraightEnd:a1,startStraightEndIndex:refCenter.startStraightEndIndex,finalStraightStartIndex:refCenter.finalStraightStartIndex,firstBend:v1,secondBend:v2,thirdBend:v3,fourthBend:v4,kickCenter:v1,kickEnd:v2,arcStart:v3,back90:v4,firstContactPlane:0,finalContactPlane:d2[1]+sideSign*radius,centerRise:d2[1]-baseY,horizontalOffset:d2[0]-(x0),trueOffset:Math.hypot(d2[0]-x0,d2[1]-baseY),length:polylineLength(pts),requiredLength:polylineLength(pts),remainingStub:refCenter.remainingStub,overLength:false,rollOutDeg:refCenter.rollOutDeg,rollBackDeg:refCenter.rollBackDeg,wallGain:refCenter.wallGain};
     }).filter(Boolean);
   }
 }
@@ -5958,10 +6001,12 @@ function detectSaddleTransitionConsistencyIssues(models){
   models.forEach(m=>{
     const d=modelData[m.index];if(!d)return;
     if(rolled){
-      // Crown-axis roll swings Point 4 → free end around Point 2–3; do not require wall-plane return.
-      const expectedRoll=d.rollBack;
-      if(expectedRoll!=null&&m.rollBackDeg!=null&&Math.abs(m.rollBackDeg-expectedRoll)>0.5){
-        issues.push({index:m.index,field:'rise',message:`Crown roll should be ${fmtDecimal(expectedRoll,2)}°, but finished ${fmtDecimal(m.rollBackDeg,2)}°`});
+      // Back on the wall plane (Z→0), still higher up the wall — Y kept climbing on both wings.
+      if(Math.abs(m.horizontalOffset||0)>tolerance)issues.push({index:m.index,field:'offset-distance',message:`Rolled return should land back on the wall plane, but finished ${fmt16(m.horizontalOffset)} off`});
+      const r1=d.trueOffset1,r2=d.trueOffset2,oh1=Math.abs(d.rise||0),oh2=Math.abs(d.secondRise||0),h1=Math.abs(d.travel1||0),h2=Math.abs(d.travel2||0);
+      if(r1!=null&&r2!=null&&r1>1e-12&&r2>1e-12&&h1>1e-12&&h2>1e-12&&oh1<=h1+1e-12&&oh2<=h2+1e-12){
+        const wallGain=r1*Math.cos(Math.asin(Math.min(1,oh1/h1)))+r2*Math.cos(Math.asin(Math.min(1,oh2/h2)));
+        if(Math.abs((m.centerRise||0)-wallGain)>tolerance)issues.push({index:m.index,field:'rise',message:`Rolled climb up the wall should be ${fmt16(wallGain)}, but finished ${fmt16(m.centerRise)}`});
       }
     }else{
       const expectedY=verticalSign*((d.rise||0)-(d.secondRise||0));
@@ -7133,7 +7178,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v1.84-unequal-3pt';
+  const APP_BUILD='v2.06-rolled-ui-parity';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
