@@ -2999,8 +2999,8 @@ function recalcSaddle(){
     if(!threePoint&&(rolled?point4In==null:middleDistanceRaw==null))need.push(rolled?'Enter Point 4 in any row':'Enter Bend 2 to Bend 3 distance in any row');
     if(saddleOffsetRelation==='different'&&secondRise==null)need.push(rolled?'Enter far-side object height in any row':'Enter second rise in any row');
     if(saddleOffsetRelation==='different'&&rolled&&hyp2In==null)need.push('Enter Hyp2 (return 2-point hypotenuse) in any row');
-    if(rolled&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)<=Math.abs(rise)+1e-12)need.push('Hyp1 must be greater than object height (oh) for Z lift φ = sin⁻¹(oh/Hyp) with +climb');
-    if(saddleOffsetRelation==='different'&&rolled&&hyp2In!=null&&secondRise!=null&&Math.abs(hyp2In)<=Math.abs(secondRise)+1e-12)need.push('Hyp2 must be greater than far-side object height');
+    if(rolled&&hyp1In!=null&&rise!=null&&Math.abs(hyp1In)+1e-12<Math.abs(rise))need.push('Hyp1 must be ≥ object height (oh) for Z lift φ = sin⁻¹(oh/Hyp)');
+    if(saddleOffsetRelation==='different'&&rolled&&hyp2In!=null&&secondRise!=null&&Math.abs(hyp2In)+1e-12<Math.abs(secondRise))need.push('Hyp2 must be ≥ far-side object height');
     if(mark1!=null&&tangentSetback!=null&&mark1<=tangentSetback)need.push(rolled?'Point 1 is too close to the conduit end for the selected bender radius':'Bend 1 is too close to the conduit end for the selected bender radius');
     if(rolled&&middleDistance!=null&&middleDistance<=0)need.push('Point 4 must leave a positive run beside the object (Point 3 after Point 2)');
     if(threePoint){
@@ -3023,7 +3023,13 @@ function recalcSaddle(){
     const commonOal=Math.max(120,...data.map(d=>(d.lastMark||d.mark4||d.mark3||0)+24));
     data.forEach(d=>{d.oal=commonOal});
   }
-  modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels);transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels);applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);if(activeView!=='custom')fitCurrentView();else draw3D();scheduleAutoSave();
+  modelData=data;rackModels=buildRackModels();rackStrutSolids=buildRunStrutSolids(rackModels);modelCollisions=detectCollisions(rackModels);hypotenuseConflicts=[];rackPlaneIssues=detectRackPlaneIssues(rackModels);transitionConsistencyIssues=detectTransitionConsistencyIssues(rackModels);applyRackIntegrityValidation();applyCollisionValidation();finishCalculatedSection();renderStatus(data);
+  // Rolled path leaves the start plane — always re-fit so a prior custom pan/zoom
+  // cannot leave the conduit off-screen ("not showing in the viewer").
+  if(rolled){activeView='free';fitCurrentView()}
+  else if(activeView!=='custom')fitCurrentView();
+  else draw3D();
+  scheduleAutoSave();
 }
 
 function recalcOffset(){
@@ -5438,18 +5444,21 @@ function buildRolledSaddleCenterline(d,clr,baseY){
   // 5) Straight on run again
   // App coords: run=+Z (their X), climb=+Y (their Y), out=+X (their Z).
   const inDir=[0,0,1],theta=d.angle*Math.PI/180,t=clr*Math.tan(theta/2);
-  if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||d.middleDistance<=2*t||d.mark1<=t)return null;
+  // Keep drawing whenever the crown run is positive. The 2×tangent gate is warned in
+  // recalcSaddle; returning null here left the viewer empty while the row said Complete.
+  if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||!(d.middleDistance>0)||!(d.mark1>t))return null;
   const hyp1=Math.abs(d.travel1||0),hyp2=Math.abs(d.travel2||0);
   const oh1=Math.abs(d.rise||0),oh2=Math.abs(d.secondRise!=null?d.secondRise:d.rise||0);
-  if(!(hyp1>1e-12&&hyp2>1e-12)||oh1>=hyp1-1e-12||oh2>=hyp2-1e-12)return null;
-  const phi1=Math.asin(Math.min(1,oh1/hyp1)),phi2=Math.asin(Math.min(1,oh2/hyp2));
+  if(!(hyp1>1e-12&&hyp2>1e-12)||oh1>hyp1+1e-12||oh2>hyp2+1e-12)return null;
+  // Cap φ just under 90° so climb component stays strictly positive.
+  const phi1=Math.asin(Math.min(0.999999,oh1/hyp1)),phi2=Math.asin(Math.min(0.999999,oh2/hyp2));
   const rise1=hyp1*Math.sin(theta),rise2=hyp2*Math.sin(theta);
   // Left First flips which way Z lifts; both wings keep +Y (climb).
   const side=(typeof saddleHorizontalDirection==='string'&&saddleHorizontalDirection==='left')?-1:1;
   // Wing 1: +climb, +out. Wing 2: +climb, −out (Z back to 0). Never reverse Y.
   const dir1=unit([side*Math.sin(phi1),Math.cos(phi1),0]);
   const dir2=unit([-side*Math.sin(phi2),Math.cos(phi2),0]);
-  if(dir1[1]<=0||dir2[1]<=0)return null;
+  if(!(dir1[1]>0)||!(dir2[1]>0))return null;
   const slope1=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir1,Math.sin(theta))));
   const slope2=unit(vadd(vmul(inDir,Math.cos(theta)),vmul(dir2,Math.sin(theta))));
   // Forward-only on run (+Z) and climb (+Y).
@@ -5555,7 +5564,7 @@ function buildSaddleRackModels(){
       const baseGeo=emtGeometry[d.size]||{od:.75,wall:.05,clr:5.5},geo={...baseGeo,clr:profileCLR(d.size,d.bender)||baseGeo.clr};
       const radius=geo.od/2,baseY=-sideSign*radius,x0=xs[i]-center;
       const theta=d.angle*Math.PI/180,tOwn=geo.clr*Math.tan(theta/2);
-      if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*tOwn||d.travel2<=2*tOwn||d.middleDistance<=2*tOwn||d.mark1<=tOwn)return null;
+      if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*tOwn||d.travel2<=2*tOwn||!(d.middleDistance>0)||d.mark1<=tOwn)return null;
       const elev=y=>y-refBaseY;
       const place=p=>[x0+p[0],baseY+elev(p[1]),p[2]];
       const pts=refCenter.pts.map(place);
