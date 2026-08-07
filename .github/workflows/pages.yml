@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - experiment/ui-playground
-      - main
   workflow_dispatch:
 
 permissions:
@@ -12,6 +11,7 @@ permissions:
   pages: write
   id-token: write
 
+# Live site tracks experiment/ui-playground only.
 # Do not share a concurrency group with the automatic pages-build-deployment
 # workflow, and do not cancel in-progress legacy builds.
 concurrency:
@@ -22,7 +22,7 @@ jobs:
   deploy:
     # Only meaningful when repo Pages source is "GitHub Actions".
     # Legacy branch deploys still use pages-build-deployment separately.
-    if: github.ref == 'refs/heads/experiment/ui-playground' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/experiment/ui-playground'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
