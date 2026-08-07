@@ -3013,7 +3013,7 @@ function recalcSaddle(){
       if(travel2!=null&&tangentSetback!=null&&travel2<=2*tangentSetback)need.push(rolled?'Hyp2 is too short for the selected bender radius and angle':'Second offset is too small for the selected radius and angle');
       // Crown between bends 2–3 must clear both tangent setbacks (same gate as build*SaddleCenterline).
       // Without this, rows show Complete while rackModels stay empty — conduit disappears from the viewer.
-      if(middleDistance!=null&&tangentSetback!=null&&middleDistance<=2*tangentSetback)need.push(rolled?'Point 4 leaves too little run beside the object for the selected bender radius (need Bend 2→3 longer than 2× tangent setback)':'Bend 2 to Bend 3 is too short for the selected radius and angle');
+      if(middleDistance!=null&&tangentSetback!=null&&middleDistance<=2*tangentSetback)need.push(rolled?'Point 4 leaves too little run beside the object for the selected bender — Bend 3 will look pointy unless Bend 2→3 is longer than 2× tangent setback (viewer pads the crown to keep the bend round)':'Bend 2 to Bend 3 is too short for the selected radius and angle');
       if(showRackOal&&mark4!=null&&oal!=null&&mark4>=oal)need.push(rolled?'Point 4 must be before OAL':'Bend 4 must be before OAL');
     }
     if(i>0&&cc!=null){const clear=outsideClearance(data[i-1].size,size,cc),ccInput=tr.querySelector('.cc');if(clear!=null&&clear<0){need.push('<span style="color:#fca5a5;font-weight:800">ERROR: conduit outside diameters overlap by '+fmt16(Math.abs(clear))+'</span>');ccInput.classList.add('invalid')}else if(clear!=null&&clear+1e-9<preferredClearance){need.push('<span style="color:#fbbf24;font-weight:800">WARNING: only '+fmt16(Math.max(0,clear))+' clear; recommended 9/16"</span>');ccInput.classList.remove('invalid')}else ccInput.classList.remove('invalid')}
@@ -5444,9 +5444,11 @@ function buildRolledSaddleCenterline(d,clr,baseY){
   // 5) Straight on run again
   // App coords: run=+Z (their X), climb=+Y (their Y), out=+X (their Z).
   const inDir=[0,0,1],theta=d.angle*Math.PI/180,t=clr*Math.tan(theta/2);
-  // Keep drawing whenever the crown run is positive. The 2×tangent gate is warned in
-  // recalcSaddle; returning null here left the viewer empty while the row said Complete.
-  if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||!(d.middleDistance>0)||!(d.mark1>t))return null;
+  if(!(theta>0&&theta<Math.PI/2)||d.travel1<=2*t||d.travel2<=2*t||!(d.mark1>t))return null;
+  // Crown must clear both tangent setbacks. Shorter than 2×t makes Bend 2→3 run
+  // backward (aTan2 behind d1) and the viewer draws a pointy ~180° spike at Bend 3.
+  const minCrown=2*t+1/16;
+  const middle=Math.max(Math.abs(d.middleDistance||0),minCrown);
   const hyp1=Math.abs(d.travel1||0),hyp2=Math.abs(d.travel2||0);
   const oh1=Math.abs(d.rise||0),oh2=Math.abs(d.secondRise!=null?d.secondRise:d.rise||0);
   if(!(hyp1>1e-12&&hyp2>1e-12)||oh1>hyp1+1e-12||oh2>hyp2+1e-12)return null;
@@ -5465,16 +5467,18 @@ function buildRolledSaddleCenterline(d,clr,baseY){
   if(slope1[2]<0||slope2[2]<0||slope1[1]<0||slope2[1]<0)return null;
   const start=[0,baseY,-30];
   const v1=vadd(start,vmul(inDir,d.mark1)),v2=vadd(v1,vmul(slope1,d.travel1));
-  const v3=vadd(v2,vmul(inDir,d.middleDistance)),v4=vadd(v3,vmul(slope2,d.travel2));
+  const v3=vadd(v2,vmul(inDir,middle)),v4=vadd(v3,vmul(slope2,d.travel2));
   const aTan1=vsub(v1,vmul(inDir,t)),c1=vsub(v2,vmul(slope1,t)),d1=vadd(v2,vmul(inDir,t));
   const aTan2=vsub(v3,vmul(inDir,t)),c2=vsub(v4,vmul(slope2,t)),d2=vadd(v4,vmul(inDir,t));
-  const steps=Math.max(18,Math.ceil(d.angle));
+  // Dense samples so compound (non-planar) bends stay round in the viewer, not faceted/pointy.
+  const steps=Math.max(48,Math.ceil(d.angle*3));
   const arc1=sampleOffsetArc(aTan1,inDir,dir1,clr,theta,steps);
   const return1=vsub(vmul(inDir,Math.sin(theta)),vmul(dir1,Math.cos(theta))),arc2=sampleOffsetArc(c1,slope1,return1,clr,theta,steps);
   const arc3=sampleOffsetArc(aTan2,inDir,dir2,clr,theta,steps);
   const return2=vsub(vmul(inDir,Math.sin(theta)),vmul(dir2,Math.cos(theta))),arc4=sampleOffsetArc(c2,slope2,return2,clr,theta,steps);
   const pts=[start];if(Math.hypot(...vsub(aTan1,start))>1e-6)pts.push(aTan1);arc1.slice(1).forEach(p=>pts.push(p));
   if(Math.hypot(...vsub(c1,pts.at(-1)))>1e-6)pts.push(c1);arc2.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d1;
+  // Crown: always advance forward from d1 to aTan2 (never reverse — that made Bend 3 pointy).
   if(Math.hypot(...vsub(aTan2,pts.at(-1)))>1e-6)pts.push(aTan2);arc3.slice(1).forEach(p=>pts.push(p));
   if(Math.hypot(...vsub(c2,pts.at(-1)))>1e-6)pts.push(c2);arc4.slice(1).forEach(p=>pts.push(p));pts[pts.length-1]=d2;
   const developed=polylineLength(pts),remainingStub=d.oal-developed;
@@ -5485,7 +5489,7 @@ function buildRolledSaddleCenterline(d,clr,baseY){
     pts,a1:aTan1,d1,d2,v1,v2,v3,v4,start,developed,remainingStub,
     startStraightEndIndex:Math.max(0,pts.indexOf(aTan1)),finalStraightStartIndex:pts.length-2,
     rollOutDeg:phi1*180/Math.PI,rollBackDeg:phi2*180/Math.PI,rollSign:side,
-    rise1,rise2,wallGain,phi1,phi2
+    rise1,rise2,wallGain,phi1,phi2,middleUsed:middle,crownPadded:middle>Math.abs(d.middleDistance||0)+1e-9
   };
 }
 function buildSaddleRackModels(){
