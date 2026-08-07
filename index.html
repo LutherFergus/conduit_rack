@@ -62,7 +62,21 @@ input:focus,select:focus{outline:2px solid #38bdf8;outline-offset:1px}.choices{d
 .storage-status.ok{border-left:5px solid var(--good)}.storage-status.warn{border-left:5px solid var(--warn)}.storage-status.bad{border-left:5px solid var(--bad)}
 .version-badge{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:999px;background:#0ea5e9;color:#fff;font-size:.72rem;vertical-align:middle}
 @media(max-width:760px){.storage-row{grid-template-columns:1fr}.storage-actions button{flex:1 1 46%}}
-.rack-data-panel{padding:0;overflow:hidden}.rack-data-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px}.rack-data-toggle{display:flex;align-items:center;gap:9px;min-width:0;min-height:38px;padding:5px 7px;background:transparent;color:var(--text);text-align:left}.rack-data-title{font-size:1.35rem;font-weight:850;white-space:nowrap}.rack-data-chevron{font-size:1.65rem;line-height:1;color:var(--muted);transition:transform .18s ease}.rack-data-panel.expanded .rack-data-chevron{transform:rotate(90deg)}.rack-data-quick-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:nowrap}.rack-data-quick-actions button{min-height:36px;padding:7px 10px;border-radius:9px;font-size:.82rem;white-space:nowrap}.rack-data-body{padding:0 14px 14px;border-top:1px solid rgba(51,65,85,.7)}.rack-data-body[hidden]{display:none}.rack-data-body .helper{margin-top:12px}@media(max-width:520px){.rack-data-header{padding:10px;gap:5px}.rack-data-title{font-size:1.05rem}.rack-data-toggle{padding:4px 2px}.rack-data-quick-actions{gap:4px}.rack-data-quick-actions button{min-height:34px;padding:6px 7px;font-size:.72rem}}
+.rack-data-panel{padding:0;overflow:hidden;margin-top:8px;border-radius:12px}
+.rack-data-toggle{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.rack-data-title{font-size:.9rem;font-weight:850;white-space:nowrap}
+.rack-data-chevron{font-size:1.15rem;line-height:1;color:inherit;opacity:.85;transition:transform .18s ease;display:inline-block}
+#rackDataToggle[aria-expanded="true"] .rack-data-chevron,
+.rack-data-panel.expanded .rack-data-chevron{transform:rotate(90deg)}
+.view-toolbar-row .rack-data-quick-actions{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:2px}
+.view-toolbar-row .rack-data-quick-actions button{min-height:auto;min-width:0;padding:inherit;border-radius:inherit;font-size:inherit;white-space:nowrap}
+.rack-data-body{padding:10px 12px 12px;border:1px solid rgba(62,196,255,.28);border-radius:12px;background:rgba(62,196,255,.07)}
+.rack-data-body[hidden]{display:none}
+.rack-data-body .helper{margin-top:0}
+@media(max-width:520px){
+  .rack-data-title{font-size:.82rem}
+  .view-toolbar-row .rack-data-quick-actions{gap:4px}
+}
 
 /* iPhone field-measurement keypad */
 .measure-keypad-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.38);z-index:9997;display:none}
@@ -403,12 +417,14 @@ input:focus,select:focus{outline-color:#3ec4ff}
     padding-top:4px;
   }
   .workspace-viewer .viewer-wrap{order:1;margin-top:0!important;border-radius:10px}
-  .workspace-viewer .toolbar-title{order:2;display:none;margin:0}
+  .workspace-viewer .rack-data-panel{order:2;display:none;margin-top:0}
+  body.mobile-viewer-open .workspace-viewer .rack-data-panel{display:block}
+  .workspace-viewer .toolbar-title{order:3;display:none;margin:0}
   body.mobile-viewer-open .workspace-viewer .toolbar-title{display:flex;flex-direction:column;align-items:stretch;gap:6px}
   .workspace-viewer .toolbar-title > div > h2{font-size:1rem;margin:0}
   body.mobile-viewer-open .workspace-viewer .toolbar-title > div:first-child{display:none}
-  .workspace-viewer .section-selector{order:3}
-  .workspace-viewer .geometry-monitor{order:4}
+  .workspace-viewer .section-selector{order:4}
+  .workspace-viewer .geometry-monitor{order:5}
   .workspace-viewer .viewer-wrap canvas{
     height:var(--mobile-viewer-peek);
     transition:height .22s ease;
@@ -475,7 +491,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.19</span>
+      <span class="version-badge">PWA v2.20</span>
     </div>
   </div>
 </header>
@@ -605,20 +621,8 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
   <span class="mobile-viewer-handle-main"><span class="mobile-viewer-title">3D Viewer</span></span>
   <span class="mobile-viewer-hint" id="mobileViewerHint">Expand</span>
 </button>
-<section class="panel viewer-panel" id="viewerPanel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper" id="viewerHelpText">True EMT ODs and circular bends. Struts are 1-5/8&quot; and stay off bend radii. Collisions show in red.</div></div><div class="view-buttons view-toolbar"><div class="view-toolbar-row" role="group" aria-label="Camera mode"><span class="row-label">Mode</span><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">Pan</button><button class="secondary" id="fitViewBtn" type="button">Fit</button></div><div class="view-toolbar-row" role="group" aria-label="Camera presets"><span class="row-label">View</span><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="bottom" type="button">Bottom</button><button class="secondary" data-view="back" type="button">Back</button><button class="secondary" data-view="free" type="button">Iso</button></div><div class="view-toolbar-row" role="group" aria-label="Rack actions"><span class="row-label">Rack</span><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">Redo</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">Test</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">Test</button><button class="secondary" id="copyViewBtn" type="button" title="Copy the current 3D viewer image to the clipboard">Copy</button></div></div></div><div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
-</aside>
-</div><!-- /.app-workspace -->
-
-<section class="panel local-storage-panel setup rack-data-panel" id="rackDataPanel">
-  <div class="rack-data-header">
-    <button class="rack-data-toggle" id="rackDataToggle" type="button" aria-expanded="false" aria-controls="rackDataBody"><span class="rack-data-chevron" aria-hidden="true">›</span><span class="rack-data-title">Rack Data</span></button>
-    <div class="rack-data-quick-actions" aria-label="Rack data actions">
-      <button class="secondary" id="createPdfBtn" type="button">Create PDF</button>
-      <button class="primary" id="saveLocalBtn" type="button">Save</button>
-      <button class="secondary" id="loadLocalBtn" type="button">Open</button>
-      <button class="secondary" id="captureViewBtn" type="button" title="Save the current 3D viewer image">Capture</button>
-    </div>
-  </div>
+<section class="panel viewer-panel" id="viewerPanel"><div class="toolbar-title"><div><h2 style="margin:0">3D Rack Viewer</h2><div class="helper" id="viewerHelpText">True EMT ODs and circular bends. Struts are 1-5/8&quot; and stay off bend radii. Collisions show in red.</div></div><div class="view-buttons view-toolbar"><div class="view-toolbar-row" role="group" aria-label="Camera mode"><span class="row-label">Mode</span><button class="secondary toggle-active" id="flyViewBtn" type="button" aria-pressed="true">Fly: ON</button><button class="secondary" id="panViewBtn" type="button" aria-pressed="false">Pan</button><button class="secondary" id="fitViewBtn" type="button">Fit</button><button class="secondary rack-data-toggle" id="rackDataToggle" type="button" aria-expanded="false" aria-controls="rackDataBody" title="Rack data, save, and PDF"><span class="rack-data-chevron" aria-hidden="true">›</span><span class="rack-data-title">Rack Data</span></button><span class="rack-data-quick-actions" aria-label="Rack data actions"><button class="secondary" id="createPdfBtn" type="button">PDF</button><button class="primary" id="saveLocalBtn" type="button">Save</button><button class="secondary" id="loadLocalBtn" type="button">Open</button><button class="secondary" id="captureViewBtn" type="button" title="Save the current 3D viewer image">Capture</button></span></div><div class="view-toolbar-row" role="group" aria-label="Camera presets"><span class="row-label">View</span><button class="secondary" data-view="front" type="button">Front</button><button class="secondary" data-view="right" type="button">Right</button><button class="secondary" data-view="left" type="button">Left</button><button class="secondary" data-view="top" type="button">Top</button><button class="secondary" data-view="bottom" type="button">Bottom</button><button class="secondary" data-view="back" type="button">Back</button><button class="secondary" data-view="free" type="button">Iso</button></div><div class="view-toolbar-row" role="group" aria-label="Rack actions"><span class="row-label">Rack</span><button class="secondary" id="viewerFixCTCBtn" type="button" title="Correct straight-spacing and bend-radius CTC conflicts">Fix CTC</button><button class="secondary" id="trimRackBtn" type="button">Trim</button><button class="primary" id="addSectionBtn" type="button">Add Section</button><button class="secondary" id="undoBtn" type="button" disabled title="Nothing to undo">Undo</button><button class="secondary" id="redoBtn" type="button" disabled title="Nothing to redo">Redo</button><button class="secondary" id="randomTestBtn" type="button" title="Load a randomized rack configuration">Test</button><button class="secondary" id="viewerRandomTestBtn" type="button" title="Load a randomized rack configuration">Test</button><button class="secondary" id="copyViewBtn" type="button" title="Copy the current 3D viewer image to the clipboard">Copy</button></div></div></div>
+<div class="rack-data-panel local-storage-panel" id="rackDataPanel">
   <div class="rack-data-body" id="rackDataBody" hidden>
     <div class="helper">The current rack is recovered automatically. Named projects remain in this browser on this device. Export a JSON backup before clearing Safari website data or replacing the HTML file.</div>
     <div class="storage-row" style="margin-top:12px">
@@ -631,7 +635,10 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
     </div>
     <div id="storageStatus" class="storage-status">Checking local storage…</div>
   </div>
-</section>
+</div>
+<div class="viewer-wrap" style="margin-top:12px"><canvas id="viewer"></canvas><div class="viewer-badge hidden" id="viewerBadge"></div></div><div id="sectionSelector" class="section-selector hidden"><span class="section-selector-label">Section:</span><span id="sectionSelectorButtons" style="display:flex;gap:8px"></span></div><div id="geometryMonitor" class="geometry-monitor ok" role="status" aria-live="polite"><strong>Geometry monitor</strong><div class="helper">Waiting for conduit geometry…</div></div></section>
+</aside>
+</div><!-- /.app-workspace -->
 
 </div>
 
@@ -4601,7 +4608,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:118,build:'PWA v2.19',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:119,build:'PWA v2.20',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
