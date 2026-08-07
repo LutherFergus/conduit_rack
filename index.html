@@ -578,7 +578,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
     </div>
   </section>
   <section id="saddleModePanel" class="panel offset-mode-panel hidden" aria-label="Saddle style">
-    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">4 Point and 3 Point clear an obstruction in one plane. Rolled 4 Mark stays +run/+climb: lift Z on the first wing, drop Z back to zero on the second, never reverse Y.</div></div>
+    <div><div class="offset-mode-title">Saddle Style</div><div class="helper">4 Mark and 3 Mark clear an obstruction in one plane. Rolled 4 Mark stays +run/+climb: lift Z on the first wing, drop Z back to zero on the second, never reverse Y.</div></div>
     <div id="saddleModeSelector" class="segmented-control" role="group" aria-label="Saddle style">
       <button type="button" data-saddle-mode="standard">4 Mark Saddle</button>
       <button type="button" data-saddle-mode="three-point">3 Mark Saddle</button>
@@ -1000,7 +1000,7 @@ function updateRackModeUI(){
   setSegmentedState('#saddleMarkMethodSelector','saddleMarkMethod',saddleMarkMethod);
   const markMethodHelp=$('#saddleMarkMethodCard .helper');
   if(markMethodHelp){
-    markMethodHelp.textContent='3-point saddles always use 45° rim-notch marks. Standard and Rolled 4-point use true centers of bend.';
+    markMethodHelp.textContent='3-mark saddles always use 45° rim-notch marks. Standard and Rolled 4-mark use true centers of bend.';
   }
   setSegmentedState('#saddleRelationSelector','saddleRelation',saddleOffsetRelation);
   setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection);
