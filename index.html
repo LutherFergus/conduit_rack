@@ -5186,10 +5186,6 @@ function flushAutoSave(updateStatus=false){
   }
 }
 function restoreAutoSave(){if(!storageAvailable)return false;const raw=localStorage.getItem(LOCAL_AUTOSAVE);if(!raw)return false;try{isRestoring=true;applyProject(JSON.parse(raw));setStorageStatus('Recovered the last rack automatically on this device.','ok');return true}catch(e){localStorage.removeItem(LOCAL_AUTOSAVE);return false}finally{isRestoring=false}}
-function hasLastRackSave(){
-  if(!storageAvailable&&!testStorage())return false;
-  try{const raw=localStorage.getItem(LOCAL_AUTOSAVE);return!!(raw&&JSON.parse(raw)?.rows)}catch(e){return false}
-}
 function loadLastRack(){
   if(!storageAvailable&&!testStorage()){
     alert('On-device storage is unavailable, so the last rack cannot be loaded.');
