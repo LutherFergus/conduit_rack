@@ -902,13 +902,15 @@ function updateLayoutModeUI(){
   if(help)help.textContent=single?'Single Conduit mode is locked to exactly one conduit. All bend tools remain available.':'';
   setSegmentedState('#layoutModeSelector','layoutMode',activeLayoutMode);
   updateSectionCardHeader();
-  // Struts card (contacts + schedule) is rack-only — keep it visible/open in rack mode.
+  // Struts card (contacts + schedule) is rack-only — keep it visible in rack mode.
   const showStruts=!single&&!isStickApp();
   const strutPanel=$('#strutSchedulePanel');
+  const wasHidden=strutPanel?.classList.contains('hidden');
   strutPanel?.classList.toggle('hidden', !showStruts);
   if(strutPanel)strutPanel.setAttribute('aria-hidden', showStruts?'false':'true');
   const strutDetails=$('#strutScheduleDetails');
-  if(strutDetails&&showStruts)strutDetails.open=true;
+  // Open when the card becomes available again (e.g. Single → Rack); do not force-reopen after a user collapse.
+  if(strutDetails&&showStruts&&wasHidden)strutDetails.open=true;
   const strutSummaryHelp=strutDetails?.querySelector('.strut-schedule-summary .helper');
   if(strutSummaryHelp)strutSummaryHelp.textContent=strutDetails?.open?'Tap to collapse':'Tap to expand';
 }
