@@ -495,7 +495,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.53</span>
+      <span class="version-badge">PWA v2.55</span>
     </div>
   </div>
 </header>
@@ -1059,9 +1059,13 @@ function updateRackModeUI(){
       :isOffset
       ?'<div class="formula-item"><strong>True Offset</strong><div class="formula-equation">√(Rise² + Offset Distance²)</div></div><div class="formula-item"><strong>Travel Between Bends</strong><div class="formula-equation">True Offset ÷ sin(Bend Angle)</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">True Offset × tan(Bend Angle ÷ 2)</div></div>'
       :activeRackType==='kicked-90'
-      ?(isStickApp()
-        ?'<div class="formula-item"><strong>Hypotenuse</strong><div class="formula-equation">Rise ÷ sin(Angle)</div></div><div class="formula-item"><strong>Kick Mark (before 90)</strong><div class="formula-equation">Back of 90 − Hypotenuse</div></div><div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div>'
-        :'<div class="formula-item"><strong>Kick Mark (before 90)</strong><div class="formula-equation">Back of 90 − Hypotenuse</div></div><div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div><div class="formula-item"><strong>Kick Mark (after 90)</strong><div class="formula-equation">Hypotenuse from the 90</div></div>')
+      ?((getRadio('kickPosition')||'before')==='after'
+        ?(isStickApp()
+          ?'<div class="formula-item"><strong>Hypotenuse</strong><div class="formula-equation">Rise ÷ sin(Angle)</div></div><div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div><div class="formula-item"><strong>Kick Mark (after 90)</strong><div class="formula-equation">Hypotenuse from the 90</div></div>'
+          :'<div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div><div class="formula-item"><strong>Kick Mark (after 90)</strong><div class="formula-equation">Hypotenuse from the 90</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">Rise × tan(Angle ÷ 2) · not added to Mark 2</div></div>')
+        :(isStickApp()
+          ?'<div class="formula-item"><strong>Hypotenuse</strong><div class="formula-equation">Rise ÷ sin(Angle)</div></div><div class="formula-item"><strong>Kick Mark (before 90)</strong><div class="formula-equation">Back of 90 − Hypotenuse</div></div><div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct + Shrink</div></div>'
+          :'<div class="formula-item"><strong>Kick Mark (before 90)</strong><div class="formula-equation">Back of 90 − Hypotenuse</div></div><div class="formula-item"><strong>90 Mark</strong><div class="formula-equation">Back of 90 − Deduct + Shrink</div></div><div class="formula-item"><strong>Shrink</strong><div class="formula-equation">Rise × tan(Angle ÷ 2)</div></div>'))
       :activeRackType==='basic-90'
       ?'<div class="formula-item"><strong>Bend Mark</strong><div class="formula-equation">Back of 90 − Deduct</div></div><div class="formula-item"><strong>90° Gain</strong><div class="formula-equation">2·R_out·tan(45°) − R_out·π/2</div></div>'
       :'<div class="formula-item"><div class="formula-equation">Angle = sin⁻¹(Rise ÷ Hypotenuse)</div></div><div class="formula-item"><div class="formula-equation">Shrink Constant = tan(Angle ÷ 2)</div></div><div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>';
@@ -1104,10 +1108,16 @@ function bendMethodGuide(size,bender){
     return{title:'Offset · two equal bends',blurb:'Two opposing bends share the same angle. Travel and shrink come from the true offset.',formulas:item('True Offset','√(Rise² + Offset Dist²)')+item('Travel','True Offset ÷ sin(θ)')+item('Shrink','True Offset × tan(θ ÷ 2)')};
   }
   if(activeRackType==='kicked-90'){
+    const kickAfter=(getRadio('kickPosition')||'before')==='after';
+    const ninetyEq=kickAfter?`BON − ${deductEq}`:`BON − ${deductEq} + Shrink`;
     if(isStickApp()){
-      return{title:'Kicked 90 · angle in',blurb:'Enter kick angle and rise. Hypotenuse is solved, then kick and 90 marks come from BON.',formulas:item('Hypotenuse','Rise ÷ sin(Angle)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark',`BON − ${deductEq}`)+deductRow};
+      return{title:kickAfter?'Kicked 90 · kick after 90':'Kicked 90 · kick before 90',blurb:kickAfter
+        ?'Bend the 90 first at the deduct mark. Kick mark is hypotenuse measured from the 90 — shrink is not added to Mark 2.'
+        :'Enter kick angle and rise. Hypotenuse is solved. Because the kick is before the 90, add kick shrink to the 90 mark.',formulas:item('Hypotenuse','Rise ÷ sin(Angle)')+(kickAfter?item('90 Mark',ninetyEq)+item('Kick Mark','Hypotenuse from the 90'):item('Kick Mark','BON − Hypotenuse')+item('90 Mark',ninetyEq))+deductRow};
     }
-    return{title:'Kicked 90 · rack',blurb:'Enter hypotenuse and rise. Angle and shrink follow; kick and 90 marks come from BON.',formulas:item('Angle','sin⁻¹(Rise ÷ Hyp)')+item('Kick Mark','BON − Hypotenuse')+item('90 Mark',`BON − ${deductEq}`)+deductRow};
+    return{title:kickAfter?'Kicked 90 · kick after 90':'Kicked 90 · kick before 90',blurb:kickAfter
+      ?'Bend the 90 first at the deduct mark. Kick mark is hypotenuse from the 90 — shrink is not added to Mark 2.'
+      :'Enter hypotenuse and rise. Kick shrink is added to the 90 mark so finished back-of-90 lands correctly.',formulas:item('Angle','sin⁻¹(Rise ÷ Hyp)')+(kickAfter?item('90 Mark',ninetyEq)+item('Kick Mark','Hypotenuse from the 90'):item('Kick Mark','BON − Hypotenuse')+item('90 Mark',ninetyEq))+deductRow};
   }
   if(activeRackType==='basic-90'){
     return{title:'Basic 90 · deduct mark',blurb:'Bend mark is back of 90 minus the bender deduct. Gain uses outside radius.',formulas:item('Bend Mark',`BON − ${deductEq}`)+item('90° Gain','2·R_out·tan(45°) − R_out·π/2')+deductRow};
@@ -3293,12 +3303,13 @@ function build(preserve=true){
     const kickAfter=(getRadio('kickPosition')||'before')==='after';
     const kickMarkHead=kickAfter?'Mark 1<br><small>kick from 90</small>':'Mark 1<br><small>kick</small>';
     const kickMarkLabel=kickAfter?'Mark 1 (kick from 90)':'Mark 1 (kick)';
+    const ninetyMarkHead=kickAfter?'Mark 2<br><small>90</small>':'Mark 2<br><small>90 · +shrink</small>';
     const stickKick=isStickApp();
     const header=document.querySelector('.table-wrap thead tr');
     // Single-stick: angle is entered; hypotenuse is solved. Rack keeps hyp as the input.
     if(header)header.innerHTML=stickKick
-      ?`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise</th><th>Angle</th><th class="mark-col">${kickMarkHead}</th><th class="mark-col">Mark 2<br><small>90</small></th><th>Hypotenuse</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>`
-      :`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th class="mark-col">${kickMarkHead}</th><th class="mark-col">Mark 2<br><small>90</small></th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>`;
+      ?`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise</th><th>Angle</th><th class="mark-col">${kickMarkHead}</th><th class="mark-col">${ninetyMarkHead}</th><th>Hypotenuse</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>`
+      :`<th>#</th><th>Conduit Size</th><th class="bender-col">Bender Profile</th>${ctcHeaderHtml(true)}<th>Distance from<br>End of Strut</th><th>Back of 90</th><th>Rise<br><small>auto-adjusted by strut contact</small></th><th>Hypotenuse</th><th class="mark-col">${kickMarkHead}</th><th class="mark-col">${ninetyMarkHead}</th><th>Angle</th><th>Shrink Constant</th><th>Shrink</th><th>Missing / Needed</th>`;
     rowsEl.innerHTML='';
     for(let i=0;i<n;i++){
       const r=old[i]||{},tr=document.createElement('tr');
@@ -3995,9 +4006,12 @@ function recalc(start=0){
     const profile=benderProfiles[bender]||benderProfiles[defaultBenderForSize(size)];
     const deduct=profile?.deduct?.[size]??null;
     const kickAfter=(getRadio('kickPosition')||'before')==='after';
-    // Before 90: kick COB = BON − hyp (equals BON − horizontal − shrink).
-    // After 90: bend the 90 first, then mark the kick from the 90 by hypotenuse.
-    const ninetyMark=bon!=null&&deduct!=null?bon-deduct:null;
+    // Before 90: kick COB = BON − hyp. Kick shrink pulls the finished 90 back, so
+    // Mark 2 (90) = BON − Deduct + Shrink. After 90: bend the 90 first at the
+    // normal deduct mark (no kick shrink), then mark the kick from the 90 by hyp.
+    const ninetyMarkBase=bon!=null&&deduct!=null?bon-deduct:null;
+    const ninetyMark=ninetyMarkBase==null?null
+      :(kickAfter?ninetyMarkBase:(shrink!=null?ninetyMarkBase+shrink:null));
     const kickMark=kickAfter
       ?(hyp!=null?hyp:null)
       :(bon!=null&&hyp!=null?bon-hyp:null);
@@ -4653,7 +4667,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:148,build:'PWA v2.53',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:150,build:'PWA v2.55',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -8241,7 +8255,7 @@ function buildPdfSectionReport(sectionPayload,projectName,dateText){
     return{number:i+1,color:conduitColor(i),values:[String(i+1),'',size,ctcVal(row,i),bonText,riseText,hypText,mark1,mark2,angleText,shrinkText,trimVal(d)].filter(v=>v!==null)};
   });
   const kickSettings=[...sectionSettings,['Conduits',countText],['90',(project.turnDirection||'left').replace(/^./,c=>c.toUpperCase())],['Kick',`${(project.kickDirection||'up').replace(/^./,c=>c.toUpperCase())} · ${(kickAfterPdf?'After 90':'Before 90')}`],...(single?[]:[['Reference',project.direction==='add'?'Shortest back of 90':'Longest back of 90']]),...(showTrim?[['Trim','Free end / 2nd leg']]:[])];
-  return{report:{projectName,dateText,headers:['#','Color','Size',...ctcHead,'Back of 90','Rise','Hypotenuse',kickAfterPdf?'Mark 1 (kick from 90)':'Mark 1 (kick)','Mark 2 (90)','Angle','Shrink',...trimHead],widths:[55,55,90,...ctcWidth,95,90,110,115,95,80,90,...trimWidth],settings:kickSettings},reportRows};
+  return{report:{projectName,dateText,headers:['#','Color','Size',...ctcHead,'Back of 90','Rise','Hypotenuse',kickAfterPdf?'Mark 1 (kick from 90)':'Mark 1 (kick)',kickAfterPdf?'Mark 2 (90)':'Mark 2 (90 · +shrink)','Angle','Shrink',...trimHead],widths:[55,55,90,...ctcWidth,95,90,110,115,110,80,90,...trimWidth],settings:kickSettings},reportRows};
 }
 async function createRackPdf(sectionPayloads){
   const busy=$('#pdfBusy'),button=$('#createPdfBtn'),scrollX=window.scrollX,scrollY=window.scrollY;busy.classList.add('open');button.disabled=true;
@@ -8525,7 +8539,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.53-viewer-toolbar-compact';
+  const APP_BUILD='v2.55-kicked-90-mark2-shrink';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
