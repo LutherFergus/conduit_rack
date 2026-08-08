@@ -4912,7 +4912,13 @@ function rebuildCustomViewerModels(){
     }
     if(!candidates.length)return;
     const ref=candidates.find(c=>c.conduit===0)||candidates[0];
-    const sectionFrame=orthonormalRunFrame(sharedFrame||{forward:ref.localDirection,up:[0,1,0],right:[1,0,0]});
+    // Keep the run direction from the prior section, but always square this
+    // section to world-vertical. Parallel-transporting "up" through a kick/90
+    // banks the next section — a 4 Point Saddle then rises on a tilt even
+    // though its own table has no roll/offset. Rolled styles already encode
+    // their sideways component in local geometry (mapped to right).
+    const joinForward=(sharedFrame&&sharedFrame.forward)||ref.localDirection;
+    const sectionFrame=orthonormalRunFrame({forward:joinForward,up:[0,1,0]});
     const commonDirection=sectionFrame.forward;
     const alignable=candidates.filter(c=>Number.isFinite(c.featureDistance));
     const commonStation=alignable.length
