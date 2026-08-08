@@ -553,7 +553,6 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
         </div>
       </div>
       <div id="globalBenderBox"><label for="globalBender">Bender Profile</label><select id="globalBender"></select><div class="helper">When every conduit is the same trade size, this profile applies to the entire rack. Mixed conduit sizes automatically show a separate Bender Profile for each row.</div></div>
-      <div class="strut-stack"><div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div><div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div></div>
     </div>
     <div class="buttons"><button class="primary" id="buildBtn">Build / Rebuild Table</button><button class="secondary rack-only" id="loadLastBtn">Load Last Conduit Set</button><button class="secondary toggle-active rack-only" id="autoSpaceBtn" type="button" aria-pressed="true">Auto Space: ON</button><button class="secondary" id="saveBtn">Save Project</button><button class="secondary" id="loadBtn">Open Project</button><input id="fileInput" class="hidden" type="file" accept=".json"><button class="danger" id="clearBtn">Clear Values</button></div>
   </div>
@@ -567,10 +566,14 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
 <div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>
 </div></div></details></section>
 
-<section id="strutSchedulePanel" class="panel strut-schedule-panel">
-  <details id="strutScheduleDetails">
-    <summary class="strut-schedule-summary"><span class="strut-schedule-title">Struts</span><span class="helper">Tap to expand</span></summary>
+<section id="strutSchedulePanel" class="panel strut-schedule-panel rack-only">
+  <details id="strutScheduleDetails" open>
+    <summary class="strut-schedule-summary"><span class="strut-schedule-title">Struts</span><span class="helper">Tap to collapse</span></summary>
     <div class="strut-schedule-body">
+      <div id="strutContactStack" class="strut-stack">
+        <div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div>
+        <div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div>
+      </div>
       <div class="strut-spacing-grid">
         <div><label for="horizontalStrutSpacing">Average Horizontal Spacing</label><input id="horizontalStrutSpacing" type="text" value="120" inputmode="decimal"><div class="helper">Default: one strut every 10' (120").</div></div>
         <div><label for="verticalStrutSpacing">Average Vertical Spacing</label><input id="verticalStrutSpacing" type="text" value="240" inputmode="decimal"><div class="helper">Default: one strut every 20' (240").</div></div>
@@ -899,8 +902,15 @@ function updateLayoutModeUI(){
   if(help)help.textContent=single?'Single Conduit mode is locked to exactly one conduit. All bend tools remain available.':'';
   setSegmentedState('#layoutModeSelector','layoutMode',activeLayoutMode);
   updateSectionCardHeader();
-  // Strut schedule is a rack support plan — hide for single conduit / stick.
-  $('#strutSchedulePanel')?.classList.toggle('hidden', single||isStickApp());
+  // Struts card (contacts + schedule) is rack-only — keep it visible/open in rack mode.
+  const showStruts=!single&&!isStickApp();
+  const strutPanel=$('#strutSchedulePanel');
+  strutPanel?.classList.toggle('hidden', !showStruts);
+  if(strutPanel)strutPanel.setAttribute('aria-hidden', showStruts?'false':'true');
+  const strutDetails=$('#strutScheduleDetails');
+  if(strutDetails&&showStruts)strutDetails.open=true;
+  const strutSummaryHelp=strutDetails?.querySelector('.strut-schedule-summary .helper');
+  if(strutSummaryHelp)strutSummaryHelp.textContent=strutDetails?.open?'Tap to collapse':'Tap to expand';
 }
 function switchLayoutMode(mode){
   if(isStickApp()){activeLayoutMode='single';if(countEl)countEl.value=1;updateLayoutModeUI();return}
