@@ -495,7 +495,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.55</span>
+      <span class="version-badge">PWA v2.56</span>
     </div>
   </div>
 </header>
@@ -553,7 +553,6 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
         </div>
       </div>
       <div id="globalBenderBox"><label for="globalBender">Bender Profile</label><select id="globalBender"></select><div class="helper">When every conduit is the same trade size, this profile applies to the entire rack. Mixed conduit sizes automatically show a separate Bender Profile for each row.</div></div>
-      <div class="strut-stack"><div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div><div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div></div>
     </div>
     <div class="buttons"><button class="primary" id="buildBtn">Build / Rebuild Table</button><button class="secondary rack-only" id="loadLastBtn">Load Last Conduit Set</button><button class="secondary toggle-active rack-only" id="autoSpaceBtn" type="button" aria-pressed="true">Auto Space: ON</button><button class="secondary" id="saveBtn">Save Project</button><button class="secondary" id="loadBtn">Open Project</button><input id="fileInput" class="hidden" type="file" accept=".json"><button class="danger" id="clearBtn">Clear Values</button></div>
   </div>
@@ -567,10 +566,14 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
 <div class="formula-item"><div class="formula-equation">Shrink = Rise × Shrink Constant</div></div>
 </div></div></details></section>
 
-<section id="strutSchedulePanel" class="panel strut-schedule-panel">
-  <details id="strutScheduleDetails">
-    <summary class="strut-schedule-summary"><span class="strut-schedule-title">Struts</span><span class="helper">Tap to expand</span></summary>
+<section id="strutSchedulePanel" class="panel strut-schedule-panel rack-only">
+  <details id="strutScheduleDetails" open>
+    <summary class="strut-schedule-summary"><span class="strut-schedule-title">Struts</span><span class="helper">Tap to collapse</span></summary>
     <div class="strut-schedule-body">
+      <div id="strutContactStack" class="strut-stack">
+        <div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div>
+        <div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div>
+      </div>
       <div class="strut-spacing-grid">
         <div><label for="horizontalStrutSpacing">Average Horizontal Spacing</label><input id="horizontalStrutSpacing" type="text" value="120" inputmode="decimal"><div class="helper">Default: one strut every 10' (120").</div></div>
         <div><label for="verticalStrutSpacing">Average Vertical Spacing</label><input id="verticalStrutSpacing" type="text" value="240" inputmode="decimal"><div class="helper">Default: one strut every 20' (240").</div></div>
@@ -899,8 +902,17 @@ function updateLayoutModeUI(){
   if(help)help.textContent=single?'Single Conduit mode is locked to exactly one conduit. All bend tools remain available.':'';
   setSegmentedState('#layoutModeSelector','layoutMode',activeLayoutMode);
   updateSectionCardHeader();
-  // Strut schedule is a rack support plan — hide for single conduit / stick.
-  $('#strutSchedulePanel')?.classList.toggle('hidden', single||isStickApp());
+  // Struts card (contacts + schedule) is rack-only — keep it visible in rack mode.
+  const showStruts=!single&&!isStickApp();
+  const strutPanel=$('#strutSchedulePanel');
+  const wasHidden=strutPanel?.classList.contains('hidden');
+  strutPanel?.classList.toggle('hidden', !showStruts);
+  if(strutPanel)strutPanel.setAttribute('aria-hidden', showStruts?'false':'true');
+  const strutDetails=$('#strutScheduleDetails');
+  // Open when the card becomes available again (e.g. Single → Rack); do not force-reopen after a user collapse.
+  if(strutDetails&&showStruts&&wasHidden)strutDetails.open=true;
+  const strutSummaryHelp=strutDetails?.querySelector('.strut-schedule-summary .helper');
+  if(strutSummaryHelp)strutSummaryHelp.textContent=strutDetails?.open?'Tap to collapse':'Tap to expand';
 }
 function switchLayoutMode(mode){
   if(isStickApp()){activeLayoutMode='single';if(countEl)countEl.value=1;updateLayoutModeUI();return}
@@ -4667,7 +4679,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:150,build:'PWA v2.55',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:151,build:'PWA v2.56',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -8539,7 +8551,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.55-kicked-90-mark2-shrink';
+  const APP_BUILD='v2.56-strut-card-visible-rack';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
