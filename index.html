@@ -480,7 +480,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.34</span>
+      <span class="version-badge">PWA v2.35</span>
     </div>
   </div>
 </header>
@@ -515,7 +515,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <div id="offsetParameters" class="hidden" style="grid-column:1/-1">
         <div class="offset-parameter-grid">
           <div class="offset-parameter-card"><label>Critical Bend</label><div id="criticalBendSelector" class="segmented-control" role="group" aria-label="Critical bend"><button type="button" data-critical-bend="first">First Bend</button><button type="button" data-critical-bend="second">Second Bend</button></div><div class="helper">First Bend anchors bend one exactly. Second Bend adds shrink to the entered critical measurement and solves bend one backward.</div></div>
-          <div class="offset-parameter-card rack-only"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Which side is conduit 1. Parallel/rolled mark stagger also follows offset direction so bends open the rack instead of closing into neighbors.</div></div>
+          <div class="offset-parameter-card rack-only"><label>Rack Starting Side</label><div id="offsetStartSelector" class="segmented-control" role="group" aria-label="Rack starting side"><button type="button" data-offset-start="left">Left</button><button type="button" data-offset-start="right">Right</button></div><div class="helper">Which side is conduit 1 when looking from the starting end along the rack (same POV as 90 Left/Right). Parallel/rolled mark stagger follows offset direction so bends open the rack.</div></div>
           <div id="offsetVerticalDirectionBox" class="offset-parameter-card"><label>Vertical Direction</label><div id="offsetVerticalSelector" class="segmented-control" role="group" aria-label="Vertical offset direction"><button type="button" data-offset-vertical="up">Up</button><button type="button" data-offset-vertical="down">Down</button></div></div>
           <div id="offsetHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="offsetHorizontalSelector" class="segmented-control" role="group" aria-label="Horizontal offset direction"><button type="button" data-offset-horizontal="left">Left</button><button type="button" data-offset-horizontal="right">Right</button></div></div>
           <div class="offset-parameter-card oal-parameter-card"><label>Overall Length (A to B)</label><button id="offsetOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear distance A to B after the offset (shortened by shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
@@ -526,7 +526,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
           <div id="saddleMarkMethodCard" class="offset-parameter-card"><label>Mark Method</label><div id="saddleMarkMethodSelector" class="segmented-control" role="group" aria-label="Saddle mark method"><button type="button" data-saddle-mark-method="push-through">Push Through</button><button type="button" data-saddle-mark-method="traditional">Traditional</button></div><div class="helper">Push Through (default on rolled): every shot on the 30° rim notch. Traditional keeps equal COB marks (no notch shift). Standard 4-point always uses center-of-bend marks. 45° notch applies to 3-point saddles only.</div></div>
           <div id="saddleHeightsCard" class="offset-parameter-card"><label>Offset Heights</label><div id="saddleRelationSelector" class="segmented-control" role="group" aria-label="Saddle offset heights"><button type="button" data-saddle-relation="same">Both Same</button><button type="button" data-saddle-relation="different">Both Different</button></div><div class="helper">Both Same copies Hyp1/oh to the return wing. Both Different enables separate Hyp2 and far object height.</div></div>
           <div id="saddleVerticalCard" class="offset-parameter-card"><label>Vertical Direction</label><div id="saddleVerticalSelector" class="segmented-control" role="group" aria-label="Saddle vertical direction"><button type="button" data-saddle-vertical="up">Up First</button><button type="button" data-saddle-vertical="down">Down First</button></div></div>
-          <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div><div class="helper">Rolled 4 Point: which way the Z lift goes on the first wing (Right = +Z out). Both wings keep climbing +Y.</div></div>
+          <div id="saddleHorizontalDirectionBox" class="offset-parameter-card"><label>Horizontal Direction</label><div id="saddleHorizontalSelector" class="segmented-control" role="group" aria-label="Saddle horizontal direction"><button type="button" data-saddle-horizontal="left">Left First</button><button type="button" data-saddle-horizontal="right">Right First</button></div><div class="helper">Rolled 4 Point: which way the first wing lifts when looking from the starting end along the rack (Left = rack-left / +X). Both wings keep climbing +Y.</div></div>
           <div class="offset-parameter-card oal-parameter-card"><label>Overall Length (A to B)</label><button id="saddleOalBtn" class="secondary oal-visibility-btn" type="button" aria-pressed="false">OAL: OFF</button><div class="helper">OAL is finished linear A→B after the saddle (shortened by total shrink). Stick developed = OAL + shrink. Not back of 90. Orange when ON.</div></div>
         </div>
       </div>
@@ -1545,7 +1545,7 @@ function stickWizardStepDefs(kind){
     {id:'rise',type:'measure',question:'What is the rise?',help:'Enter the vertical component of the rolled offset.',field:'rise',inputId:'wizardStickRise',placeholder:'Example: 6'},
     {id:'odist',type:'measure',question:'What is the offset distance?',help:'Enter the horizontal component of the rolled offset.',field:'stickOffsetDistance',inputId:'wizardStickOffsetDist',placeholder:'Example: 8'},
     {id:'vert',type:'choice',question:'Is the vertical move up or down?',help:'Finished vertical direction.',field:'offsetVerticalDirection',choices:[['up','Up'],['down','Down']]},
-    {id:'horiz',type:'choice',question:'Is the horizontal move left or right?',help:'Finished horizontal direction.',field:'offsetHorizontalDirection',choices:[['left','Left'],['right','Right']]},
+    {id:'horiz',type:'choice',question:'Is the horizontal move left or right?',help:'Finished horizontal direction looking from the starting end along the rack.',field:'offsetHorizontalDirection',choices:[['left','Left'],['right','Right']]},
     angle
   ];
   if(kind==='saddle-rolled')return[
@@ -3496,7 +3496,8 @@ function recalcSaddle(){
       saddleVerticalDirection='down';setSegmentedState('#saddleVerticalSelector','saddleVertical',saddleVerticalDirection);
     }
   }
-  if(distanceAnchor?.value<0&&!rolled){saddleHorizontalDirection='left';setSegmentedState('#saddleHorizontalSelector','saddleHorizontal',saddleHorizontalDirection)}
+  // Negative distance is world −X = rack-right.
+  if(distanceAnchor?.value<0&&!rolled){saddleHorizontalDirection='right';setSegmentedState('#saddleHorizontalSelector','saddleHorizontal',saddleHorizontalDirection)}
   setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'oal',oalAnchor,value=>value);
   setOffsetFieldFromAnchor(trs,'bend-angle',angleAnchor,value=>value);
@@ -3675,7 +3676,8 @@ function recalcOffset(){
   const distanceAnchor=activeOffsetType==='standard'?null:findManualAnchor(trs,'offset-distance');
   const angleAnchor=findManualAnchor(trs,'bend-angle');
   if(riseAnchor?.value<0){offsetVerticalDirection='down';setSegmentedState('#offsetVerticalSelector','offsetVertical',offsetVerticalDirection)}
-  if(distanceAnchor?.value<0){offsetHorizontalDirection='left';setSegmentedState('#offsetHorizontalSelector','offsetHorizontal',offsetHorizontalDirection)}
+  // Negative Offset Distance is world −X = rack-right (looking from start along the run).
+  if(distanceAnchor?.value<0){offsetHorizontalDirection='right';setSegmentedState('#offsetHorizontalSelector','offsetHorizontal',offsetHorizontalDirection)}
   const angleForProgression=angleAnchor?.value||0;
   const riseForProjection=activeOffsetType==='parallel'?0:(riseAnchor?.value||0);
   const distanceForProjection=activeOffsetType==='standard'?0:(distanceAnchor?.value||0);
@@ -3691,12 +3693,14 @@ function recalcOffset(){
   // offset-travel direction get EARLIER marks so they move away first. Using only
   // rack-start left/right (old behavior) staggered the wrong way for a right-hand
   // parallel offset and produced real OD collisions / geometry-monitor faults.
+  //
+  // Left/right are rack POV (from starting end looking along +Z): Left = +X.
   const projection=activeOffsetType==='standard'?0:activeOffsetType==='parallel'?1:(preliminaryTrueOffset>0?Math.abs(distanceForProjection)/preliminaryTrueOffset:0);
-  const rackSign=offsetRackStart==='left'?1:-1;
-  const horizontalSign=offsetHorizontalDirection==='left'?-1:1;
+  const rackSign=offsetRackStart==='left'?-1:1;
+  const horizontalSign=offsetHorizontalDirection==='left'?1:-1;
   const progressionSign=(activeOffsetType==='parallel'||activeOffsetType==='rolled')
     ?(-rackSign*horizontalSign)
-    :(offsetRackStart==='left'?1:-1);
+    :rackSign;
   const staggerPerInch=Math.tan(Math.max(0,Math.min(89.9,angleForProgression))*Math.PI/360)*projection;
   // Surface-gap mark add is parallel-only (parallelGapProgression returns 0 otherwise).
   setOffsetFieldFromAnchor(trs,'critical',criticalAnchor,(value,i,anchorIndex)=>value+progressionSign*(pos[i]-pos[anchorIndex])*staggerPerInch+progressionSign*parallelGapProgression(i,anchorIndex,trs));
@@ -4605,7 +4609,7 @@ function loadLast(){
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
   countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:133,build:'PWA v2.34',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:134,build:'PWA v2.35',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4619,6 +4623,15 @@ function applyProject(p){
   if(!p||!Array.isArray(p.rows))throw new Error('Invalid project');
   activeLayoutMode=isStickApp()?'single':(p.layoutMode==='single'?'single':'rack');
   if(isStickApp()){p={...p,count:1,rows:(p.rows||[]).slice(0,1)};if(countEl)countEl.value=1}
+  // v2.35: Left/Right for start side + horizontal moves are rack POV (was viewer POV).
+  // Flip saved labels so existing projects keep the same physical geometry.
+  const flipSide=v=>v==='left'?'right':v==='right'?'left':v;
+  if((+p.version||0)<134){
+    if(p.offsetRackStart==='left'||p.offsetRackStart==='right')p.offsetRackStart=flipSide(p.offsetRackStart);
+    if(p.offsetHorizontalDirection==='left'||p.offsetHorizontalDirection==='right')p.offsetHorizontalDirection=flipSide(p.offsetHorizontalDirection);
+    if(p.saddleHorizontalDirection==='left'||p.saddleHorizontalDirection==='right')p.saddleHorizontalDirection=flipSide(p.saddleHorizontalDirection);
+    if(p.saddleDirection==='left'||p.saddleDirection==='right')p.saddleDirection=flipSide(p.saddleDirection);
+  }
   activeRackType=rackTypes[p.rackType]?.available?p.rackType:'kicked-90';
   activeOffsetType=offsetTypes[p.offsetType]?p.offsetType:'standard';
   offsetCriticalBend=p.offsetCriticalBend==='second'?'second':'first';
@@ -4945,7 +4958,7 @@ function sectionDirectionControlsMarkup(){
       card('Kick Location',[['before','Before 90'],['after','After 90']].map(([v,l])=>sectionDirectionButton('kick-position',v,l,getRadio('kickPosition'))).join(''));
   }else if(activeRackType==='offset'){
     if(activeOffsetType!=='parallel')cards+=card('Vertical Direction',['up','down'].map(v=>sectionDirectionButton('offset-vertical',v,v[0].toUpperCase()+v.slice(1),offsetVerticalDirection)).join(''),'A negative Rise input forces Down.');
-    if(activeOffsetType!=='standard')cards+=card('Horizontal Direction',['left','right'].map(v=>sectionDirectionButton('offset-horizontal',v,v[0].toUpperCase()+v.slice(1),offsetHorizontalDirection)).join(''),'A negative Offset Distance forces Left.');
+    if(activeOffsetType!=='standard')cards+=card('Horizontal Direction',['left','right'].map(v=>sectionDirectionButton('offset-horizontal',v,v[0].toUpperCase()+v.slice(1),offsetHorizontalDirection)).join(''),'A negative Offset Distance forces Right (rack POV).');
   }else if(activeRackType==='saddle'){
     if(isThreePointSaddle()){
       const opts=[['up','Up'],['down','Down'],['left','Left'],['right','Right']]
@@ -6221,8 +6234,9 @@ function buildRolledSaddleCenterline(d,clr,baseY){
   // Cap φ just under 90° so climb component stays strictly positive.
   const phi1=Math.asin(Math.min(0.999999,oh1/hyp1)),phi2=Math.asin(Math.min(0.999999,oh2/hyp2));
   const rise1=hyp1*Math.sin(theta),rise2=hyp2*Math.sin(theta);
-  // Left First flips which way Z lifts; both wings keep +Y (climb).
-  const side=(typeof saddleHorizontalDirection==='string'&&saddleHorizontalDirection==='left')?-1:1;
+  // Left First lifts toward rack-left (+X) when looking from the start along the run.
+  // Both wings keep +Y (climb).
+  const side=(typeof saddleHorizontalDirection==='string'&&saddleHorizontalDirection==='left')?1:-1;
   // Wing 1: +climb, +out. Wing 2: +climb, −out (Z back to 0). Never reverse Y.
   const dir1=unit([side*Math.sin(phi1),Math.cos(phi1),0]);
   const dir2=unit([-side*Math.sin(phi2),Math.cos(phi2),0]);
@@ -6281,7 +6295,7 @@ function buildSaddleRackModels(){
       if(threePoint?!d.mark3:!(d.mark4!=null&&d.middleDistance!=null))continue;
       const baseGeo=emtGeometry[d.size]||{od:.75,wall:.05,clr:5.5},geo={...baseGeo,clr:profileCLR(d.size,d.bender)||baseGeo.clr};
       const baseY=-sideSign*(geo.od/2);
-      const planeSign=d.rise<0?-1:(threePointHorizontal?(threePointDir==='left'?-1:1):(threePoint?(threePointDir==='down'?-1:1):(saddleVerticalDirection==='down'?-1:1)));
+      const planeSign=d.rise<0?-1:(threePointHorizontal?(threePointDir==='left'?1:-1):(threePoint?(threePointDir==='down'?-1:1):(saddleVerticalDirection==='down'?-1:1)));
       const built=threePoint
         ?(threePointHorizontal
           ?buildThreePointSaddleCenterlineXZ(d,geo.clr,baseY,planeSign)
@@ -6351,7 +6365,9 @@ function buildOffsetRackModels(){
     const entered=modelData[i].cc;
     xs.push(xs[i-1]+(entered==null?0:entered));
   }
-  const rackSign=offsetRackStart==='left'?1:-1;
+  // Rack POV: looking from the starting end along +Z, Left = +X. Conduit 1 on
+  // the Left start side therefore sits on the +X side of the centered rack.
+  const rackSign=offsetRackStart==='left'?-1:1;
   xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const firstSide=getRadio('firstStrutSide')||'top',secondSide=getRadio('secondStrutSide')||'top';
@@ -6369,7 +6385,8 @@ function buildOffsetRackModels(){
     const radius=geo.od/2,baseY=-firstSign*radius;
     const rowVerticalSign=(d.rise||0)<0?-1:(offsetVerticalDirection==='down'?-1:1);
     const finalY=secondContactPlane==null?baseY+rowVerticalSign*Math.abs(d.rise||0):secondContactPlane-secondSign*radius;
-    const horizontalSign=d.offsetDistance<0?-1:(offsetHorizontalDirection==='left'?-1:1);
+    // Negative Offset Distance keeps world −X (rack-right); otherwise use rack-POV Left = +X.
+    const horizontalSign=d.offsetDistance<0?-1:(offsetHorizontalDirection==='left'?1:-1);
     const dx=activeOffsetType==='standard'?0:horizontalSign*Math.abs(d.offsetDistance||0);
     const dy=activeOffsetType==='parallel'?0:finalY-baseY;
     const trueOffset=Math.hypot(dx,dy);
@@ -8303,7 +8320,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.34-capture-4x3';
+  const APP_BUILD='v2.35-rack-pov-sides';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
