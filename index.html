@@ -6928,10 +6928,8 @@ function pointNearPolylineEnd(point,model,tol){
   return Math.hypot(...vsub(point,pts[0]))<=tol||Math.hypot(...vsub(point,pts.at(-1)))<=tol;
 }
 function isCrossSectionJunctionSample(mi,mj,best,tol){
-  // Different custom-section fragments only meet at couplings. Closest-approach
-  // samples there often sit exactly on the preferred gap (or float slightly under)
-  // and paint red dots on the purple sleeve — skip preferred-gap Faults there.
-  // Actual OD overlap (negative clearance) still warns.
+  // Adjacent custom-section fragments meet at couplings (purple sleeves).
+  // Closest-approach samples there must never count as collisions.
   if(mi?.sectionIndex==null||mj?.sectionIndex==null)return false;
   if(mi.sectionIndex===mj.sectionIndex)return false;
   if(Math.abs(mi.sectionIndex-mj.sectionIndex)!==1)return false;
@@ -6950,21 +6948,20 @@ function detectCollisions(models){
       const c=closestSegments(mi.points[a],mi.points[a+1],mj.points[b],mj.points[b+1]);
       if(c.dist<best.dist)best={...c,segA:a,segB:b};
     }
+    // Couplings shall not trigger a collision — skip junction samples entirely.
+    if(isCrossSectionJunctionSample(mi,mj,best,couplingTol))continue;
     const safety=pairCollisionSafety(mi,mj);
     // Outer-skin clearance: centerline separation minus both OD radii.
     // Require a true deficit past float/chord sampling noise before flagging —
     // exact preferredClearance (clear 9/16, need 9/16) must not Fault.
     const odClearance=best.dist-(mi.radius+mj.radius);
-    const atCoupling=isCrossSectionJunctionSample(mi,mj,best,couplingTol);
-    // At the section junction, only actual OD penetration is a collision; preferred
-    // gap is already enforced within each section and must not double-fault the sleeve.
-    const required=atCoupling?0:safety;
+    const required=safety;
     if(odClearance+collisionClearanceEpsilon<required){
       const aIndex=mi.index,bIndex=mj.index,targetRow=Math.max(aIndex,bIndex);
       const current=modelData[targetRow]?.cc;
       const deficit=required-odClearance;
       const recommended=current==null?null:roundUp16(current+deficit+1/16);
-      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit:mi.radius+mj.radius+required,targetRow,currentCC:current,recommendedCC:recommended,clearance:odClearance,requiredClearance:required,segA:best.segA,segB:best.segB,atCoupling:!!atCoupling});
+      out.push({a:aIndex,b:bIndex,point:vmul(vadd(best.p,best.q),.5),distance:best.dist,limit:mi.radius+mj.radius+required,targetRow,currentCC:current,recommendedCC:recommended,clearance:odClearance,requiredClearance:required,segA:best.segA,segB:best.segB,atCoupling:false});
     }
   }
   return out;
