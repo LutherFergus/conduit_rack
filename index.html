@@ -4586,8 +4586,7 @@ function realisticRandomRunTest(){
 function populateOffsetTestRack(randomize=false){
   closeMeasureKeypad(true);
   countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*5):6);
-  offsetRackStart=randomize&&Math.random()>.5?'right':'left';
-  setRadioValue('startingSide',offsetRackStart);
+  setRackStartingSide(randomize&&Math.random()>.5?'right':'left');
   offsetVerticalDirection=randomize&&Math.random()>.5?'down':'up';
   offsetHorizontalDirection=randomize&&Math.random()>.5?'left':'right';
   offsetCriticalBend=randomize&&Math.random()>.5?'second':'first';
@@ -8532,7 +8531,7 @@ else startIPhoneBuild();
 window.__conduitTest={
   switchBendType,populateOffsetTestRack,populateSaddleTestRack,populateBasic90TestRack,
   populateSegmentedTestRack,populateTestRack,randomRackTest,realisticRandomRunTest,randomGroupedRackTestSizes,loadLast,recalc,build,
-  applyAllAutoSpacing,updateRackModeUI,updateAutoSpaceButton,setRadioValue,rackSetupFromReference,
+  applyAllAutoSpacing,updateRackModeUI,updateAutoSpaceButton,setRadioValue,rackSetupFromReference,setRackStartingSide,rackStartSide,
   detectCollisions,closestSegments,fitCurrentView,draw3D,setPresetView,cameraState,
   buildCaptureReportImageBlob,renderCurrentViewerReportImage,renderPdfTechnicalView,drawPdfTablePage,buildPdfSectionReport,
   captureSelectedPdfView,getCaptureSheetLayout,isPhoneCaptureDevice,CAPTURE_SHEET_WIDTH,CAPTURE_SHEET_HEIGHT,
