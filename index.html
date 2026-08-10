@@ -83,7 +83,7 @@ input:focus,select:focus{outline:2px solid #38bdf8;outline-offset:1px}.choices{d
 .conduit-card-controls>.panel{margin:0;box-shadow:none}
 .conduit-card-controls .section-direction-controls{margin:0}
 .top-run-controls{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-color:#38bdf8;background:linear-gradient(90deg,rgba(14,165,233,.16),rgba(17,24,39,.97))}
-.top-run-format{flex:1 1 420px}.top-run-format-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.top-run-format-row .segmented-control{flex:1 1 220px}.top-run-format-row #trimModeBtn{min-height:42px;white-space:nowrap}.top-run-actions{display:flex;gap:8px;flex-wrap:wrap}.top-run-actions button{min-height:42px}
+.top-run-format{flex:1 1 420px}.top-run-format-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.top-run-format-row .segmented-control{flex:1 1 160px}.top-run-format-row .format-start-wrap{display:flex;flex-direction:column;gap:4px;flex:1 1 160px;min-width:140px}.top-run-format-row .format-inline-label{font-size:12px;font-weight:700;letter-spacing:.02em;opacity:.85}.top-run-format-row #trimModeBtn{min-height:42px;white-space:nowrap}.top-run-actions{display:flex;gap:8px;flex-wrap:wrap}.top-run-actions button{min-height:42px}
 .geometry-monitor{margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid #334155;background:#0f172a;font-size:.86rem;line-height:1.35}
 .geometry-monitor.ok{border-color:#166534;background:rgba(22,101,52,.18);color:#bbf7d0}
 .geometry-monitor.warn{border-color:#a16207;background:rgba(161,98,7,.16);color:#fde68a}
@@ -495,7 +495,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.55</span>
+      <span class="version-badge">PWA v2.56</span>
     </div>
   </div>
 </header>
@@ -519,7 +519,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
   </summary>
   <div class="rack-parameters-body">
     <div class="grid">
-      <div class="rack-only"><label>Format</label><div class="top-run-format-row"><div id="layoutModeSelector" class="segmented-control" role="group" aria-label="Single conduit or rack format"><button type="button" data-layout-mode="single">Single</button><button type="button" data-layout-mode="rack">Rack</button></div><button id="trimModeBtn" class="secondary toggle-active" type="button" aria-pressed="true" title="Auto-square every rack section to the shortest finished free end (second leg)">Trim Mode: ON</button></div><div class="helper">Switch formats at any time. Single is locked to one conduit; Rack restores the normal multi-conduit workflow. Trim Mode (default ON) square-cuts each section to the shortest free end / second leg so all conduits line up; the Trim Off column is how much to cut off the other end of each longer stick.</div></div>
+      <div class="rack-only"><label>Format</label><div class="top-run-format-row"><div id="layoutModeSelector" class="segmented-control" role="group" aria-label="Single conduit or rack format"><button type="button" data-layout-mode="single">Single</button><button type="button" data-layout-mode="rack">Rack</button></div><div id="formatStartWrap" class="format-start-wrap"><span class="format-inline-label">Starting conduit</span><div id="formatStartSelector" class="segmented-control" role="group" aria-label="Starting conduit side"><button type="button" data-format-start="left">Left</button><button type="button" data-format-start="right">Right</button></div></div><button id="trimModeBtn" class="secondary toggle-active" type="button" aria-pressed="true" title="Auto-square every rack section to the shortest finished free end (second leg)">Trim Mode: ON</button></div><div class="helper">Switch formats at any time. Single is locked to one conduit; Rack restores the normal multi-conduit workflow. Starting conduit is which side conduit 1 sits on when looking from the starting end along the rack (Left = rack-left / +X). Trim Mode (default ON) square-cuts each section to the shortest free end / second leg so all conduits line up; the Trim Off column is how much to cut off the other end of each longer stick.</div></div>
       <div id="conduitCountBox" class="rack-only"><label id="conduitCountLabel" for="count">How many conduits?</label><input id="count" type="number" min="1" max="100" value="6"><div id="conduitCountHelp" class="helper"></div></div>
       <div class="hidden" aria-hidden="true"><input type="radio" name="direction" value="add"><input type="radio" name="direction" value="subtract" checked><input id="autoDirection" type="checkbox"><input type="radio" name="startingSide" value="left" checked><input type="radio" name="startingSide" value="right"></div>
       <div class="hidden" aria-hidden="true"><input type="radio" name="spacingMode" value="multiple" checked><input id="pattern" type="hidden" value=""></div>
@@ -853,6 +853,15 @@ function rackSetupFromReference(referenceLength,turnDirection){
   const startingSide=physicalSign<0?'right':'left';
   return {direction,startingSide,physicalSign};
 }
+function rackStartSide(){return offsetRackStart==='right'?'right':'left'}
+// Rack POV (from starting end looking along +Z): Left = +X. Conduit 1 on Left
+// sits on the +X side of the centered rack after the xs are signed and centered.
+function rackStartSign(){return rackStartSide()==='left'?-1:1}
+function setRackStartingSide(side){
+  const next=side==='right'?'right':'left';
+  offsetRackStart=next;
+  setRadioValue('startingSide',next);
+}
 function setRadioValue(name,value){const el=document.querySelector(`input[name="${name}"][value="${value}"]`);if(el)el.checked=true}
 function updateActiveRackTypeLabel(){
   const el=$('#activeRackTypeLabel');if(!el)return;
@@ -1007,9 +1016,11 @@ function updateRackModeUI(){
   $('#saddleModeSelector [data-saddle-mode="rolled"]')?.classList.toggle('hidden',activeLayoutMode!=='single');
   if(activeLayoutMode!=='single'&&activeSaddleType==='rolled')activeSaddleType='standard';
   $('#offsetModeSelector [data-offset-mode="parallel"]')?.classList.toggle('hidden',activeLayoutMode==='single');
+  $('#formatStartWrap')?.classList.toggle('hidden',activeLayoutMode==='single');
+  setSegmentedState('#formatStartSelector','formatStart',rackStartSide());
   setSegmentedState('#offsetModeSelector','offsetMode',activeOffsetType);
   setSegmentedState('#criticalBendSelector','criticalBend',offsetCriticalBend);
-  setSegmentedState('#offsetStartSelector','offsetStart',offsetRackStart);
+  setSegmentedState('#offsetStartSelector','offsetStart',rackStartSide());
   setSegmentedState('#offsetVerticalSelector','offsetVertical',offsetVerticalDirection);
   setSegmentedState('#offsetHorizontalSelector','offsetHorizontal',offsetHorizontalDirection);
   setSegmentedState('#saddleModeSelector','saddleMode',activeSaddleType);
@@ -1762,7 +1773,7 @@ function completeStickBendWizard(){
     setRadioValue('kickDirection',wizardState.kickDirection);
     setRadioValue('turnDirection',wizardState.turnDirection);
     setRadioValue('kickPosition',wizardState.kickPosition);
-    setRadioValue('startingSide',setup.startingSide);
+    setRackStartingSide(setup.startingSide);
     setRadioValue('direction',setup.direction);
     if(autoDirectionEl)autoDirectionEl.checked=false;
   }else if(kind==='offset-standard'||kind==='offset-rolled'){
@@ -1945,7 +1956,7 @@ function applyWizardValues(){
   build(false);
   const setup=rackSetupFromReference(wizardState.referenceLength,wizardState.turnDirection);
   rackReferenceLength=wizardState.referenceLength;
-  setRadioValue('kickDirection',wizardState.kickDirection);setRadioValue('turnDirection',wizardState.turnDirection);setRadioValue('startingSide',setup.startingSide);setRadioValue('kickPosition',wizardState.kickPosition);setRadioValue('direction',setup.direction);
+  setRadioValue('kickDirection',wizardState.kickDirection);setRadioValue('turnDirection',wizardState.turnDirection);setRackStartingSide(setup.startingSide);setRadioValue('kickPosition',wizardState.kickPosition);setRadioValue('direction',setup.direction);
   setRadioValue('firstStrutSide','top');setRadioValue('secondStrutSide','top');
   autoDirectionEl.checked=false;
   const trs=$$('#rows tr');
@@ -2043,7 +2054,7 @@ function populateTestRack(hard=false){
   const n=activeLayoutMode==='single'?1:(hard?6:Math.max(4,Math.min(8,+countEl.value||6)));countEl.value=n;build(false);
   const kickDirection=randomChoice(['up','down']),turnDirection=randomChoice(['left','right']),kickPosition=randomChoice(['before','after']),referenceLength=randomChoice(['longest','shortest']);
   const setup=rackSetupFromReference(referenceLength,turnDirection);rackReferenceLength=referenceLength;
-  setRadioValue('kickDirection',kickDirection);setRadioValue('turnDirection',turnDirection);setRadioValue('kickPosition',kickPosition);setRadioValue('direction',setup.direction);setRadioValue('startingSide',setup.startingSide);setRadioValue('firstStrutSide','top');setRadioValue('secondStrutSide','top');
+  setRadioValue('kickDirection',kickDirection);setRadioValue('turnDirection',turnDirection);setRadioValue('kickPosition',kickPosition);setRadioValue('direction',setup.direction);setRackStartingSide(setup.startingSide);setRadioValue('firstStrutSide','top');setRadioValue('secondStrutSide','top');
   const rise=randomQuarter(6,14),hyp=randomQuarter(rise+12,rise+28),oal=randomQuarter(56,78);
   const stickKick=isStickApp()&&activeRackType==='kicked-90';
   const kickAngle=stickKick?randomChoice([15,22.5,30,45]):null;
@@ -3751,7 +3762,7 @@ function recalcOffset(){
   //
   // Left/right are rack POV (from starting end looking along +Z): Left = +X.
   const projection=activeOffsetType==='standard'?0:activeOffsetType==='parallel'?1:(preliminaryTrueOffset>0?Math.abs(distanceForProjection)/preliminaryTrueOffset:0);
-  const rackSign=offsetRackStart==='left'?-1:1;
+  const rackSign=rackStartSign();
   const horizontalSign=offsetHorizontalDirection==='left'?1:-1;
   const progressionSign=(activeOffsetType==='parallel'||activeOffsetType==='rolled')
     ?(-rackSign*horizontalSign)
@@ -4379,7 +4390,7 @@ function randomRackTest(){
   rackReferenceLength=randomChoice(['longest','shortest']);
   const setup=rackSetupFromReference(rackReferenceLength,getRadio('turnDirection'));
   setRadioValue('direction',setup.direction);
-  setRadioValue('startingSide',setup.startingSide);
+  setRackStartingSide(setup.startingSide);
   autoDirectionEl.checked=false;
   autoSpaceActive=true;
   updateAutoSpaceButton();
@@ -4542,6 +4553,7 @@ function realisticRandomRunTest(){
     const setup=rackSetupFromReference(p.referenceLength,p.turnDirection);
     p.direction=setup.direction;
     p.startingSide=setup.startingSide;
+    p.offsetRackStart=setup.startingSide;
     const angle=randomChoice(anglePool),rise=q(5,13),hyp=Math.max(rise+8,q(rise+12,rise+27));
     p.rows=p.rows.map((r,i)=>({...r,
       strut:i===0?fmtR(q(2,9)):'',
@@ -4575,6 +4587,7 @@ function populateOffsetTestRack(randomize=false){
   closeMeasureKeypad(true);
   countEl.value=activeLayoutMode==='single'?1:(randomize?Math.floor(4+Math.random()*5):6);
   offsetRackStart=randomize&&Math.random()>.5?'right':'left';
+  setRadioValue('startingSide',offsetRackStart);
   offsetVerticalDirection=randomize&&Math.random()>.5?'down':'up';
   offsetHorizontalDirection=randomize&&Math.random()>.5?'left':'right';
   offsetCriticalBend=randomize&&Math.random()>.5?'second':'first';
@@ -4665,9 +4678,9 @@ function loadLast(){
   if(activeRackType==='segmented'){populateSegmentedTestRack(false);return}
   if(activeRackType==='saddle'){populateSaddleTestRack(false);return}
   if(activeRackType==='offset'){populateOffsetTestRack(false);return}
-  countEl.value=6;rackReferenceLength='longest';$('input[name="startingSide"][value="left"]').checked=true;autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
+  countEl.value=6;rackReferenceLength='longest';setRackStartingSide('left');autoDirectionEl.checked=false;$('input[name="firstStrutSide"][value="top"]').checked=true;$('input[name="secondStrutSide"][value="top"]').checked=true;$('input[name="direction"][value="subtract"]').checked=true;$('input[name="spacingMode"][value="multiple"]').checked=true;patternBox.classList.add('hidden');build(false);const a=[['3/4"','','54-3/8','5-3/4','30-3/8'],['3/4"','2','','5-3/4',''],['1"','2','','5-1/2',''],['1-1/4"','3-3/8','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8',''],['1-1/4"','2-1/2','','5-1/8','']];$$('#rows tr').forEach((tr,i)=>{tr.querySelector('.size').value=a[i][0];if(i){const cc=tr.querySelector('.cc');if(cc)cc.value=a[i][1]}tr.querySelector('.strut').value='';{const be=tr.querySelector('.bon')||tr.querySelector('.oal');if(be)be.value=a[i][2]}tr.querySelector('.rise').value=a[i][3];const angEl=tr.querySelector('.kick-angle');if(angEl){const rv=parseM(a[i][3]),hv=parseM(a[i][4]);angEl.value=(i===0&&rv!=null&&hv!=null&&hv>0)?(Math.asin(rv/hv)*180/Math.PI).toFixed(1):''}else{const hypEl=tr.querySelector('.hyp');if(hypEl)hypEl.value=a[i][4]}});refreshBenderMode();if(autoSpaceActive)applyAllAutoSpacing();else recalc(0);
 }
-function baseProjectObject(){return {version:150,build:'PWA v2.55',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart,offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:getRadio('startingSide'),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
+function baseProjectObject(){return {version:150,build:'PWA v2.56',appMode:APP_MODE,layoutMode:isStickApp()?'single':activeLayoutMode,rackType:activeRackType,offsetType:activeOffsetType,offsetCriticalBend,offsetRackStart:rackStartSide(),offsetVerticalDirection,offsetHorizontalDirection,saddleType:activeSaddleType,saddleMarkMethod,saddleOffsetRelation,saddleVerticalDirection,saddleHorizontalDirection,saddleDirection,segmentedReferenceMode,segmentedTurnDirection,basic90Direction,showRackOal,trimApplied,trimModeActive,horizontalStrutSpacing,verticalStrutSpacing,strutOverrides:clonePlain(strutOverrides),savedAt:new Date().toISOString(),globalBender:globalBenderEl.value,count:+countEl.value,direction:getRadio('direction'),autoDirection:autoDirectionEl.checked,startingSide:rackStartSide(),spacingMode:getRadio('spacingMode'),pattern:patternEl.value,turnDirection:getRadio('turnDirection'),kickDirection:getRadio('kickDirection'),kickPosition:getRadio('kickPosition'),firstStrutSide:getRadio('firstStrutSide'),secondStrutSide:getRadio('secondStrutSide'),autoSpaceActive,rows:rawRows()}}
 function projectObject(){
   if(isCustomRun)syncActiveCustomCalculatedState(false);
   const p=baseProjectObject();
@@ -4723,7 +4736,13 @@ function applyProject(p){
   ['direction','startingSide','spacingMode','turnDirection','kickDirection','kickPosition','firstStrutSide','secondStrutSide'].forEach(n=>{const legacySide=p.strutSide;const v=p[n]||(n==='firstStrutSide'||n==='secondStrutSide'?legacySide:null)||({direction:'subtract',startingSide:'left',spacingMode:'multiple',turnDirection:'left',kickDirection:'up',kickPosition:'before',firstStrutSide:'top',secondStrutSide:'top'}[n]);const e=document.querySelector(`input[name="${n}"][value="${v}"]`);if(e)e.checked=true});
   updateRackModeUI();
   rackReferenceLength=p.referenceLength||(p.direction==='add'?'shortest':'longest');
-  const derived=rackSetupFromReference(rackReferenceLength,getRadio('turnDirection'));setRadioValue('direction',derived.direction);setRadioValue('startingSide',derived.startingSide);autoDirectionEl.checked=false;patternEl.value=p.pattern||'2-1/2';patternBox.classList.toggle('hidden',getRadio('spacingMode')!=='pattern');autoSpaceActive=p.autoSpaceActive!==false;updateAutoSpaceButton();build(false);
+  // Offset racks historically used offsetRackStart; kick racks used startingSide.
+  // Format Starting conduit keeps both in sync going forward.
+  const loadedStart=activeRackType==='offset'
+    ?(p.offsetRackStart==='right'?'right':'left')
+    :((p.startingSide==='left'||p.startingSide==='right')?p.startingSide:(p.offsetRackStart==='right'?'right':'left'));
+  setRackStartingSide(loadedStart);
+  const derived=rackSetupFromReference(rackReferenceLength,getRadio('turnDirection'));setRadioValue('direction',derived.direction);autoDirectionEl.checked=false;patternEl.value=p.pattern||'2-1/2';patternBox.classList.toggle('hidden',getRadio('spacingMode')!=='pattern');autoSpaceActive=p.autoSpaceActive!==false;updateAutoSpaceButton();build(false);
   (p.rows||[]).forEach((x,i)=>{
     const tr=$$('#rows tr')[i];if(!tr)return;
     tr.querySelector('.size').value=x.size||'';
@@ -6369,6 +6388,8 @@ function buildRolledSaddleCenterline(d,clr,baseY){
 function buildSaddleRackModels(){
   if(!modelData.length)return[];
   const xs=[0];for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?0:modelData[i].cc));
+  const rackSign=rackStartSign();
+  xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const side=getRadio('firstStrutSide')||'top',sideSign=side==='top'?1:-1;
   const inDir=[0,0,1];
@@ -6466,7 +6487,7 @@ function buildOffsetRackModels(){
   }
   // Rack POV: looking from the starting end along +Z, Left = +X. Conduit 1 on
   // the Left start side therefore sits on the +X side of the centered rack.
-  const rackSign=offsetRackStart==='left'?-1:1;
+  const rackSign=rackStartSign();
   xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const firstSide=getRadio('firstStrutSide')||'top',secondSide=getRadio('secondStrutSide')||'top';
@@ -6533,6 +6554,8 @@ function buildSegmentedRackModels(){
   if(!modelData.length)return[];
   const xs=[0];
   for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?requiredCC(modelData[i-1].size,modelData[i].size)||preferredClearance:modelData[i].cc));
+  const rackSign=rackStartSign();
+  xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const turnSign=segmentedTurnDirection==='left'?1:-1;
   return modelData.map((d,i)=>{
@@ -6560,6 +6583,8 @@ function buildStraightRackModels(){
   if(!modelData.length)return[];
   const xs=[0];
   for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?requiredCC(modelData[i-1].size,modelData[i].size)||preferredClearance:modelData[i].cc));
+  const rackSign=rackStartSign();
+  xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const firstSide=getRadio('firstStrutSide')||'top',firstSign=firstSide==='top'?1:-1;
   return modelData.map((d,i)=>{
@@ -6572,6 +6597,8 @@ function buildStraightRackModels(){
 function buildBasic90RackModels(){
   if(!modelData.length)return[];
   const xs=[0];for(let i=1;i<modelData.length;i++)xs.push(xs[i-1]+(modelData[i].cc==null?requiredCC(modelData[i-1].size,modelData[i].size)||preferredClearance:modelData[i].cc));
+  const rackSign=rackStartSign();
+  xs.forEach((_,i)=>xs[i]*=rackSign);
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const firstSide=getRadio('firstStrutSide')||'top',firstSign=firstSide==='top'?1:-1;
   const turnBasis=basic90Direction==='up'?[0,1,0]:basic90Direction==='down'?[0,-1,0]:basic90Direction==='right'?[-1,0,0]:[1,0,0];
@@ -6608,12 +6635,10 @@ function buildRackModels(){
     const clear=entered==null?preferredClearance:Math.max(0,entered-prevR-curR);
     xs.push(xs[i-1]+prevR+clear+curR);
   }
-  // Place the rack from its invariant physical rule rather than a subjective
-  // viewer side: the shortest OAL is always farthest toward the selected turn.
-  // If row 1 is longest, subsequent rows progress toward the turn. If row 1 is
-  // shortest, subsequent rows progress away from the turn.
-  const turnSign=getRadio('turnDirection')==='left'?1:-1;
-  const progressionSign=rackReferenceLength==='longest'?turnSign:-turnSign;
+  // Format Starting conduit (same as Offset Rack Starting Side): conduit 1 sits
+  // on Left (+X) or Right (−X) when looking from the starting end along +Z.
+  // OAL add/subtract still follows longest/shortest reference; turn chooses the bend.
+  const progressionSign=rackStartSign();
   for(let i=0;i<xs.length;i++)xs[i]*=progressionSign;
   const center=(Math.min(...xs)+Math.max(...xs))/2;
   const referenceRise=modelData[0]?.rise;
@@ -8364,6 +8389,7 @@ document.addEventListener('change',e=>{
   applySectionDirection(select.dataset.sectionDirectionKind,select.value);
 },true);
 $('#layoutModeSelector').onclick=e=>{const b=e.target.closest('[data-layout-mode]');if(b)switchLayoutMode(b.dataset.layoutMode)};
+$('#formatStartSelector').onclick=e=>{const b=e.target.closest('[data-format-start]');if(!b)return;setRackStartingSide(b.dataset.formatStart);updateRackModeUI();recalc(0)};
 $('#offsetModeSelector').onclick=e=>{const b=e.target.closest('[data-offset-mode]');if(!b||activeRackType!=='offset'||!offsetTypes[b.dataset.offsetMode]||b.dataset.offsetMode===activeOffsetType)return;closeMeasureKeypad(true);activeOffsetType=b.dataset.offsetMode;updateRackModeUI();build(true)};
 $('#criticalBendSelector').onclick=e=>{const b=e.target.closest('[data-critical-bend]');if(!b)return;offsetCriticalBend=b.dataset.criticalBend==='second'?'second':'first';updateRackModeUI();recalc(0)};
 $('#segmentedReferenceSelector').onclick=e=>{
@@ -8378,7 +8404,7 @@ $('#segmentedReferenceSelector').onclick=e=>{
   segmentedReferenceMode=mode;updateRackModeUI();build(true);
 };
 $('#segmentedTurnSelector').onclick=e=>{const b=e.target.closest('[data-segmented-turn]');if(!b)return;segmentedTurnDirection=b.dataset.segmentedTurn==='right'?'right':'left';updateRackModeUI();recalc(0)};
-$('#offsetStartSelector').onclick=e=>{const b=e.target.closest('[data-offset-start]');if(!b)return;offsetRackStart=b.dataset.offsetStart==='right'?'right':'left';updateRackModeUI();recalc(0)};
+$('#offsetStartSelector').onclick=e=>{const b=e.target.closest('[data-offset-start]');if(!b)return;setRackStartingSide(b.dataset.offsetStart);updateRackModeUI();recalc(0)};
 $('#offsetVerticalSelector').onclick=e=>{const b=e.target.closest('[data-offset-vertical]');if(!b)return;offsetVerticalDirection=b.dataset.offsetVertical==='down'?'down':'up';updateRackModeUI();recalc(0)};
 $('#offsetHorizontalSelector').onclick=e=>{const b=e.target.closest('[data-offset-horizontal]');if(!b)return;offsetHorizontalDirection=b.dataset.offsetHorizontal==='left'?'left':'right';updateRackModeUI();recalc(0)};
 $('#saddleModeSelector').onclick=e=>{const b=e.target.closest('[data-saddle-mode]');if(!b||activeRackType!=='saddle'||!saddleTypes[b.dataset.saddleMode]||b.dataset.saddleMode===activeSaddleType)return;if(activeLayoutMode!=='single'&&b.dataset.saddleMode==='rolled')return;closeMeasureKeypad(true);activeSaddleType=b.dataset.saddleMode;updateRackModeUI();build(true)};
@@ -8386,7 +8412,7 @@ $('#saddleMarkMethodSelector').onclick=e=>{const b=e.target.closest('[data-saddl
 $('#saddleRelationSelector').onclick=e=>{const b=e.target.closest('[data-saddle-relation]');if(!b)return;saddleOffsetRelation=b.dataset.saddleRelation==='different'?'different':'same';updateRackModeUI();build(true)};
 $('#saddleVerticalSelector').onclick=e=>{const b=e.target.closest('[data-saddle-vertical]');if(!b)return;saddleVerticalDirection=b.dataset.saddleVertical==='down'?'down':'up';updateRackModeUI();recalc(0)};
 $('#saddleHorizontalSelector').onclick=e=>{const b=e.target.closest('[data-saddle-horizontal]');if(!b)return;saddleHorizontalDirection=b.dataset.saddleHorizontal==='left'?'left':'right';updateRackModeUI();recalc(0)};
-$$('input[name="turnDirection"]').forEach(e=>e.onchange=()=>{const derived=rackSetupFromReference(rackReferenceLength,getRadio('turnDirection'));setRadioValue('direction',derived.direction);setRadioValue('startingSide',derived.startingSide);clearAutoFrom(1);recalc(0)});
+$$('input[name="turnDirection"]').forEach(e=>e.onchange=()=>{const derived=rackSetupFromReference(rackReferenceLength,getRadio('turnDirection'));setRadioValue('direction',derived.direction);clearAutoFrom(1);recalc(0)});
 $$('input[name="kickDirection"],input[name="firstStrutSide"],input[name="secondStrutSide"]').forEach(e=>e.onchange=()=>recalc(0));
 $$('input[name="kickPosition"]').forEach(e=>e.onchange=()=>{if(activeRackType==='kicked-90')build(true);else recalc(0)});
 $$('input[name="firstStrutSide"],input[name="secondStrutSide"]').forEach(e=>e.addEventListener('change',()=>{if((activeRackType==='offset'&&activeOffsetType==='parallel')||activeRackType==='saddle'){setRadioValue(e.name==='firstStrutSide'?'secondStrutSide':'firstStrutSide',e.value);recalc(0)}}));
@@ -8539,7 +8565,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.55-kicked-90-mark2-shrink';
+  const APP_BUILD='v2.56-format-starting-conduit';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
