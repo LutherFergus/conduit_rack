@@ -519,7 +519,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
   </summary>
   <div class="rack-parameters-body">
     <div class="grid">
-      <div class="rack-only"><label>Format</label><div class="top-run-format-row"><div id="layoutModeSelector" class="segmented-control" role="group" aria-label="Single conduit or rack format"><button type="button" data-layout-mode="single">Single</button><button type="button" data-layout-mode="rack">Rack</button></div><div id="formatStartWrap" class="format-start-wrap"><span class="format-inline-label">Starting conduit</span><div id="formatStartSelector" class="segmented-control" role="group" aria-label="Starting conduit side"><button type="button" data-format-start="left">Left</button><button type="button" data-format-start="right">Right</button></div></div><div id="formatGapWrap" class="format-gap-wrap"><span class="format-inline-label">Gap</span><input id="formatGapInput" class="format-gap-input" type="text" inputmode="decimal" value="9/16" aria-label="Surface clearance gap" title="Surface-to-surface clearance used by Auto Space (default 9/16&quot;)"></div><button id="trimModeBtn" class="secondary toggle-active" type="button" aria-pressed="true" title="Auto-square every rack section to the shortest finished free end (second leg)">Trim Mode: ON</button></div><div class="helper" id="formatHelpText">Switch formats at any time. Single is locked to one conduit; Rack restores the normal multi-conduit workflow. Starting conduit is which side conduit 1 sits on when looking from the starting end along the rack (Left = rack-left / +X). Back of 90 steps by CTC from that side: start on the 90-turn side adds CTC (e.g. 12, 13.75, …); start opposite subtracts. Gap is the surface-to-surface clearance Auto Space adds between ODs (default 9/16&quot;). Trim Mode (default ON) square-cuts each section to the shortest free end / second leg so all conduits line up; the Trim Off column is how much to cut off the other end of each longer stick.</div></div>
+      <div class="rack-only"><label>Format</label><div class="top-run-format-row"><div id="layoutModeSelector" class="segmented-control" role="group" aria-label="Single conduit or rack format"><button type="button" data-layout-mode="single">Single</button><button type="button" data-layout-mode="rack">Rack</button></div><div id="formatStartWrap" class="format-start-wrap"><span class="format-inline-label">Starting conduit</span><div id="formatStartSelector" class="segmented-control" role="group" aria-label="Starting conduit side"><button type="button" data-format-start="left">Left</button><button type="button" data-format-start="right">Right</button></div></div><div id="formatGapWrap" class="format-gap-wrap"><span class="format-inline-label">Gap</span><input id="formatGapInput" class="format-gap-input" type="text" inputmode="none" readonly value="9/16" autocomplete="off" spellcheck="false" aria-label="Surface clearance gap" title="Surface-to-surface clearance used by Auto Space (default 9/16&quot;). Tap to enter with the fraction keypad."></div><button id="trimModeBtn" class="secondary toggle-active" type="button" aria-pressed="true" title="Auto-square every rack section to the shortest finished free end (second leg)">Trim Mode: ON</button></div><div class="helper" id="formatHelpText">Switch formats at any time. Single is locked to one conduit; Rack restores the normal multi-conduit workflow. Starting conduit is which side conduit 1 sits on when looking from the starting end along the rack (Left = rack-left / +X). Back of 90 steps by CTC from that side: start on the 90-turn side adds CTC (e.g. 12, 13.75, …); start opposite subtracts. Gap is the surface-to-surface clearance Auto Space adds between ODs (default 9/16&quot;). Trim Mode (default ON) square-cuts each section to the shortest free end / second leg so all conduits line up; the Trim Off column is how much to cut off the other end of each longer stick.</div></div>
       <div id="conduitCountBox" class="rack-only"><label id="conduitCountLabel" for="count">How many conduits?</label><input id="count" type="number" min="1" max="100" value="6"><div id="conduitCountHelp" class="helper"></div></div>
       <div class="hidden" aria-hidden="true"><input type="radio" name="direction" value="add"><input type="radio" name="direction" value="subtract" checked><input id="autoDirection" type="checkbox"><input type="radio" name="startingSide" value="left" checked><input type="radio" name="startingSide" value="right"></div>
       <div class="hidden" aria-hidden="true"><input type="radio" name="spacingMode" value="multiple" checked><input id="pattern" type="hidden" value=""></div>
@@ -2216,7 +2216,8 @@ const collisionClearanceEpsilon=1e-4; // ignore float/chord noise at exact Auto 
 function preferredClearanceLabel(){return fmt16(preferredClearance)||'9/16"'}
 function updateGapControlUI(){
   const el=$('#formatGapInput');
-  if(el&&document.activeElement!==el)el.value=fmt16Input(preferredClearance);
+  // Do not clobber while the user is editing (native focus or fraction keypad).
+  if(el&&document.activeElement!==el&&measureKeypadTarget!==el)el.value=fmt16Input(preferredClearance);
   const gapTxt=preferredClearanceLabel();
   const ctcHelp=$('#ctcSpacingHelp');
   if(ctcHelp)ctcHelp.textContent=`Auto Space calculates each adjacent CTC from the two conduit outside diameters plus the Format Gap (${gapTxt}). Turn Auto Space off to enter CTC values manually.`;
@@ -2366,6 +2367,15 @@ let measureKeypadReplaceOnFirstKey=false;
 let choicePickerOnPick=null; /* stick-keypad-flow-v1 */
 function measurementFieldVisible(el){
   if(!el)return false;
+  if(el.id==='formatGapInput'){
+    const wrap=$('#formatGapWrap');
+    if(wrap&&(wrap.classList.contains('hidden')||wrap.hasAttribute('hidden')))return false;
+    try{
+      if(wrap&&getComputedStyle(wrap).display==='none')return false;
+      if(getComputedStyle(el).display==='none')return false;
+    }catch(_e){}
+    return true;
+  }
   const td=el.closest('td');
   if(td&&(td.classList.contains('hidden')||td.hasAttribute('hidden')))return false;
   try{
@@ -2376,7 +2386,10 @@ function measurementFieldVisible(el){
 }
 // Stick Next skips secondary fields, but those fields must still open the measure keypad on tap.
 function stickKeypadNextSkip(el){
-  if(!isStickApp()||!el)return false;
+  if(!el)return false;
+  // Format Gap is edited on demand — never chain into it via Next.
+  if(el.id==='formatGapInput')return true;
+  if(!isStickApp())return false;
   if(el.classList.contains('oal'))return true;
   // Rolled Point 4 / Hyp2 / far oh are primary fabrication inputs — keep them on Next.
   if(activeRackType==='saddle'&&isRolledSaddle())return false;
@@ -2384,7 +2397,7 @@ function stickKeypadNextSkip(el){
 }
 function measurementInputEligible(el){
   if(!(el instanceof HTMLInputElement)||el.disabled)return false;
-  if(el.id==='pattern')return true;
+  if(el.id==='pattern'||el.id==='formatGapInput')return true;
   const tr=el.closest('#rows tr');if(!tr)return false;
   const i=$$('#rows tr').indexOf(tr);
   if(el.classList.contains('cc'))return i>0;
@@ -2409,6 +2422,7 @@ function measurementInputEligible(el){
   return false;
 }
 function measurementLabel(el){
+  if(el?.id==='formatGapInput')return 'Format · Gap';
   const td=el.closest('td'),row=el.closest('tr');
   const rowNum=row?$$('#rows tr').indexOf(row)+1:null;
   const label=td?.dataset?.label||el.id||'Measurement';
@@ -2486,7 +2500,12 @@ function insertMeasureFraction(fraction){
   if(v&&/\d$/.test(v))v+='-';
   setMeasureValue(v+fraction);
 }
-function measurementTargets(){return [...$$('#rows input')].filter(el=>measurementInputEligible(el)&&measurementFieldVisible(el))}
+function measurementTargets(){
+  const rowInputs=[...$$('#rows input')].filter(el=>measurementInputEligible(el)&&measurementFieldVisible(el));
+  const gap=$('#formatGapInput');
+  if(gap&&measurementInputEligible(gap)&&measurementFieldVisible(gap))return [gap,...rowInputs];
+  return rowInputs;
+}
 function measurementNextTargets(){return measurementTargets().filter(el=>!stickKeypadNextSkip(el))}
 function closeChoicePicker(){
   const modal=$('#choicePicker');
@@ -8626,7 +8645,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.59-format-gap-adjustable';
+  const APP_BUILD='v2.60-format-gap-keypad';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
