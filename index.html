@@ -38,7 +38,7 @@ input,select,button{font:inherit}input,select{width:100%;min-height:44px;backgro
 input:focus,select:focus{outline:2px solid #38bdf8;outline-offset:1px}.choices{display:flex;gap:14px;flex-wrap:wrap;padding-top:7px}.choices label{display:flex;align-items:center;gap:7px;margin:0;font-weight:650}.choices input{width:auto;min-height:auto}
 .buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{min-height:44px;border:0;border-radius:10px;padding:10px 15px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#334155;color:#fff}.secondary.toggle-active{background:#3ec4ff;color:#041018}.danger{background:#7f1d1d;color:#fff}
 .helper{font-size:.88rem;color:var(--muted);margin-top:5px;line-height:1.35}.formula{background:#0f172a;border:1px dashed #475569;border-radius:12px;padding:12px;color:#cbd5e1;line-height:1.55}
-.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1410px;background:#0b1220}table.offset-layout{min-width:2050px}th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:8px;text-align:center;vertical-align:middle}th{background:#1e293b;position:sticky;top:0;z-index:2}td input,td select{min-width:90px;padding:8px}.cc{min-width:102px}td.output{background:#0f172a;font-variant-numeric:tabular-nums;white-space:nowrap}td.need{font-size:.78rem;line-height:1.35;color:#fbbf24;min-width:190px}.bender-col{display:none!important}.auto-filled{border-color:#3ec4ff!important;background:#0b2536!important}.invalid{border-color:var(--bad)!important;box-shadow:0 0 0 3px rgba(239,68,68,.45)!important;outline:2px solid var(--bad)!important;outline-offset:1px}
+.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1410px;background:#0b1220}table.offset-layout{min-width:2050px}th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:8px;text-align:center;vertical-align:middle}th{background:#1e293b;position:sticky;top:0;z-index:2}td input,td select{min-width:90px;padding:8px}.cc{min-width:102px}td.output{background:#0f172a;font-variant-numeric:tabular-nums;white-space:nowrap}td.need{font-size:.78rem;line-height:1.35;color:#fbbf24;min-width:190px}.bender-col,#globalBenderBox{display:none!important}.auto-filled{border-color:#3ec4ff!important;background:#0b2536!important}.invalid{border-color:var(--bad)!important;box-shadow:0 0 0 3px rgba(239,68,68,.45)!important;outline:2px solid var(--bad)!important;outline-offset:1px}
 .toolbar-title{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}.dot.auto{background:#2563eb}.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.conduit-id{display:inline-flex;align-items:center;justify-content:center;gap:8px}.conduit-color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:0 0 12px;border:2px solid rgba(255,255,255,.72);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 
 
@@ -495,7 +495,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
       <a class="help-toggle stick-only" id="openRackAppLink" href="./index.html" title="Open full rack calculator">Rack app</a>
       <a class="help-toggle rack-only" id="openStickAppLink" href="./single.html" title="Open single-stick calculator">Single stick</a>
       <button type="button" class="help-toggle" id="helpToggle" aria-pressed="false" title="Show field tips">Help</button>
-      <span class="version-badge">PWA v2.60</span>
+      <span class="version-badge">PWA v2.61</span>
     </div>
   </div>
 </header>
@@ -552,7 +552,7 @@ td.mark-cell.mark-ready{color:#fff;font-weight:900}
           <div class="offset-parameter-card"><label>Automatic Layout</label><div class="helper">The 90 is divided into nine equal 10-degree shots. Marks are centered within nine equal developed-arc sections.</div></div>
         </div>
       </div>
-      <div id="globalBenderBox"><label for="globalBender">Bender Profile</label><select id="globalBender"></select><div class="helper">When every conduit is the same trade size, this profile applies to the entire rack. Mixed conduit sizes automatically show a separate Bender Profile for each row.</div></div>
+      <div id="globalBenderBox" class="hidden" hidden aria-hidden="true"><label for="globalBender">Bender Profile</label><select id="globalBender" tabindex="-1"></select><div class="helper">When every conduit is the same trade size, this profile applies to the entire rack. Mixed conduit sizes automatically show a separate Bender Profile for each row.</div></div>
       <div class="strut-stack"><div class="strut-contact"><label>First strut contact</label><div class="choices"><label><input type="radio" name="firstStrutSide" value="top" checked> Top</label><label><input type="radio" name="firstStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the starting straight section is attached on the top or bottom of the first strut.</div></div><div class="strut-contact"><label>Second strut contact</label><div class="choices"><label><input type="radio" name="secondStrutSide" value="top" checked> Top</label><label><input type="radio" name="secondStrutSide" value="bottom"> Bottom</label></div><div class="helper">Select whether the final straight section is attached on the top or bottom of the second strut. Rows below the first automatically adjust centerline rise by actual EMT outside diameter so every conduit remains tangent to the same two strut planes.</div></div></div>
     </div>
     <div class="buttons"><button class="primary" id="buildBtn">Build / Rebuild Table</button><button class="secondary rack-only" id="loadLastBtn">Load Last Conduit Set</button><button class="secondary toggle-active rack-only" id="autoSpaceBtn" type="button" aria-pressed="true">Auto Space: ON</button><button class="secondary" id="saveBtn">Save Project</button><button class="secondary" id="loadBtn">Open Project</button><input id="fileInput" class="hidden" type="file" accept=".json"><button class="danger" id="clearBtn">Clear Values</button></div>
@@ -814,7 +814,7 @@ let verticalStrutSpacing=240;
 let strutOverrides=[];
 let scheduledStruts=[];
 const rackTypes={
-  'straight':{label:'Straight',description:'A straight 120-inch conduit section with size, bender, and spacing only.',available:true},
+  'straight':{label:'Straight',description:'A straight 120-inch conduit section with size and spacing only.',available:true},
   'basic-90':{label:'Basic 90',description:'A single 90-degree bend with no kick.',available:true},
   'kicked-90':{label:'Kicked 90',description:'A rack with a kick and a 90-degree bend.',available:true},
   'offset':{label:'Offset Rack',description:'Standard, parallel, and rolled offsets across a conduit rack.',available:true},
@@ -1073,7 +1073,7 @@ function updateRackModeUI(){
   const formulaGrid=document.querySelector('.formula-grid');
   if(formulaGrid){
     formulaGrid.innerHTML=isStraight
-      ?'<div class="formula-item"><strong>Stick Length</strong><div class="formula-equation">120″ full stick</div></div><div class="formula-item"><strong>Spacing</strong><div class="formula-equation">CTC ≥ (OD₁ + OD₂) ÷ 2 + Gap</div></div><div class="formula-item"><strong>Inputs</strong><div class="formula-equation">Size · Bender · CTC · Gap '+preferredClearanceLabel()+'</div></div>'
+      ?'<div class="formula-item"><strong>Stick Length</strong><div class="formula-equation">120″ full stick</div></div><div class="formula-item"><strong>Spacing</strong><div class="formula-equation">CTC ≥ (OD₁ + OD₂) ÷ 2 + Gap</div></div><div class="formula-item"><strong>Inputs</strong><div class="formula-equation">Size · CTC · Gap '+preferredClearanceLabel()+'</div></div>'
       :isSegmented
       ?'<div class="formula-item"><strong>Developed Arc</strong><div class="formula-equation">Radius × π ÷ 2</div></div><div class="formula-item"><strong>Shot Angle</strong><div class="formula-equation">90° ÷ 9 = 10°</div></div><div class="formula-item"><strong>Mark Spacing</strong><div class="formula-equation">Developed Arc ÷ 9</div></div>'
       :isSaddle
@@ -2204,7 +2204,28 @@ function requiredBendCenterSpacing(size,key,angleDeg){
   const angleAllowance=clr*(over30/60);
   return roundUp16(base+angleAllowance);
 }
-function refreshBenderMode(){const trs=$$('#rows tr');if(!trs.length)return;const selectedSizes=trs.map(tr=>tr.querySelector('.size').value).filter(Boolean);const mixed=new Set(selectedSizes).size>1;$$('.bender-col').forEach(el=>el.classList.toggle('hidden',!mixed));$('#globalBenderBox').classList.toggle('hidden',mixed);if(!mixed){const size=selectedSizes[0]||'';globalBenderEl.innerHTML=benderOptions(size,globalBenderEl.value);const selected=globalBenderEl.value||defaultBenderForSize(size);trs.forEach(tr=>{const b=tr.querySelector('.bender');b.innerHTML=benderOptions(tr.querySelector('.size').value,selected);b.value=selected});}else{trs.forEach(tr=>{const b=tr.querySelector('.bender'),size=tr.querySelector('.size').value,old=b.value;b.innerHTML=benderOptions(size,old);if(!b.value)b.value=defaultBenderForSize(size)})}}
+function refreshBenderMode(){
+  // Bender Profile UI is hidden for now; keep default profiles applied under the hood.
+  const trs=$$('#rows tr');if(!trs.length)return;
+  $$('.bender-col').forEach(el=>el.classList.add('hidden'));
+  const box=$('#globalBenderBox');
+  if(box){box.classList.add('hidden');box.setAttribute('hidden','');box.setAttribute('aria-hidden','true')}
+  const selectedSizes=trs.map(tr=>tr.querySelector('.size').value).filter(Boolean);
+  const mixed=new Set(selectedSizes).size>1;
+  if(!mixed){
+    const size=selectedSizes[0]||'';
+    if(globalBenderEl)globalBenderEl.innerHTML=benderOptions(size,globalBenderEl.value);
+    const selected=(globalBenderEl?.value)||defaultBenderForSize(size);
+    trs.forEach(tr=>{const b=tr.querySelector('.bender');if(!b)return;b.innerHTML=benderOptions(tr.querySelector('.size').value,selected);b.value=selected});
+  }else{
+    trs.forEach(tr=>{
+      const b=tr.querySelector('.bender'),size=tr.querySelector('.size').value,old=b?.value;
+      if(!b)return;
+      b.innerHTML=benderOptions(size,old);
+      if(!b.value)b.value=defaultBenderForSize(size);
+    });
+  }
+}
 
 const DEFAULT_PREFERRED_CLEARANCE=9/16; // surface-to-surface Auto Space gap
 let preferredClearance=DEFAULT_PREFERRED_CLEARANCE;
@@ -4398,7 +4419,7 @@ function renderStraightStatus(d){
   const full=d.filter(x=>x.size).length;
   let overlapCount=0,tightCount=0;
   d.forEach((x,i)=>{if(!i||x.cc==null)return;const c=outsideClearance(d[i-1].size,x.size,x.cc);if(c!=null&&c<0)overlapCount++;else if(c!=null&&c<preferredClearance)tightCount++});
-  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits ready</strong><div class="helper">Straight sections use a full 120-inch stick. Enter size, bender, and center-to-center spacing.</div></div><div class="status-card ok"><strong>No bends on this section</strong><div class="helper">Struts attach on the level run with the selected Top or Bottom contact.</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred '+preferredClearanceLabel()+' clearance.':'All straight-run gaps provide at least '+preferredClearanceLabel()+' clearance.'}</div></div>${overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
+  statusEl.innerHTML=`<div class="status-card ${full===d.length?'ok':'warn'}"><strong>${full} of ${d.length} conduits ready</strong><div class="helper">Straight sections use a full 120-inch stick. Enter size and center-to-center spacing.</div></div><div class="status-card ok"><strong>No bends on this section</strong><div class="helper">Struts attach on the level run with the selected Top or Bottom contact.</div></div><div class="status-card ${overlapCount?'bad':tightCount?'warn':'ok'}"><strong>${overlapCount?'Impossible straight spacing':tightCount?'Straight spacing warning':'Conduit spacing is valid'}</strong><div class="helper">${overlapCount?'One or more CTC measurements overlap adjacent conduit ODs.':tightCount?'One or more gaps are below the preferred '+preferredClearanceLabel()+' clearance.':'All straight-run gaps provide at least '+preferredClearanceLabel()+' clearance.'}</div></div>${overlapCount||tightCount?'<div class="status-card warn"><strong>CTC correction available</strong><div class="buttons" style="margin-top:10px"><button class="primary" id="fixCTCBtn" type="button">Fix CTC</button></div></div>':''}`;
   const hasError=Boolean(overlapCount);
   const errorSignature=hasError?JSON.stringify({straight:true,overlapCount}):'';
   if(hasError&&errorSignature!==lastShownProjectErrorSignature){lastShownProjectErrorSignature=errorSignature;openProjectStatusModal()}
@@ -8645,7 +8666,7 @@ window.__conduitTest={
 
 <script>
 (function(){
-  const APP_BUILD='v2.60-format-gap-keypad';
+  const APP_BUILD='v2.61-hide-bender-profile';
   try{
     if(localStorage.getItem('conduitRack.appBuild')!==APP_BUILD){
       localStorage.setItem('conduitRack.appBuild',APP_BUILD);
